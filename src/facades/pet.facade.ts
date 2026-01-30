@@ -3,6 +3,7 @@ import { petStore } from '../state/PetStore';
 import type { Pet, CreatePetDto, PetFormData, PetFilters } from '../types/pet.types';
 import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
+import { toast } from 'react-hot-toast';
 
 /**
  * PetFacade - Padrão Facade para Pets
@@ -128,7 +129,7 @@ export class PetFacade {
         petStore.setError(null);
 
         const response = await petService.getAll(filters, page, size);
-        
+
         // API retorna 'content' em vez de 'pets'
         petStore.setPets(response.content, response.total, response.page);
       } catch (error) {
@@ -159,7 +160,7 @@ export class PetFacade {
       petStore.setError(null);
 
       const pet = await petService.getById(id);
-      
+
       petStore.setCurrentPet(pet);
       return pet;
     } catch (error) {
@@ -181,7 +182,7 @@ export class PetFacade {
       petStore.setError(null);
 
       const pets = await petService.getByTutorCpf(cpf);
-      
+
       petStore.setPets(pets);
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets do tutor');
@@ -240,7 +241,7 @@ export class PetFacade {
         } catch (uploadError) {
           console.error('[PetFacade] Erro no upload da foto:', uploadError);
           // Pet já foi criado, então apenas avisamos sobre a falha do upload
-          alert('Pet criado com sucesso, mas houve erro ao enviar a foto. Tente adicionar a foto depois.');
+          toast.error('Pet criado com sucesso, mas houve erro ao enviar a foto.');
         }
       }
 
@@ -248,6 +249,7 @@ export class PetFacade {
       console.log('[PetFacade] Atualizando lista de pets...');
       await this.fetchPets(undefined, 0, 10);
 
+      toast.success('Pet criado com sucesso!');
       return createdPet;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar pet');
@@ -272,7 +274,7 @@ export class PetFacade {
 
       console.log('[PetFacade] Validando dados do pet...');
       this.validatePetData(data);
-      
+
       console.log('[PetFacade] Normalizando dados do pet...');
       const normalizedData = this.normalizePetData(data);
 
@@ -288,13 +290,14 @@ export class PetFacade {
           console.log('[PetFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[PetFacade] Falha no upload da foto:', uploadError);
-          alert('Pet atualizado com sucesso, mas houve erro ao enviar a foto.');
+          toast.error('Pet atualizado, mas houve erro ao enviar a foto.');
         }
       }
 
       console.log('[PetFacade] Atualizando lista...');
       await this.fetchPets(undefined, 0, 10);
 
+      toast.success('Pet atualizado com sucesso!');
       return updatedPet;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar pet');
@@ -315,9 +318,11 @@ export class PetFacade {
       petStore.setError(null);
 
       await petService.delete(id);
-      
+
       // Remove da lista local
       petStore.removePet(id);
+
+      toast.success('Pet removido com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover pet');
       petStore.setError(errorMessage);
@@ -381,7 +386,7 @@ export class PetFacade {
     if (error instanceof Error) {
       return error.message;
     }
-    
+
     if (typeof error === 'object' && error !== null && 'response' in error) {
       const axiosError = error as { response?: { data?: { message?: string } } };
       return axiosError.response?.data?.message || defaultMessage;

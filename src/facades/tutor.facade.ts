@@ -2,6 +2,7 @@ import { tutorService } from '../services/tutor.service';
 import { tutorStore } from '../state/TutorStore';
 import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../types/tutor.types';
 import type { Observable } from 'rxjs';
+import { toast } from 'react-hot-toast';
 
 /**
  * TutorFacade - Padrão Facade para Tutores
@@ -33,7 +34,7 @@ export class TutorFacade {
       tutorStore.setError(null);
 
       const response = await tutorService.getAll(filters, page, size);
-      
+
       tutorStore.setTutores(response.content, response.total, response.page);
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutores');
@@ -51,9 +52,9 @@ export class TutorFacade {
       tutorStore.setError(null);
 
       const tutor = await tutorService.getById(id);
-      
+
       tutorStore.setCurrentTutor(tutor);
-      
+
       return tutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutor');
@@ -94,7 +95,7 @@ export class TutorFacade {
           console.log('[TutorFacade] Upload concluído');
         } catch (uploadError) {
           console.error('[TutorFacade] Erro no upload:', uploadError);
-          alert('Tutor criado com sucesso, mas houve erro ao enviar a foto.');
+          toast.error('Tutor criado, mas houve erro ao enviar a foto.');
         }
       }
 
@@ -108,13 +109,14 @@ export class TutorFacade {
           console.log('[TutorFacade] Pets vinculados com sucesso');
         } catch (linkError) {
           console.error('[TutorFacade] Erro ao vincular pets:', linkError);
-          alert('Tutor criado com sucesso, mas houve erro ao vincular alguns pets.');
+          toast.error('Tutor criado, mas houve erro ao vincular alguns pets.');
         }
       }
 
       console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
+      toast.success('Tutor criado com sucesso!');
       return createdTutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar tutor');
@@ -136,7 +138,7 @@ export class TutorFacade {
 
       console.log('[TutorFacade] Validando dados do tutor...');
       this.validateTutorData(data);
-      
+
       console.log('[TutorFacade] Normalizando dados do tutor...');
       const normalizedData = this.normalizeTutorData(data);
 
@@ -152,13 +154,14 @@ export class TutorFacade {
           console.log('[TutorFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
-          alert('Tutor atualizado com sucesso, mas houve erro ao enviar a foto.');
+          toast.error('Tutor atualizado, mas houve erro ao enviar a foto.');
         }
       }
 
       console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
+      toast.success('Tutor atualizado com sucesso!');
       return updatedTutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar tutor');
@@ -176,8 +179,9 @@ export class TutorFacade {
       tutorStore.setError(null);
 
       await tutorService.delete(id);
-      
+
       tutorStore.removeTutor(id);
+      toast.success('Tutor removido com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover tutor');
       tutorStore.setError(errorMessage);
@@ -197,13 +201,14 @@ export class TutorFacade {
       tutorStore.setError(null);
 
       console.log('[TutorFacade] Vinculando pet', petId, 'ao tutor', tutorId);
-      
+
       await tutorService.linkPet(tutorId, petId);
-      
+
       // Recarrega dados do tutor para atualizar lista de pets
       await this.fetchTutorById(tutorId);
-      
+
       console.log('[TutorFacade] Pet vinculado com sucesso');
+      toast.success('Pet vinculado com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao vincular pet');
       tutorStore.setError(errorMessage);
@@ -223,13 +228,14 @@ export class TutorFacade {
       tutorStore.setError(null);
 
       console.log('[TutorFacade] Removendo vínculo do pet', petId, 'do tutor', tutorId);
-      
+
       await tutorService.unlinkPet(tutorId, petId);
-      
+
       // Recarrega dados do tutor para atualizar lista de pets
       await this.fetchTutorById(tutorId);
-      
+
       console.log('[TutorFacade] Vínculo removido com sucesso');
+      toast.success('Vínculo removido com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover vínculo');
       tutorStore.setError(errorMessage);
@@ -286,14 +292,14 @@ export class TutorFacade {
     if (error instanceof Error) {
       return error.message;
     }
-    
+
     if (typeof error === 'object' && error !== null && 'response' in error) {
       const axiosError = error as { response?: { data?: { message?: string } } };
       if (axiosError.response?.data?.message) {
         return axiosError.response.data.message;
       }
     }
-    
+
     return defaultMessage;
   }
 }

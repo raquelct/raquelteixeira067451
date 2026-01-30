@@ -1,11 +1,11 @@
 import apiClient from '../api/axiosInstance';
-import type { 
-  Tutor, 
-  TutorApiDto, 
-  CreateTutorDto, 
-  TutorFilters, 
+import type {
+  Tutor,
+  TutorApiDto,
+  CreateTutorDto,
+  TutorFilters,
   TutorListResponse,
-  TutorListApiResponse 
+  TutorListApiResponse
 } from '../types/tutor.types';
 import type { Pet, PetApiDto } from '../types/pet.types';
 
@@ -27,6 +27,7 @@ class TutorService {
   private transformPetDto(dto: PetApiDto): Pet {
     return {
       id: dto.id,
+      nome: dto.nome, // Required by Pet interface
       name: dto.nome,
       breed: dto.raca,
       age: dto.idade,
@@ -61,10 +62,10 @@ class TutorService {
    */
   async getAll(filters?: TutorFilters, page = 0, size = 20): Promise<TutorListResponse> {
     const params = new URLSearchParams();
-    
+
     if (filters?.nome) params.append('nome', filters.nome);
     if (filters?.cpf) params.append('cpf', filters.cpf);
-    
+
     params.append('page', String(page));
     params.append('size', String(size));
 

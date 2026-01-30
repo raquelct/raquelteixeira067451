@@ -16,12 +16,13 @@ import type { Tutor } from '../../types/tutor.types';
 import { petFacade } from '../../facades/pet.facade';
 import { tutorFacade } from '../../facades/tutor.facade';
 import { Button } from '../shared/Button';
+import toast from 'react-hot-toast';
 
 interface LinkedPetsSectionProps {
   // Modo de edição: tutor existente
   tutor?: Tutor;
   onRefresh?: () => void;
-  
+
   // Modo de criação: estado local
   mode?: 'create' | 'edit';
   selectedPets?: Pet[];
@@ -29,8 +30,8 @@ interface LinkedPetsSectionProps {
   onRemovePet?: (petId: number) => void;
 }
 
-export const LinkedPetsSection = ({ 
-  tutor, 
+export const LinkedPetsSection = ({
+  tutor,
   onRefresh,
   mode = 'edit',
   selectedPets = [],
@@ -56,7 +57,7 @@ export const LinkedPetsSection = ({
     const loadAvailablePets = async () => {
       try {
         setIsLoadingPets(true);
-        
+
         // Busca todos os pets (primeira página com tamanho grande)
         const subscription = petFacade.pets$.subscribe((pets) => {
           // Filtra pets que já estão vinculados
@@ -104,19 +105,19 @@ export const LinkedPetsSection = ({
           throw new Error('Tutor não fornecido em modo de edição');
         }
         await tutorFacade.linkPetToTutor(tutor.id, selectedPetId);
-        
+
         // Fecha modal e reseta seleção
         setIsAddingPet(false);
         setSelectedPetId(0);
-        
+
         // Callback para refresh no componente pai
         onRefresh?.();
-        
-        alert('Pet vinculado com sucesso!');
+
+        toast.success('Pet vinculado com sucesso!');
       }
     } catch (error) {
       console.error('[LinkedPetsSection] Erro ao vincular pet:', error);
-      alert('Erro ao vincular pet. Tente novamente.');
+      toast.error('Erro ao vincular pet. Tente novamente.');
     } finally {
       setIsLinking(false);
     }
@@ -146,10 +147,10 @@ export const LinkedPetsSection = ({
           throw new Error('Tutor não fornecido em modo de edição');
         }
         await tutorFacade.removePetFromTutor(tutor.id, petId);
-        
+
         // Callback para refresh no componente pai
         onRefresh?.();
-        
+
         alert('Vínculo removido com sucesso!');
       }
     } catch (error) {
@@ -288,7 +289,7 @@ export const LinkedPetsSection = ({
               <label htmlFor="pet-select" className="block text-sm font-medium text-gray-700 mb-2">
                 Selecione um pet
               </label>
-              
+
               {isLoadingPets ? (
                 <div className="animate-pulse">
                   <div className="h-12 bg-gray-200 rounded-lg" />

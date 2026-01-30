@@ -38,7 +38,7 @@ export const TutorList = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  
+
   const PAGE_SIZE = 10;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -58,7 +58,7 @@ export const TutorList = () => {
       console.log('[TutorList] Skipping fetch - already loading');
       return;
     }
-    
+
     const filters = debouncedSearchTerm ? { nome: debouncedSearchTerm } : undefined;
     console.log('[TutorList] Fetching page:', currentPage, 'filters:', filters);
     fetchTutores(filters, currentPage, PAGE_SIZE);
@@ -82,7 +82,7 @@ export const TutorList = () => {
       <PageHeader
         title="Tutores Cadastrados"
         subtitle={
-          totalCount > 0 
+          totalCount > 0
             ? `${totalCount} ${totalCount === 1 ? 'tutor encontrado' : 'tutores encontrados'}`
             : 'Nenhum tutor cadastrado'
         }
@@ -182,9 +182,7 @@ export const TutorList = () => {
                 onViewDetails={(id) => navigate(`/tutores/${id}`)}
                 onEdit={(id) => navigate(`/tutores/${id}/edit`)}
                 onDelete={(id) => {
-                  if (window.confirm(`Tem certeza que deseja excluir o tutor ${tutor.name}?`)) {
-                    tutorFacade.deleteTutor(id);
-                  }
+                  tutorFacade.deleteTutor(id);
                 }}
                 additionalInfo={
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">

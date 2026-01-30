@@ -1,4 +1,5 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'react-hot-toast';
 import { authStore } from '../state/AuthStore';
 import type { RefreshTokenResponse, RefreshTokenRequestDto } from '../types/auth.types';
 
@@ -134,10 +135,10 @@ apiClient.interceptors.response.use(
 
     // Verifica se é erro 401 Unauthorized
     const is401Error = error.response?.status === 401;
-    
+
     // CRÍTICO: Previne loop infinito - não tenta refresh se a própria URL de refresh falhou
     const isRefreshEndpoint = originalRequest?.url?.includes('/autenticacao/refresh');
-    
+
     // Verifica se já tentou fazer retry desta requisição
     const hasAlreadyRetried = originalRequest?._retry === true;
 
@@ -162,10 +163,10 @@ apiClient.interceptors.response.use(
       }
 
       // === CENÁRIO 2: Inicia processo de refresh ===
-      
+
       // Marca requisição como retry para não tentar novamente
       originalRequest._retry = true;
-      
+
       // Ativa flag de refresh em progresso
       isRefreshing = true;
 
@@ -176,25 +177,25 @@ apiClient.interceptors.response.use(
       // Verifica se há refresh token disponível
       if (!refreshToken) {
         logApiError(error, 'No refresh token available - redirecting to login');
-        
+
         // Limpa autenticação
         authStore.clearAuth();
-        
+
         // Rejeita todas as requisições na fila
         processQueue(error, null);
-        
+
         // Reseta flag
         isRefreshing = false;
-        
+
         // Redireciona para login
         redirectToLogin();
-        
+
         return Promise.reject(error);
       }
 
       try {
         // === Tenta fazer refresh do token ===
-        
+
         // Monta payload conforme OpenAPI
         const refreshPayload: RefreshTokenRequestDto = {
           refresh_token: refreshToken,
@@ -236,12 +237,12 @@ apiClient.interceptors.response.use(
 
         // Refaz a requisição original com novo token
         return apiClient(originalRequest);
-        
+
       } catch (refreshError) {
         // === Refresh falhou (401/403 ou erro de rede) ===
-        
+
         const axiosError = refreshError as AxiosError;
-        
+
         logApiError(axiosError, 'Token refresh failed - redirecting to login');
 
         // Rejeita todas as requisições na fila
@@ -264,6 +265,18 @@ apiClient.interceptors.response.use(
     // Log apenas se for um erro de resposta da API
     if (error.response && error.response.status !== 401) {
       logApiError(error, 'API Response Error');
+
+      // === GLOBAL ERROR TOAST ===
+      // Mostra toast automaticamente para erros de servidor ou bad request
+      const status = error.response.status;
+      const message = (error.response.data as { message?: string })?.message || 'Ocorreu um erro inesperado';
+
+      if (status >= 500) {
+        toast.error(`Erro do Servidor: ${message}`);
+      } else if (status >= 400 && status !== 404) {
+        // 404 geralmente é tratado localmente (ex: tela vazia), mas 400/403 merecem aviso
+        toast.error(message);
+      }
     }
 
     return Promise.reject(error);

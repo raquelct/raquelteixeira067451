@@ -32,6 +32,7 @@ export class PetService {
   private transformPetDto(dto: PetApiDto): Pet {
     const pet: Pet = {
       id: dto.id,
+      nome: dto.nome, // Required by Pet interface (compatibility)
       name: dto.nome,
       breed: dto.raca,
       age: dto.idade,
@@ -74,10 +75,10 @@ export class PetService {
    */
   async getAll(filters?: PetFilters, page = 0, size = 20): Promise<PetListResponse> {
     const params = new URLSearchParams();
-    
+
     if (filters?.name) params.append('nome', filters.name);
     if (filters?.ownerCpf) params.append('ownerCpf', filters.ownerCpf);
-    
+
     params.append('page', String(page));
     params.append('size', String(size));
 

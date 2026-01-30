@@ -14,6 +14,8 @@
  * - Tutors: title={nome}, subtitle={email}, description={telefone}
  */
 
+import { toast } from 'react-hot-toast';
+
 interface GenericCardProps {
   id: number;
   title: string;
@@ -39,6 +41,42 @@ export const GenericCard = ({
   onDelete,
   additionalInfo,
 }: GenericCardProps) => {
+
+  const handleDeleteClick = () => {
+    if (!onDelete) return;
+
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <p className="font-medium text-gray-800">
+          Tem certeza que deseja excluir <b>{title}</b>?
+        </p>
+        <div className="flex gap-2 justify-end mt-2">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => {
+              onDelete(id);
+              toast.dismiss(t.id);
+            }}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+          >
+            Excluir
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      icon: '⚠️',
+      style: {
+        minWidth: '300px',
+      },
+    });
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group flex flex-col h-full">
       {/* Image or Icon - Fixed Height */}
@@ -65,8 +103,8 @@ export const GenericCard = ({
       {/* Content - Grows to fill space, pushes buttons down */}
       <div className="p-6 flex flex-col items-center text-center flex-1">
         {/* Title (Nome) - Max 2 lines with ellipsis */}
-        <h3 
-          className="text-xl font-bold text-gray-900 mb-2 w-full line-clamp-2" 
+        <h3
+          className="text-xl font-bold text-gray-900 mb-2 w-full line-clamp-2"
           title={title}
         >
           {title}
@@ -74,8 +112,8 @@ export const GenericCard = ({
 
         {/* Subtitle (Raça/Email) - Single line with ellipsis */}
         {subtitle && (
-          <p 
-            className="text-sm text-gray-600 mb-2 w-full truncate" 
+          <p
+            className="text-sm text-gray-600 mb-2 w-full truncate"
             title={subtitle}
           >
             {subtitle}
@@ -118,10 +156,10 @@ export const GenericCard = ({
                 aria-label="Editar"
                 title="Editar"
               >
-                <svg 
-                  className="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition-colors" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition-colors"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path
@@ -135,7 +173,7 @@ export const GenericCard = ({
             )}
             {onDelete && (
               <button
-                onClick={() => onDelete(id)}
+                onClick={handleDeleteClick}
                 className="px-3 py-2.5 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 group"
                 aria-label="Excluir"
                 title="Excluir"
