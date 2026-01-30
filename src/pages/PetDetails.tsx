@@ -309,7 +309,9 @@ export const PetDetails = () => {
 
             {/* Action Buttons */}
             <div className="pt-6 border-t border-gray-200 flex gap-3">
-              <button className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors">
+              <button 
+              onClick={() => navigate(`/pets/${pet.id}/edit`)}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors">
                 Editar Informações
               </button>
               <button className="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
