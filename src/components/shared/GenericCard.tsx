@@ -15,14 +15,14 @@
  */
 
 interface GenericCardProps {
-  id: string;
+  id: number;
   title: string;
   subtitle?: string;
   description?: string;
   imageUrl?: string | null;
   icon?: React.ReactNode;
-  onViewDetails?: (id: string) => void;
-  onEdit?: (id: string) => void;
+  onViewDetails?: (id: number) => void;
+  onEdit?: (id: number) => void;
   additionalInfo?: React.ReactNode;
 }
 

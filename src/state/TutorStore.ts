@@ -92,7 +92,7 @@ class TutorStore {
     });
   }
 
-  removeTutor(tutorId: string): void {
+  removeTutor(tutorId: number): void {
     const currentState = this.tutorState$.getValue();
     const tutores = currentState.tutores.filter((tutor) => tutor.id !== tutorId);
     

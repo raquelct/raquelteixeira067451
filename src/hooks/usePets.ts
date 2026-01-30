@@ -63,7 +63,7 @@ export const usePets = () => {
     []
   );
 
-  const fetchPetById = useCallback((id: string) => {
+  const fetchPetById = useCallback((id: number) => {
     return petFacade.fetchPetById(id);
   }, []);
 
@@ -76,13 +76,13 @@ export const usePets = () => {
   }, []);
 
   const updatePet = useCallback(
-    (id: string, data: Parameters<typeof petFacade.updatePet>[1]) => {
+    (id: number, data: Parameters<typeof petFacade.updatePet>[1]) => {
       return petFacade.updatePet(id, data);
     },
     []
   );
 
-  const deletePet = useCallback((id: string) => {
+  const deletePet = useCallback((id: number) => {
     return petFacade.deletePet(id);
   }, []);
 

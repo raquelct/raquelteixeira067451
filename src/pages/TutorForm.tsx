@@ -64,7 +64,7 @@ export const TutorForm = () => {
         setIsLoadingData(true);
         console.log('[TutorForm] Carregando tutor:', id);
         
-        const tutor = await tutorFacade.fetchTutorById(id);
+        const tutor = await tutorFacade.fetchTutorById(Number(id));
         
         // Armazena tutor no estado local
         setCurrentTutor(tutor);
@@ -143,7 +143,7 @@ export const TutorForm = () => {
   /**
    * Remove pet do estado local (modo criação)
    */
-  const handleRemovePet = (petId: string) => {
+  const handleRemovePet = (petId: number) => {
     setSelectedPets((prev) => prev.filter((p) => p.id !== petId));
   };
 
@@ -159,7 +159,7 @@ export const TutorForm = () => {
       
       if (isEditMode && id) {
         // Modo edição: atualiza tutor existente
-        await tutorFacade.updateTutor(id, data, imageFile || undefined);
+        await tutorFacade.updateTutor(Number(id), data, imageFile || undefined);
         console.log('[TutorForm] Tutor atualizado com sucesso');
       } else {
         // Modo criação: cria novo tutor e vincula pets selecionados
@@ -190,7 +190,7 @@ export const TutorForm = () => {
 
     try {
       console.log('[TutorForm] Recarregando dados do tutor...');
-      const tutor = await tutorFacade.fetchTutorById(id);
+      const tutor = await tutorFacade.fetchTutorById(Number(id));
       setCurrentTutor(tutor);
       console.log('[TutorForm] Dados atualizados:', tutor);
     } catch (error) {

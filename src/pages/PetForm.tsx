@@ -54,7 +54,7 @@ export const PetForm = () => {
         setIsLoadingData(true);
         console.log('[PetForm] Carregando pet:', id);
         
-        const pet = await petFacade.fetchPetById(id);
+        const pet = await petFacade.fetchPetById(Number(id));
         
         // Pré-preenche o formulário
         reset({
@@ -130,7 +130,7 @@ export const PetForm = () => {
       
       if (isEditMode && id) {
         // Modo edição: atualiza pet existente
-        await petFacade.updatePet(id, data, imageFile || undefined);
+        await petFacade.updatePet(Number(id), data, imageFile || undefined);  
         console.log('[PetForm] Pet atualizado com sucesso');
       } else {
         // Modo criação: cria novo pet

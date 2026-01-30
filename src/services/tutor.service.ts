@@ -83,7 +83,7 @@ class TutorService {
    * Busca tutor por ID
    * GET /v1/tutores/:id
    */
-  async getById(id: string): Promise<Tutor> {
+  async getById(id: number): Promise<Tutor> {
     const response = await apiClient.get<TutorApiDto>(`${this.baseUrl}/${id}`);
     return this.transformTutorDto(response.data);
   }
@@ -101,7 +101,7 @@ class TutorService {
    * Atualiza um tutor existente
    * PUT /v1/tutores/:id
    */
-  async update(id: string, data: CreateTutorDto): Promise<Tutor> {
+  async update(id: number, data: CreateTutorDto): Promise<Tutor> {
     const response = await apiClient.put<TutorApiDto>(`${this.baseUrl}/${id}`, data);
     return this.transformTutorDto(response.data);
   }
@@ -110,7 +110,7 @@ class TutorService {
    * Upload de foto para um tutor existente
    * POST /v1/tutores/:tutorId/fotos
    */
-  async uploadPhoto(tutorId: string, file: File): Promise<void> {
+  async uploadPhoto(tutorId: number, file: File): Promise<void> {
     const formData = new FormData();
     formData.append('foto', file);
 
@@ -125,7 +125,7 @@ class TutorService {
    * Remove um tutor
    * DELETE /v1/tutores/:id
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: number): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
   }
 
@@ -133,7 +133,7 @@ class TutorService {
    * Vincula um pet a um tutor
    * POST /v1/tutores/:tutorId/pets/:petId
    */
-  async linkPet(tutorId: string, petId: string): Promise<void> {
+  async linkPet(tutorId: number, petId: number): Promise<void> {
     await apiClient.post(`${this.baseUrl}/${tutorId}/pets/${petId}`);
   }
 
@@ -141,7 +141,7 @@ class TutorService {
    * Desvincula um pet de um tutor
    * DELETE /v1/tutores/:tutorId/pets/:petId
    */
-  async unlinkPet(tutorId: string, petId: string): Promise<void> {
+  async unlinkPet(tutorId: number, petId: number): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${tutorId}/pets/${petId}`);
   }
 }

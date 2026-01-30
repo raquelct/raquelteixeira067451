@@ -32,7 +32,7 @@ export class AuthFacade {
       // Cria objeto user básico com username
       // Em produção, buscar dados completos via GET /auth/me após login
       const user: User = {
-        id: credentials.username,
+        id: parseInt(credentials.username),
         name: credentials.username,
         email: `${credentials.username}@pet-registry.com`,
         cpf: '00000000000',

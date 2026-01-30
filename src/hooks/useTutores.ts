@@ -59,7 +59,7 @@ export const useTutores = () => {
     []
   );
 
-  const fetchTutorById = useCallback((id: string) => {
+  const fetchTutorById = useCallback((id: number) => {
     return tutorFacade.fetchTutorById(id);
   }, []);
 
@@ -67,7 +67,7 @@ export const useTutores = () => {
     return tutorFacade.createTutor(data, imageFile);
   }, []);
 
-  const deleteTutor = useCallback((id: string) => {
+  const deleteTutor = useCallback((id: number) => {
     return tutorFacade.deleteTutor(id);
   }, []);
 

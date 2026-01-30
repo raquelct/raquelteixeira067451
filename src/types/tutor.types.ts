@@ -19,7 +19,7 @@ export interface TutorPhoto {
  * DTO da API - Campos em português conforme retornado pelo backend
  */
 export interface TutorApiDto {
-  id: string;
+  id: number;
   nome: string;
   email: string;
   telefone: string;
@@ -33,7 +33,7 @@ export interface TutorApiDto {
  * Modelo de domínio - Campos em inglês para uso na aplicação
  */
 export interface Tutor {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;

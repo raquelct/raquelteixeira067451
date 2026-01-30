@@ -26,7 +26,7 @@ interface LinkedPetsSectionProps {
   mode?: 'create' | 'edit';
   selectedPets?: Pet[];
   onAddPet?: (pet: Pet) => void;
-  onRemovePet?: (petId: string) => void;
+  onRemovePet?: (petId: number) => void;
 }
 
 export const LinkedPetsSection = ({ 
@@ -39,10 +39,10 @@ export const LinkedPetsSection = ({
 }: LinkedPetsSectionProps) => {
   const [isAddingPet, setIsAddingPet] = useState(false);
   const [availablePets, setAvailablePets] = useState<Pet[]>([]);
-  const [selectedPetId, setSelectedPetId] = useState<string>('');
+  const [selectedPetId, setSelectedPetId] = useState<number>(0);
   const [isLoadingPets, setIsLoadingPets] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
-  const [unlinkingPetId, setUnlinkingPetId] = useState<string | null>(null);
+  const [unlinkingPetId, setUnlinkingPetId] = useState<number | null>(null);
 
   // Em modo 'create', usar selectedPets; em modo 'edit', usar tutor.pets
   const linkedPets = mode === 'create' ? selectedPets : (tutor?.pets || []);
@@ -96,7 +96,7 @@ export const LinkedPetsSection = ({
         if (petToAdd && onAddPet) {
           onAddPet(petToAdd);
           setIsAddingPet(false);
-          setSelectedPetId('');
+          setSelectedPetId(0);
         }
       } else {
         // Modo edição: faz API call
@@ -107,7 +107,7 @@ export const LinkedPetsSection = ({
         
         // Fecha modal e reseta seleção
         setIsAddingPet(false);
-        setSelectedPetId('');
+        setSelectedPetId(0);
         
         // Callback para refresh no componente pai
         onRefresh?.();
@@ -125,7 +125,7 @@ export const LinkedPetsSection = ({
   /**
    * Remove vínculo de pet com confirmação
    */
-  const handleUnlinkPet = async (petId: string, petName: string) => {
+  const handleUnlinkPet = async (petId: number, petName: string) => {
     const confirmed = window.confirm(
       `Tem certeza que deseja desvincular o pet "${petName}" deste tutor?`
     );
@@ -273,7 +273,7 @@ export const LinkedPetsSection = ({
               <button
                 onClick={() => {
                   setIsAddingPet(false);
-                  setSelectedPetId('');
+                  setSelectedPetId(0);
                 }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -301,7 +301,7 @@ export const LinkedPetsSection = ({
                 <select
                   id="pet-select"
                   value={selectedPetId}
-                  onChange={(e) => setSelectedPetId(e.target.value)}
+                  onChange={(e) => setSelectedPetId(Number(e.target.value))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                 >
                   <option value="">-- Selecione um pet --</option>
@@ -320,7 +320,7 @@ export const LinkedPetsSection = ({
                 variant="outline"
                 onClick={() => {
                   setIsAddingPet(false);
-                  setSelectedPetId('');
+                  setSelectedPetId(0);
                 }}
                 className="flex-1"
               >

@@ -46,7 +46,7 @@ export interface RefreshTokenResponse {
 // === Tipos do domínio ===
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   cpf: string;

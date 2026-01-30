@@ -18,7 +18,7 @@ export interface PetPhoto {
  * APENAS campos que a API realmente retorna
  */
 export interface PetApiDto {
-  id: string;
+  id: number;
   nome: string;
   raca?: string;
   idade?: number;
@@ -66,7 +66,7 @@ export interface PetTutor {
  * - foto: { url: string } | null
  */
 export interface Pet {
-  id: string;
+  id: number;
   name: string;
   breed?: string;
   age?: number;
@@ -112,7 +112,7 @@ export interface PetFormData {
 }
 
 export interface UpdatePetDto extends Partial<CreatePetDto> {
-  id: string;
+  id: number;
 }
 
 export interface PetFilters {

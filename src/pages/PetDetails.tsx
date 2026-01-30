@@ -32,7 +32,7 @@ export const PetDetails = () => {
 
     console.log('[PetDetails] Fetching pet:', id);
     
-    fetchPetById(id).catch((err) => {
+    fetchPetById(Number(id)).catch((err) => {
       console.error('[PetDetails] Error fetching pet:', err);
       // 404 ou erro de rede
       if (err.response?.status === 404) {
@@ -114,7 +114,7 @@ export const PetDetails = () => {
           </p>
           <div className="flex gap-4 justify-center">
             <button
-              onClick={() => id && fetchPetById(id)}
+              onClick={() => id && fetchPetById(Number(id))}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
             >
               Tentar novamente

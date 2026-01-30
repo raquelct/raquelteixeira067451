@@ -96,7 +96,7 @@ export class PetService {
    * Busca um pet específico por ID
    * GET /v1/pets/:id
    */
-  async getById(id: string): Promise<Pet> {
+  async getById(id: number): Promise<Pet> {
     const response = await apiClient.get<PetApiDto>(`${this.baseUrl}/${id}`);
     return this.transformPetDto(response.data);
   }
@@ -123,7 +123,7 @@ export class PetService {
    * Atualiza um pet existente
    * PUT /v1/pets/:id
    */
-  async update(id: string, data: Partial<CreatePetDto>): Promise<Pet> {
+  async update(id: number, data: Partial<CreatePetDto>): Promise<Pet> {
     const response = await apiClient.put<PetApiDto>(`${this.baseUrl}/${id}`, data);
     return this.transformPetDto(response.data);
   }
@@ -134,7 +134,7 @@ export class PetService {
    * @param petId - ID do pet
    * @param file - Arquivo de imagem
    */
-  async uploadPhoto(petId: string, file: File): Promise<void> {
+  async uploadPhoto(petId: number, file: File): Promise<void> {
     const formData = new FormData();
     formData.append('foto', file);  // Key "foto" conforme Swagger
 
@@ -149,7 +149,7 @@ export class PetService {
    * Remove um pet
    * DELETE /v1/pets/:id
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: number): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
   }
 

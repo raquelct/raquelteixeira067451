@@ -45,7 +45,7 @@ export class TutorFacade {
     }
   }
 
-  async fetchTutorById(id: string): Promise<Tutor> {
+  async fetchTutorById(id: number): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
@@ -65,7 +65,7 @@ export class TutorFacade {
     }
   }
 
-  async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: string[]): Promise<Tutor> {
+  async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
     let createdTutor: Tutor | null = null;
 
     try {
@@ -129,7 +129,7 @@ export class TutorFacade {
   /**
    * Atualiza tutor existente (sequencial: Update → Upload Photo se necessário)
    */
-  async updateTutor(id: string, data: TutorFormData, imageFile?: File): Promise<Tutor> {
+  async updateTutor(id: number, data: TutorFormData, imageFile?: File): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
@@ -148,7 +148,7 @@ export class TutorFacade {
       if (imageFile) {
         try {
           console.log('[TutorFacade] Fazendo upload da foto...');
-          await tutorService.uploadPhoto(String(updatedTutor.id), imageFile);
+          await tutorService.uploadPhoto((updatedTutor.id), imageFile);
           console.log('[TutorFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
@@ -170,7 +170,7 @@ export class TutorFacade {
     }
   }
 
-  async deleteTutor(id: string): Promise<void> {
+  async deleteTutor(id: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
@@ -191,7 +191,7 @@ export class TutorFacade {
   /**
    * Vincula um pet a um tutor
    */
-  async linkPetToTutor(tutorId: string, petId: string): Promise<void> {
+  async linkPetToTutor(tutorId: number, petId: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
@@ -217,7 +217,7 @@ export class TutorFacade {
   /**
    * Remove vínculo de um pet com um tutor
    */
-  async removePetFromTutor(tutorId: string, petId: string): Promise<void> {
+  async removePetFromTutor(tutorId: number, petId: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);

@@ -175,7 +175,7 @@ class PetStore {
   /**
    * Remove um pet da lista
    */
-  public removePet(petId: string): void {
+  public removePet(petId: number): void {
     const currentState = this.petState$.getValue();
     const pets = currentState.pets.filter((pet) => pet.id !== petId);
     this.petState$.next({

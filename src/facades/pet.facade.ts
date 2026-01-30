@@ -153,7 +153,7 @@ export class PetFacade {
    * Busca um pet específico por ID
    * Atualiza o currentPet no store
    */
-  async fetchPetById(id: string): Promise<Pet> {
+  async fetchPetById(id: number): Promise<Pet> {
     try {
       petStore.setLoading(true);
       petStore.setError(null);
@@ -265,7 +265,7 @@ export class PetFacade {
   /**
    * Atualiza pet existente (sequencial: Update → Upload Photo se necessário)
    */
-  async updatePet(id: string, data: PetFormData, imageFile?: File): Promise<Pet> {
+  async updatePet(id: number, data: PetFormData, imageFile?: File): Promise<Pet> {
     try {
       petStore.setLoading(true);
       petStore.setError(null);
@@ -309,7 +309,7 @@ export class PetFacade {
   /**
    * Remove um pet
    */
-  async deletePet(id: string): Promise<void> {
+  async deletePet(id: number): Promise<void> {
     try {
       petStore.setLoading(true);
       petStore.setError(null);
