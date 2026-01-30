@@ -1,26 +1,39 @@
 import apiClient from '../api/axiosInstance';
-import type { LoginCredentials, User, AuthTokens } from '../types/auth.types';
+import type { AuthRequestDto, AuthResponseDto, User, AuthTokens } from '../types/auth.types';
 
 /**
  * AuthService - Serviço de Autenticação
- * Implementa as chamadas à API conforme OpenAPI
- * Endpoints base: /v1/auth/*
+ * Implementa as chamadas à API conforme OpenAPI Real
  */
 
+/**
+ * Response interna do login (mapeada de AuthResponseDto)
+ */
 export interface LoginResponse {
-  user: User;
   accessToken: string;
   refreshToken: string;
+  expiresIn: number;
+  refreshExpiresIn: number;
 }
 
 export class AuthService {
   /**
    * Realiza login do usuário
-   * POST /v1/auth/login
+   * POST /autenticacao/login
    */
-  async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    const response = await apiClient.post<LoginResponse>('/v1/auth/login', credentials);
-    return response.data;
+  async login(credentials: AuthRequestDto): Promise<LoginResponse> {
+    const response = await apiClient.post<AuthResponseDto>(
+      '/autenticacao/login',
+      credentials
+    );
+
+    // Mapeia snake_case da API para camelCase interno
+    return {
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+      expiresIn: response.data.expires_in,
+      refreshExpiresIn: response.data.refresh_expires_in,
+    };
   }
 
   /**

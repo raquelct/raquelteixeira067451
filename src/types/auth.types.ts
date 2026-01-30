@@ -7,21 +7,22 @@
 
 /**
  * AuthRequestDto - Payload de login
- * POST /v1/auth/login
+ * POST /autenticacao/login
  */
 export interface AuthRequestDto {
-  email: string;
+  username: string;
   password: string;
 }
 
 /**
  * AuthResponseDto - Resposta de login
- * POST /v1/auth/login
+ * POST /autenticacao/login
  */
 export interface AuthResponseDto {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  refresh_expires_in: number;
 }
 
 /**
@@ -34,11 +35,12 @@ export interface RefreshTokenRequestDto {
 
 /**
  * RefreshTokenResponse - Resposta de refresh
- * POST /v1/auth/refresh
  */
 export interface RefreshTokenResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  refresh_expires_in: number;
 }
 
 // === Tipos do domínio ===

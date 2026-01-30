@@ -136,7 +136,7 @@ apiClient.interceptors.response.use(
     const is401Error = error.response?.status === 401;
     
     // CRÍTICO: Previne loop infinito - não tenta refresh se a própria URL de refresh falhou
-    const isRefreshEndpoint = originalRequest?.url?.includes('/v1/auth/refresh');
+    const isRefreshEndpoint = originalRequest?.url?.includes('/autenticacao/refresh');
     
     // Verifica se já tentou fazer retry desta requisição
     const hasAlreadyRetried = originalRequest?._retry === true;
@@ -203,7 +203,7 @@ apiClient.interceptors.response.use(
         // Faz requisição de refresh usando axios diretamente (não apiClient)
         // para evitar que passe pelos interceptors
         const response = await axios.post<RefreshTokenResponse>(
-          'https://pet-manager-api.geia.vip/v1/auth/refresh',
+          'https://pet-manager-api.geia.vip/autenticacao/refresh',
           refreshPayload,
           {
             headers: {
@@ -213,7 +213,9 @@ apiClient.interceptors.response.use(
           }
         );
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        // Mapeia resposta da API (snake_case) para uso interno
+        const accessToken = response.data.access_token;
+        const newRefreshToken = response.data.refresh_token;
 
         // Atualiza tokens no AuthStore (BehaviorSubject)
         authStore.updateTokens({

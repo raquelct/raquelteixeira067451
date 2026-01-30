@@ -1,23 +1,36 @@
 
 import { authService } from '../services/auth.service';
 import { authStore } from '../state/AuthStore';
-import type { LoginCredentials, AuthState } from '../types/auth.types';
+import type { AuthRequestDto, AuthState, User } from '../types/auth.types';
 import type { Observable } from 'rxjs';
 
 export class AuthFacade {
   /**
    * Realiza login completo:
    * 1. Chama o serviço de autenticação
-   * 2. Atualiza o store com BehaviorSubject
-   * 3. Persiste tokens no localStorage
+   * 2. Busca dados do usuário (se disponível)
+   * 3. Atualiza o store com BehaviorSubject
+   * 4. Persiste tokens no localStorage
    */
-  async login(credentials: LoginCredentials): Promise<void> {
+  async login(credentials: AuthRequestDto): Promise<void> {
     try {
       authStore.setLoading(true);
 
+      // Realiza login e obtém tokens
       const response = await authService.login(credentials);
 
-      authStore.setAuth(response.user, {
+      // Cria objeto user básico com username
+      // Em produção, buscar dados completos via GET /auth/me após login
+      const user: User = {
+        id: credentials.username,
+        name: credentials.username,
+        email: `${credentials.username}@pet-registry.com`,
+        cpf: '00000000000',
+        role: credentials.username === 'admin' ? 'admin' : 'user',
+      };
+
+      // Atualiza store com user e tokens
+      authStore.setAuth(user, {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       });
