@@ -2,7 +2,16 @@ import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestCo
 import { authStore } from '../state/AuthStore';
 import type { RefreshTokenResponse } from '../types/auth.types';
 
-// Cria instância do Axios
+/**
+ * Cliente API configurado com Axios
+ * Requisitos do Edital SEPLAG/MT - Nível Sênior
+ * 
+ * Features:
+ * - BaseURL configurada para Pet Manager API
+ * - Interceptor de Request: adiciona JWT automaticamente
+ * - Interceptor de Response: refresh automático de token em 401
+ * - Fila de requisições durante refresh para evitar race conditions
+ */
 export const apiClient = axios.create({
   baseURL: 'https://pet-manager-api.geia.vip',
   timeout: 30000,
@@ -17,6 +26,21 @@ let failedQueue: Array<{
   resolve: (value?: unknown) => void;
   reject: (reason?: unknown) => void;
 }> = [];
+
+/**
+ * Log centralizado de erros da API
+ * Em produção, pode integrar com serviços como Sentry, DataDog, etc.
+ */
+const logApiError = (error: AxiosError, context: string) => {
+  console.error(`[API Error - ${context}]`, {
+    message: error.message,
+    status: error.response?.status,
+    statusText: error.response?.statusText,
+    data: error.response?.data,
+    url: error.config?.url,
+    method: error.config?.method,
+  });
+};
 
 /**
  * Processa a fila de requisições que falharam durante o refresh
@@ -85,6 +109,7 @@ apiClient.interceptors.response.use(
 
       if (!refreshToken) {
         // Sem refresh token, desloga o usuário
+        logApiError(error, 'No refresh token available');
         authStore.clearAuth();
         processQueue(error, null);
         isRefreshing = false;
@@ -92,10 +117,10 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        // Tenta fazer refresh do token
+        // Tenta fazer refresh do token usando endpoint do OpenAPI
         const response = await axios.post<RefreshTokenResponse>(
-          'https://pet-manager-api.geia.vip/auth/refresh',
-          { refreshToken }
+          'https://pet-manager-api.geia.vip/v1/auth/refresh',
+          { refresh_token: refreshToken }
         );
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
@@ -118,11 +143,17 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Falha no refresh, desloga o usuário
+        logApiError(refreshError as AxiosError, 'Token refresh failed');
         processQueue(refreshError as AxiosError, null);
         authStore.clearAuth();
         isRefreshing = false;
         return Promise.reject(refreshError);
       }
+    }
+
+    // Log de erros não tratados
+    if (error.response) {
+      logApiError(error, 'API Response Error');
     }
 
     return Promise.reject(error);
