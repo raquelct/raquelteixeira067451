@@ -1,6 +1,6 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import { authStore } from '../state/AuthStore';
-import type { RefreshTokenResponse } from '../types/auth.types';
+import type { RefreshTokenResponse, RefreshTokenRequestDto } from '../types/auth.types';
 
 /**
  * Cliente API configurado com Axios
@@ -8,9 +8,11 @@ import type { RefreshTokenResponse } from '../types/auth.types';
  * 
  * Features:
  * - BaseURL configurada para Pet Manager API
- * - Interceptor de Request: adiciona JWT automaticamente
- * - Interceptor de Response: refresh automático de token em 401
+ * - Request Interceptor: adiciona JWT automaticamente a todas as requisições
+ * - Response Interceptor: refresh automático e silencioso de token em 401
  * - Fila de requisições durante refresh para evitar race conditions
+ * - Prevenção de loops infinitos no refresh
+ * - Redirecionamento automático para /login em falhas críticas
  */
 export const apiClient = axios.create({
   baseURL: 'https://pet-manager-api.geia.vip',
@@ -20,18 +22,25 @@ export const apiClient = axios.create({
   },
 });
 
-// Flag para evitar loop infinito no refresh
+/**
+ * Interface para itens da fila de requisições pendentes
+ */
+interface QueuedRequest {
+  resolve: (value: string | null) => void;
+  reject: (reason: AxiosError) => void;
+}
+
+// Flag para controle de refresh em progresso
 let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: unknown) => void;
-}> = [];
+
+// Fila de requisições que falharam com 401 durante o refresh
+let failedQueue: QueuedRequest[] = [];
 
 /**
  * Log centralizado de erros da API
- * Em produção, pode integrar com serviços como Sentry, DataDog, etc.
+ * Em produção, integrar com Sentry, DataDog, etc.
  */
-const logApiError = (error: AxiosError, context: string) => {
+const logApiError = (error: AxiosError, context: string): void => {
   console.error(`[API Error - ${context}]`, {
     message: error.message,
     status: error.response?.status,
@@ -44,115 +53,214 @@ const logApiError = (error: AxiosError, context: string) => {
 
 /**
  * Processa a fila de requisições que falharam durante o refresh
+ * @param error - Erro a ser propagado para todas as requisições na fila (se houver)
+ * @param token - Novo access token para ser usado nas requisições (se sucesso)
  */
-const processQueue = (error: AxiosError | null, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+const processQueue = (error: AxiosError | null, token: string | null = null): void => {
+  failedQueue.forEach((queuedRequest: QueuedRequest) => {
     if (error) {
-      prom.reject(error);
+      queuedRequest.reject(error);
     } else {
-      prom.resolve(token);
+      queuedRequest.resolve(token);
     }
   });
 
+  // Limpa a fila após processar
   failedQueue = [];
 };
 
 /**
- * Request Interceptor - Adiciona JWT Bearer Token
+ * Redireciona para página de login
+ * Usado quando autenticação falha de forma irrecuperável
+ */
+const redirectToLogin = (): void => {
+  // Verifica se está em ambiente browser
+  if (typeof window !== 'undefined') {
+    window.location.href = '/login';
+  }
+};
+
+/**
+ * Request Interceptor
+ * 
+ * Intercepta todas as requisições HTTP para:
+ * 1. Obter o access_token do AuthStore (RxJS BehaviorSubject)
+ * 2. Anexar o token como Bearer token no header Authorization
+ * 
+ * Este interceptor é executado ANTES de cada requisição ser enviada.
  */
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    // Obtém snapshot do estado de autenticação do BehaviorSubject
     const authState = authStore.getCurrentAuthState();
     const token = authState.tokens?.accessToken;
 
+    // Adiciona Bearer token se existir
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
   },
-  (error: AxiosError) => {
+  (error: AxiosError): Promise<never> => {
     return Promise.reject(error);
   }
 );
 
+/**
+ * Interface estendida para rastrear tentativas de retry
+ */
+interface RetryableAxiosRequestConfig extends AxiosRequestConfig {
+  _retry?: boolean;
+}
+
+/**
+ * Response Interceptor - Silent Refresh Token Logic
+ * 
+ * Intercepta respostas HTTP para:
+ * 1. Detectar erros 401 Unauthorized
+ * 2. Tentar refresh automático usando POST /v1/auth/refresh
+ * 3. Gerenciar fila de requisições durante refresh (previne race conditions)
+ * 4. Redirecionar para /login se refresh falhar
+ * 5. Prevenir loops infinitos se o próprio endpoint de refresh retornar 401
+ */
 apiClient.interceptors.response.use(
   (response) => {
+    // Resposta bem-sucedida, passa adiante
     return response;
   },
-  async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+  async (error: AxiosError): Promise<unknown> => {
+    const originalRequest = error.config as RetryableAxiosRequestConfig;
 
-    // Se o erro for 401 e não for uma tentativa de retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Verifica se é erro 401 Unauthorized
+    const is401Error = error.response?.status === 401;
+    
+    // CRÍTICO: Previne loop infinito - não tenta refresh se a própria URL de refresh falhou
+    const isRefreshEndpoint = originalRequest?.url?.includes('/v1/auth/refresh');
+    
+    // Verifica se já tentou fazer retry desta requisição
+    const hasAlreadyRetried = originalRequest?._retry === true;
+
+    if (is401Error && !hasAlreadyRetried && !isRefreshEndpoint) {
+      // === CENÁRIO 1: Refresh já está em progresso ===
       if (isRefreshing) {
-        // Se já está refreshing, adiciona à fila
-        return new Promise((resolve, reject) => {
+        // Adiciona requisição à fila para ser reprocessada após refresh
+        return new Promise<string | null>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
+          .then((newToken: string | null) => {
+            // Refresh completou com sucesso, atualiza header e refaz requisição
+            if (originalRequest.headers && newToken) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
             return apiClient(originalRequest);
           })
-          .catch((err) => {
+          .catch((err: AxiosError) => {
+            // Refresh falhou, propaga erro
             return Promise.reject(err);
           });
       }
 
+      // === CENÁRIO 2: Inicia processo de refresh ===
+      
+      // Marca requisição como retry para não tentar novamente
       originalRequest._retry = true;
+      
+      // Ativa flag de refresh em progresso
       isRefreshing = true;
 
+      // Obtém refresh token do AuthStore
       const authState = authStore.getCurrentAuthState();
       const refreshToken = authState.tokens?.refreshToken;
 
+      // Verifica se há refresh token disponível
       if (!refreshToken) {
-        // Sem refresh token, desloga o usuário
-        logApiError(error, 'No refresh token available');
+        logApiError(error, 'No refresh token available - redirecting to login');
+        
+        // Limpa autenticação
         authStore.clearAuth();
+        
+        // Rejeita todas as requisições na fila
         processQueue(error, null);
+        
+        // Reseta flag
         isRefreshing = false;
+        
+        // Redireciona para login
+        redirectToLogin();
+        
         return Promise.reject(error);
       }
 
       try {
-        // Tenta fazer refresh do token usando endpoint do OpenAPI
+        // === Tenta fazer refresh do token ===
+        
+        // Monta payload conforme OpenAPI
+        const refreshPayload: RefreshTokenRequestDto = {
+          refresh_token: refreshToken,
+        };
+
+        // Faz requisição de refresh usando axios diretamente (não apiClient)
+        // para evitar que passe pelos interceptors
         const response = await axios.post<RefreshTokenResponse>(
           'https://pet-manager-api.geia.vip/v1/auth/refresh',
-          { refresh_token: refreshToken }
+          refreshPayload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 30000,
+          }
         );
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        // Atualiza tokens no store
+        // Atualiza tokens no AuthStore (BehaviorSubject)
         authStore.updateTokens({
           accessToken,
           refreshToken: newRefreshToken,
         });
 
-        // Processa fila de requisições
+        // Processa todas as requisições na fila com novo token
         processQueue(null, accessToken);
 
-        // Refaz a requisição original com novo token
+        // Atualiza header da requisição original
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
 
+        // Reseta flag
         isRefreshing = false;
+
+        // Refaz a requisição original com novo token
         return apiClient(originalRequest);
+        
       } catch (refreshError) {
-        // Falha no refresh, desloga o usuário
-        logApiError(refreshError as AxiosError, 'Token refresh failed');
-        processQueue(refreshError as AxiosError, null);
+        // === Refresh falhou (401/403 ou erro de rede) ===
+        
+        const axiosError = refreshError as AxiosError;
+        
+        logApiError(axiosError, 'Token refresh failed - redirecting to login');
+
+        // Rejeita todas as requisições na fila
+        processQueue(axiosError, null);
+
+        // Limpa autenticação
         authStore.clearAuth();
+
+        // Reseta flag
         isRefreshing = false;
+
+        // Redireciona para login
+        redirectToLogin();
+
         return Promise.reject(refreshError);
       }
     }
 
-    // Log de erros não tratados
-    if (error.response) {
+    // Se chegou aqui, é um erro que não é 401 ou já foi tratado
+    // Log apenas se for um erro de resposta da API
+    if (error.response && error.response.status !== 401) {
       logApiError(error, 'API Response Error');
     }
 
