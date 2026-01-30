@@ -14,6 +14,7 @@ import type { PetState } from '../state/PetStore';
  * - Transforma dados e aplica lógica de negócio
  * - Expõe observables reativos para a UI
  * - Implementa retry logic e validações
+ * - Previne requisições duplicadas
  * 
  * UI Components DEVEM usar APENAS este Facade.
  * NUNCA importar PetService ou axios diretamente.
@@ -24,6 +25,9 @@ import type { PetState } from '../state/PetStore';
  *              Store (BehaviorSubject)
  */
 export class PetFacade {
+  // ========== Controle de Estado Interno ==========
+  private pendingRequests: Map<string, Promise<unknown>> = new Map();
+
   // ========== Observables Reativos ==========
 
   /**
@@ -90,29 +94,59 @@ export class PetFacade {
   /**
    * Busca todos os pets com filtros opcionais
    * 
+   * Features de Nível Sênior:
+   * - Previne requisições duplicadas com request deduplication
+   * - Gerencia loading state automaticamente
+   * - Error handling com mensagens user-friendly
+   * 
    * Fluxo:
-   * 1. Set loading = true
-   * 2. Chama PetService.getAll()
-   * 3. Atualiza PetStore com resultado
-   * 4. Set loading = false
-   * 5. Emite para todos os subscribers via BehaviorSubject
+   * 1. Verifica se requisição já está em andamento
+   * 2. Set loading = true
+   * 3. Chama PetService.getAll()
+   * 4. Atualiza PetStore com resultado
+   * 5. Set loading = false
+   * 6. Emite para todos os subscribers via BehaviorSubject
+   * 
+   * @param filters - Filtros opcionais (nome, espécie, etc)
+   * @param page - Número da página (default: 1)
+   * @param size - Quantidade de itens por página (default: 10 conforme edital)
    */
-  async fetchPets(filters?: PetFilters, page = 1, limit = 20): Promise<void> {
-    try {
-      petStore.setLoading(true);
-      petStore.setError(null);
+  async fetchPets(filters?: PetFilters, page = 1, size = 10): Promise<void> {
+    // Cria chave única para deduplicação
+    const requestKey = `fetchPets-${JSON.stringify(filters)}-${page}-${size}`;
 
-      const response = await petService.getAll(filters, page, limit);
-      
-      petStore.setPets(response.pets, response.total, response.page);
-    } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets');
-      petStore.setError(errorMessage);
-      console.error('[PetFacade] fetchPets error:', error);
-      throw error;
-    } finally {
-      petStore.setLoading(false);
+    // Se já existe requisição em andamento, retorna a Promise existente
+    if (this.pendingRequests.has(requestKey)) {
+      console.log('[PetFacade] Requisição duplicada detectada, aguardando existente...');
+      return this.pendingRequests.get(requestKey) as Promise<void>;
     }
+
+    // Cria nova Promise e armazena
+    const requestPromise = (async () => {
+      try {
+        petStore.setLoading(true);
+        petStore.setError(null);
+
+        const response = await petService.getAll(filters, page, size);
+        
+        // API retorna 'content' em vez de 'pets'
+        petStore.setPets(response.content, response.total, response.page);
+      } catch (error) {
+        const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets');
+        petStore.setError(errorMessage);
+        console.error('[PetFacade] fetchPets error:', error);
+        throw error;
+      } finally {
+        petStore.setLoading(false);
+        // Remove da lista de pendentes ao finalizar
+        this.pendingRequests.delete(requestKey);
+      }
+    })();
+
+    // Armazena a Promise
+    this.pendingRequests.set(requestKey, requestPromise);
+
+    return requestPromise;
   }
 
   /**

@@ -3,6 +3,19 @@
  * Para futuras implementações do CRUD
  */
 
+/**
+ * Estrutura da foto do pet conforme API
+ */
+export interface PetPhoto {
+  url: string;
+  nome?: string;
+  tamanho?: number;
+  tipo?: string;
+}
+
+/**
+ * Interface Pet conforme estrutura real da API
+ */
 export interface Pet {
   id: string;
   name: string;
@@ -19,7 +32,8 @@ export interface Pet {
   vaccinated: boolean;
   neutered: boolean;
   microchipId?: string;
-  photo?: string;
+  foto?: PetPhoto | null;  // API retorna 'foto', não 'photo'
+  photo?: string;           // Mantido para compatibilidade (deprecated)
   observations?: string;
 }
 
@@ -46,15 +60,21 @@ export interface UpdatePetDto extends Partial<CreatePetDto> {
 }
 
 export interface PetFilters {
+  name?: string;
   species?: Pet['species'];
   ownerCpf?: string;
   vaccinated?: boolean;
   neutered?: boolean;
 }
 
+/**
+ * Resposta paginada da API de Pets
+ * Conforme estrutura real da API
+ */
 export interface PetListResponse {
-  pets: Pet[];
-  total: number;
   page: number;
-  limit: number;
+  size: number;
+  total: number;
+  pageCount: number;
+  content: Pet[];
 }

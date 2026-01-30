@@ -34,11 +34,11 @@ export const Login = () => {
 
   /**
    * Verifica se usuário já está autenticado
-   * Se sim, redireciona para Home
+   * Se sim, redireciona para Home (PetList)
    */
   useEffect(() => {
     if (authFacade.isAuthenticated()) {
-      navigate('/home', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [navigate]);
 
@@ -57,8 +57,8 @@ export const Login = () => {
         password: data.password,
       });
 
-      // Login bem-sucedido, navega para Home
-      navigate('/home', { replace: true });
+      // Login bem-sucedido, navega para Home (PetList)
+      navigate('/', { replace: true });
     } catch (error) {
       // Trata erros da API
       if (error instanceof AxiosError) {

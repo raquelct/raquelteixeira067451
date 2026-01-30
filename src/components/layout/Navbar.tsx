@@ -75,7 +75,7 @@ export const Navbar = () => {
           {/* Logo / Brand */}
           <div className="flex items-center">
             <Link
-              to={isAuthenticated ? '/home' : '/'}
+              to="/"
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <svg
@@ -101,19 +101,9 @@ export const Navbar = () => {
               <>
                 {/* Navigation Links */}
                 <Link
-                  to="/home"
+                  to="/"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/home')
-                      ? 'bg-indigo-700 text-white'
-                      : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
-                  }`}
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/pets"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/pets')
+                    isActivePath('/')
                       ? 'bg-indigo-700 text-white'
                       : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
                   }`}
@@ -247,19 +237,9 @@ export const Navbar = () => {
 
                 {/* Navigation Links Mobile */}
                 <Link
-                  to="/home"
+                  to="/"
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    isActivePath('/home')
-                      ? 'bg-indigo-700 text-white'
-                      : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
-                  }`}
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/pets"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    isActivePath('/pets')
+                    isActivePath('/')
                       ? 'bg-indigo-700 text-white'
                       : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
                   }`}

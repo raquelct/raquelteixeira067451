@@ -20,15 +20,21 @@ import type {
  * Sempre usar PetFacade como intermediário.
  */
 export class PetService {
-  private readonly baseUrl = '/pets';
+  private readonly baseUrl = '/v1/pets';
 
   /**
    * Lista todos os pets com filtros opcionais
-   * GET /pets
+   * GET /v1/pets
+   * 
+   * Parâmetros conforme OpenAPI:
+   * - page: número da página
+   * - size: quantidade de itens por página
+   * - nome: filtro por nome (opcional)
    */
-  async getAll(filters?: PetFilters, page = 1, limit = 20): Promise<PetListResponse> {
+  async getAll(filters?: PetFilters, page = 1, size = 20): Promise<PetListResponse> {
     const params = new URLSearchParams();
     
+    if (filters?.name) params.append('nome', filters.name);
     if (filters?.species) params.append('species', filters.species);
     if (filters?.ownerCpf) params.append('ownerCpf', filters.ownerCpf);
     if (filters?.vaccinated !== undefined)
@@ -37,7 +43,7 @@ export class PetService {
       params.append('neutered', String(filters.neutered));
     
     params.append('page', String(page));
-    params.append('limit', String(limit));
+    params.append('size', String(size));
 
     const response = await apiClient.get<PetListResponse>(
       `${this.baseUrl}?${params.toString()}`
@@ -47,7 +53,7 @@ export class PetService {
 
   /**
    * Busca um pet específico por ID
-   * GET /pets/:id
+   * GET /v1/pets/:id
    */
   async getById(id: string): Promise<Pet> {
     const response = await apiClient.get<Pet>(`${this.baseUrl}/${id}`);
@@ -56,7 +62,7 @@ export class PetService {
 
   /**
    * Busca pets de um tutor específico
-   * GET /pets/tutor/:cpf
+   * GET /v1/pets/tutor/:cpf
    */
   async getByTutorCpf(cpf: string): Promise<Pet[]> {
     const response = await apiClient.get<Pet[]>(`${this.baseUrl}/tutor/${cpf}`);
@@ -65,7 +71,7 @@ export class PetService {
 
   /**
    * Cria um novo pet
-   * POST /pets
+   * POST /v1/pets
    */
   async create(data: CreatePetDto): Promise<Pet> {
     const response = await apiClient.post<Pet>(this.baseUrl, data);
@@ -74,7 +80,7 @@ export class PetService {
 
   /**
    * Atualiza um pet existente
-   * PUT /pets/:id
+   * PUT /v1/pets/:id
    */
   async update(id: string, data: Partial<CreatePetDto>): Promise<Pet> {
     const response = await apiClient.put<Pet>(`${this.baseUrl}/${id}`, data);
@@ -83,7 +89,7 @@ export class PetService {
 
   /**
    * Remove um pet
-   * DELETE /pets/:id
+   * DELETE /v1/pets/:id
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
@@ -91,7 +97,7 @@ export class PetService {
 
   /**
    * Busca estatísticas de pets
-   * GET /pets/stats
+   * GET /v1/pets/stats
    */
   async getStats(): Promise<{
     total: number;

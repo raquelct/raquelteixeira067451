@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { petFacade } from '../facades/pet.facade';
-import type { Pet } from '../types/pet.types';
+import type { Pet, PetFilters } from '../types/pet.types';
 
 /**
  * Hook customizado para gerenciar pets
@@ -10,12 +10,13 @@ import type { Pet } from '../types/pet.types';
  * - NÃO importa PetService
  * - USA APENAS PetFacade
  * - Subscribe aos Observables do Facade
+ * - Métodos memoizados com useCallback para evitar loops
  * 
  * UI Components devem seguir este padrão.
  */
 export const usePets = () => {
   const [pets, setPets] = useState<Pet[]>([]);
-  const [currentPet, setCurrentPet] = useState<Pet | null>(null);
+  const [currentPet, setCurrentPetState] = useState<Pet | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -27,7 +28,7 @@ export const usePets = () => {
     });
 
     const currentPetSubscription = petFacade.currentPet$.subscribe((data) => {
-      setCurrentPet(data);
+      setCurrentPetState(data);
     });
 
     const loadingSubscription = petFacade.isLoading$.subscribe((data) => {
@@ -52,6 +53,55 @@ export const usePets = () => {
     };
   }, []);
 
+  // ========== Métodos Memoizados ==========
+  // CRÍTICO: useCallback previne loops infinitos em useEffect
+
+  const fetchPets = useCallback(
+    (filters?: PetFilters, page?: number, size?: number) => {
+      return petFacade.fetchPets(filters, page, size);
+    },
+    []
+  );
+
+  const fetchPetById = useCallback((id: string) => {
+    return petFacade.fetchPetById(id);
+  }, []);
+
+  const fetchPetsByTutor = useCallback((cpf: string) => {
+    return petFacade.fetchPetsByTutor(cpf);
+  }, []);
+
+  const createPet = useCallback((data: Parameters<typeof petFacade.createPet>[0]) => {
+    return petFacade.createPet(data);
+  }, []);
+
+  const updatePet = useCallback(
+    (id: string, data: Parameters<typeof petFacade.updatePet>[1]) => {
+      return petFacade.updatePet(id, data);
+    },
+    []
+  );
+
+  const deletePet = useCallback((id: string) => {
+    return petFacade.deletePet(id);
+  }, []);
+
+  const setCurrentPet = useCallback((pet: Pet | null) => {
+    petFacade.setCurrentPet(pet);
+  }, []);
+
+  const clear = useCallback(() => {
+    petFacade.clear();
+  }, []);
+
+  const formatPetAge = useCallback((age?: number) => {
+    return petFacade.formatPetAge(age);
+  }, []);
+
+  const formatPetWeight = useCallback((weight?: number) => {
+    return petFacade.formatPetWeight(weight);
+  }, []);
+
   return {
     // Estado reativo
     pets,
@@ -60,18 +110,18 @@ export const usePets = () => {
     error,
     totalCount,
     
-    // Métodos do Facade (expostos diretamente)
-    fetchPets: petFacade.fetchPets.bind(petFacade),
-    fetchPetById: petFacade.fetchPetById.bind(petFacade),
-    fetchPetsByTutor: petFacade.fetchPetsByTutor.bind(petFacade),
-    createPet: petFacade.createPet.bind(petFacade),
-    updatePet: petFacade.updatePet.bind(petFacade),
-    deletePet: petFacade.deletePet.bind(petFacade),
-    setCurrentPet: petFacade.setCurrentPet.bind(petFacade),
-    clear: petFacade.clear.bind(petFacade),
+    // Métodos memoizados (previnem loops)
+    fetchPets,
+    fetchPetById,
+    fetchPetsByTutor,
+    createPet,
+    updatePet,
+    deletePet,
+    setCurrentPet,
+    clear,
     
     // Helpers de formatação
-    formatPetAge: petFacade.formatPetAge.bind(petFacade),
-    formatPetWeight: petFacade.formatPetWeight.bind(petFacade),
+    formatPetAge,
+    formatPetWeight,
   };
 };
