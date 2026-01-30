@@ -110,7 +110,7 @@ export const PetList = () => {
             value={searchTerm}
             onChange={handleSearchChange}
             placeholder="Buscar pet por nome..."
-            className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-gray-900 focus:text-gray-900 placeholder-gray-400"
           />
           {searchTerm && (
             <button
@@ -251,7 +251,7 @@ export const PetList = () => {
                 <button
                   onClick={() => handlePageChange(0)}
                   disabled={currentPage === 0}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Primeira página"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +268,7 @@ export const PetList = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 0}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Anterior
                 </button>
@@ -280,12 +280,12 @@ export const PetList = () => {
                       key={idx}
                       onClick={() => typeof pageNum === 'number' && handlePageChange(pageNum - 1)}
                       disabled={pageNum === '...'}
-                      className={`px-4 py-2 border rounded-lg transition-colors ${
+                      className={`px-4 py-2 border rounded-lg transition-colors font-medium ${
                         pageNum === currentPage + 1
-                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
                           : pageNum === '...'
-                          ? 'border-transparent cursor-default'
-                          : 'border-gray-300 hover:bg-gray-50'
+                          ? 'border-transparent cursor-default text-gray-400'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
                       {pageNum}
@@ -297,7 +297,7 @@ export const PetList = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages - 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Próxima
                 </button>
@@ -306,7 +306,7 @@ export const PetList = () => {
                 <button
                   onClick={() => handlePageChange(totalPages - 1)}
                   disabled={currentPage === totalPages - 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Última página"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

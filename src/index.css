@@ -7,9 +7,10 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* ✅ Force light mode only */
+  color-scheme: light;
+  color: #111827; /* gray-900 */
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,10 +24,60 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #f9fafb; /* gray-50 */
 }
 
 #root {
   width: 100%;
   margin: 0 auto;
   text-align: center;
+}
+
+/* ========== Fix Browser Autofill White Text Issue ========== */
+/* Chrome, Safari, Edge autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827 !important; /* gray-900 */
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Firefox autofill styling */
+input:-moz-autofill,
+input:-moz-autofill-preview {
+  color: #111827 !important; /* gray-900 */
+  background-color: #ffffff !important;
+}
+
+/* ========== Ensure Text Visibility in All Input States ========== */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+textarea {
+  color: #111827 !important; /* gray-900 */
+  background-color: #ffffff !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="search"]:focus,
+textarea:focus {
+  color: #111827 !important; /* gray-900 */
+  background-color: #ffffff !important;
+}
+
+/* Selection text */
+::selection {
+  background-color: #3b82f6; /* blue-500 */
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: #3b82f6; /* blue-500 */
+  color: #ffffff;
 }

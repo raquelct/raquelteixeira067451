@@ -4,6 +4,8 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  // ✅ Use 'media' for dark mode - prevents automatic dark mode from system preferences
+  darkMode: 'media',
   theme: {
     extend: {
       colors: {
