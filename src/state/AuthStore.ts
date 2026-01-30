@@ -1,6 +1,19 @@
 import { BehaviorSubject, Observable } from 'rxjs';
+import { map, distinctUntilChanged } from 'rxjs/operators';
 import type { AuthState, User, AuthTokens } from '../types/auth.types';
 
+/**
+ * Storage keys para tokens
+ */
+const STORAGE_KEYS = {
+  ACCESS_TOKEN: 'pet_registry_access_token',
+  REFRESH_TOKEN: 'pet_registry_refresh_token',
+  USER_DATA: 'pet_registry_user_data',
+} as const;
+
+/**
+ * Estado inicial de autenticação
+ */
 const initialAuthState: AuthState = {
   user: null,
   tokens: null,
@@ -8,8 +21,20 @@ const initialAuthState: AuthState = {
   isLoading: false,
 };
 
+/**
+ * AuthStore - Gerenciamento Global de Estado de Autenticação
+ * 
+ * Features de Nível Sênior:
+ * - RxJS BehaviorSubject para estado reativo
+ * - Persistência segura em localStorage
+ * - Sincronização automática entre tabs/janelas
+ * - Observables granulares (isAuthenticated$, user$, etc)
+ * - Type safety completo com OpenAPI types
+ * - Emissão imediata para todos os subscribers
+ */
 class AuthStore {
   private authState$: BehaviorSubject<AuthState>;
+  private isInitialized = false;
 
   constructor() {
     // Inicializa o BehaviorSubject com estado inicial
@@ -17,6 +42,11 @@ class AuthStore {
     
     // Carrega tokens do localStorage se existirem
     this.loadStoredAuth();
+    
+    // Configura listener para sincronização entre tabs
+    this.setupStorageListener();
+    
+    this.isInitialized = true;
   }
 
   /**

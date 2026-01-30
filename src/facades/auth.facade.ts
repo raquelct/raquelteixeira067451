@@ -3,7 +3,18 @@ import { authService } from '../services/auth.service';
 import { authStore } from '../state/AuthStore';
 import type { AuthRequestDto, AuthState, User } from '../types/auth.types';
 import type { Observable } from 'rxjs';
+import type { AuthTokens } from '../types/auth.types';
 
+/**
+ * AuthFacade - Padrão Facade para Autenticação
+ * 
+ * Features de Nível Sênior:
+ * - Interface única para UI components
+ * - Orquestra AuthService + AuthStore
+ * - Expõe observables reativos granulares
+ * - Gestão completa de sessão e tokens
+ * - Sincronização automática entre tabs via AuthStore
+ */
 export class AuthFacade {
   /**
    * Realiza login completo:
