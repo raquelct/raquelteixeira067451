@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePets } from '../hooks/usePets';
-import type { Pet } from '../types/pet.types';
+import { GenericCard } from '../components/shared/GenericCard';
+import { SearchBar } from '../components/shared/SearchBar';
+import { Pagination } from '../components/shared/Pagination';
+import { PageHeader } from '../components/shared/PageHeader';
+import { Button } from '../components/shared/Button';
+import { containerStyles } from '../styles/theme';
 
 /**
  * PetList - Listagem de Pets com Paginação e Busca
@@ -64,95 +69,40 @@ export const PetList = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  }, []);
-
   const clearSearch = useCallback(() => {
     setSearchTerm('');
     setDebouncedSearchTerm('');
-    setCurrentPage(0); // ✅ Reset para página 0
+    setCurrentPage(0);
   }, []);
 
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-              🐾 Pets Cadastrados
-            </h1>
-            <p className="text-gray-600">
-              {totalCount > 0 
-                ? `${totalCount} ${totalCount === 1 ? 'pet encontrado' : 'pets encontrados'}`
-                : 'Nenhum pet cadastrado'}
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/pets/new')}
-            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-md hover:shadow-lg"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Novo Pet
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Pets Cadastrados"
+        subtitle={
+          totalCount > 0 
+            ? `${totalCount} ${totalCount === 1 ? 'pet encontrado' : 'pets encontrados'}`
+            : 'Nenhum pet cadastrado'
+        }
+        icon="🐾"
+        buttonLabel="Novo Pet"
+        navigateTo="/pets/new"
+      />
 
       {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Buscar pet por nome..."
-            className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-gray-900 focus:text-gray-900 placeholder-gray-400"
-          />
-          {searchTerm && (
-            <button
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-        {debouncedSearchTerm && (
-          <p className="mt-2 text-sm text-gray-500">
-            Buscando por: <span className="font-semibold">"{debouncedSearchTerm}"</span>
-          </p>
-        )}
-      </div>
+      <SearchBar
+        value={searchTerm}
+        onChange={setSearchTerm}
+        onClear={clearSearch}
+        placeholder="Buscar pet por nome..."
+        className="mb-6"
+      />
+      {debouncedSearchTerm && (
+        <p className="mb-6 text-sm text-gray-500">
+          Buscando por: <span className="font-semibold">"{debouncedSearchTerm}"</span>
+        </p>
+      )}
 
       {/* Error State */}
       {error && (
@@ -176,16 +126,17 @@ export const PetList = () => {
               <p className="text-sm text-red-600">{error}</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="danger"
             onClick={() => fetchPets(
               debouncedSearchTerm ? { name: debouncedSearchTerm } : undefined,
               currentPage,
               PAGE_SIZE
             )}
-            className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className="mt-4"
           >
             Tentar Novamente
-          </button>
+          </Button>
         </div>
       )}
 
@@ -235,12 +186,12 @@ export const PetList = () => {
               : 'Comece cadastrando o primeiro pet'}
           </p>
           {debouncedSearchTerm && (
-            <button
+            <Button
+              variant="primary"
               onClick={clearSearch}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Limpar Busca
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -248,212 +199,31 @@ export const PetList = () => {
       {/* Pet Grid */}
       {!isLoading && !error && pets.length > 0 && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className={containerStyles.grid}>
             {pets.map((pet) => (
-              <PetCard key={pet.id} pet={pet} />
+              <GenericCard
+                key={pet.id}
+                id={pet.id}
+                title={pet.name}
+                subtitle={pet.breed}
+                description={pet.age !== undefined ? `${pet.age} ${pet.age === 1 ? 'ano' : 'anos'}` : undefined}
+                imageUrl={pet.foto?.url || pet.photo}
+                onViewDetails={(id) => navigate(`/pets/${id}`)}
+                onEdit={(id) => navigate(`/pets/${id}/edit`)}
+              />
             ))}
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Page Info - Exibe currentPage + 1 para o usuário */}
-              <div className="text-sm text-gray-600">
-                Página <span className="font-semibold">{currentPage + 1}</span> de{' '}
-                <span className="font-semibold">{totalPages}</span>
-                {' '}({totalCount} {totalCount === 1 ? 'item' : 'itens'} no total)
-              </div>
-
-              {/* Pagination Controls */}
-              <div className="flex items-center space-x-2">
-                {/* First Page - 0-indexed */}
-                <button
-                  onClick={() => handlePageChange(0)}
-                  disabled={currentPage === 0}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Primeira página"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Previous Page */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 0}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  Anterior
-                </button>
-
-                {/* Page Numbers - Mostra 1-indexed, envia 0-indexed */}
-                <div className="hidden sm:flex items-center space-x-1">
-                  {getPageNumbers(currentPage + 1, totalPages).map((pageNum, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => typeof pageNum === 'number' && handlePageChange(pageNum - 1)}
-                      disabled={pageNum === '...'}
-                      className={`px-4 py-2 border rounded-lg transition-colors font-medium ${
-                        pageNum === currentPage + 1
-                          ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
-                          : pageNum === '...'
-                          ? 'border-transparent cursor-default text-gray-400'
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Next Page */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages - 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  Próxima
-                </button>
-
-                {/* Last Page - 0-indexed */}
-                <button
-                  onClick={() => handlePageChange(totalPages - 1)}
-                  disabled={currentPage === totalPages - 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Última página"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </div>
   );
 };
-
-/**
- * PetCard - Card individual de Pet
- */
-interface PetCardProps {
-  pet: Pet;
-}
-
-const PetCard = ({ pet }: PetCardProps) => {
-  const navigate = useNavigate();
-
-  const handleViewDetails = () => {
-    navigate(`/pets/${pet.id}`);
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-      {/* Pet Photo */}
-      <div className="relative h-48 bg-gradient-to-br from-indigo-100 to-purple-100 overflow-hidden">
-        {pet.foto?.url || pet.photo ? (
-          <img
-            src={pet.foto?.url || pet.photo || ''}
-            alt={pet.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            onError={(e) => {
-              // Fallback para ícone se imagem falhar ao carregar
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        ) : null}
-        {!pet.foto?.url && !pet.photo && (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-6xl">🐾</span>
-          </div>
-        )}
-      </div>
-
-      {/* Pet Info - Centralizado */}
-      <div className="p-6 flex flex-col items-center text-center">
-        {/* Name - Principal e destacado */}
-        <h3 className="text-xl font-bold text-gray-900 mb-2" title={pet.name}>
-          {pet.name}
-        </h3>
-
-        {/* Breed - Subtítulo */}
-        {pet.breed && (
-          <p className="text-sm text-gray-600 mb-2">
-            {pet.breed}
-          </p>
-        )}
-
-        {/* Age - Info secundária */}
-        {pet.age !== undefined && (
-          <p className="text-sm text-gray-500 mb-4">
-            {pet.age} {pet.age === 1 ? 'ano' : 'anos'}
-          </p>
-        )}
-
-        {/* Action Buttons */}
-        <div className="w-full flex space-x-2">
-          <button 
-            onClick={handleViewDetails}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors"
-          >
-            Ver Detalhes
-          </button>
-          <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/**
- * Gera array de números de página para paginação
- * Ex: [1, 2, 3, '...', 10] ou [1, '...', 5, 6, 7, '...', 10]
- */
-function getPageNumbers(currentPage: number, totalPages: number): (number | string)[] {
-  const delta = 2; // Quantas páginas mostrar ao redor da atual
-  const range: number[] = [];
-  const rangeWithDots: (number | string)[] = [];
-  let l: number | undefined;
-
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-      range.push(i);
-    }
-  }
-
-  for (const i of range) {
-    if (l !== undefined) {
-      if (i - l === 2) {
-        rangeWithDots.push(l + 1);
-      } else if (i - l !== 1) {
-        rangeWithDots.push('...');
-      }
-    }
-    rangeWithDots.push(i);
-    l = i;
-  }
-
-  return rangeWithDots;
-}
