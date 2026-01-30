@@ -1,6 +1,14 @@
 /**
  * GenericCard - Componente de card polimórfico e reutilizável
  * 
+ * Features:
+ * - Altura consistente (h-full) para grid perfeito
+ * - Truncamento automático de texto longo (line-clamp-2 no título, truncate no resto)
+ * - Tooltip no hover para ver texto completo
+ * - Imagem com aspect ratio fixo (h-48)
+ * - Botões sempre alinhados no bottom do card
+ * - Suporta ícone fallback quando sem imagem
+ * 
  * Uso:
  * - Pets: title={nome}, subtitle={raca}, description={idade}
  * - Tutors: title={nome}, subtitle={email}, description={telefone}
@@ -30,9 +38,9 @@ export const GenericCard = ({
   additionalInfo,
 }: GenericCardProps) => {
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-      {/* Image or Icon */}
-      <div className="relative h-48 bg-gradient-to-br from-indigo-100 to-purple-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group flex flex-col h-full">
+      {/* Image or Icon - Fixed Height */}
+      <div className="relative h-48 flex-shrink-0 bg-gradient-to-br from-indigo-100 to-purple-100 overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -52,37 +60,46 @@ export const GenericCard = ({
         )}
       </div>
 
-      {/* Content - Centralizado */}
-      <div className="p-6 flex flex-col items-center text-center">
-        {/* Title (Nome) */}
-        <h3 className="text-xl font-bold text-gray-900 mb-2" title={title}>
+      {/* Content - Grows to fill space, pushes buttons down */}
+      <div className="p-6 flex flex-col items-center text-center flex-1">
+        {/* Title (Nome) - Max 2 lines with ellipsis */}
+        <h3 
+          className="text-xl font-bold text-gray-900 mb-2 w-full line-clamp-2" 
+          title={title}
+        >
           {title}
         </h3>
 
-        {/* Subtitle (Raça/Email) */}
+        {/* Subtitle (Raça/Email) - Single line with ellipsis */}
         {subtitle && (
-          <p className="text-sm text-gray-600 mb-2">
+          <p 
+            className="text-sm text-gray-600 mb-2 w-full truncate" 
+            title={subtitle}
+          >
             {subtitle}
           </p>
         )}
 
-        {/* Description (Idade/Telefone) */}
+        {/* Description (Idade/Telefone) - Single line */}
         {description && (
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 mb-2 w-full truncate">
             {description}
           </p>
         )}
 
-        {/* Additional Info (CPF, Endereço, etc) */}
+        {/* Additional Info (CPF, Endereço, etc) - Limited height */}
         {additionalInfo && (
-          <div className="w-full mb-4">
+          <div className="w-full mb-2 overflow-hidden">
             {additionalInfo}
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Spacer - Pushes buttons to bottom */}
+        <div className="flex-1 min-h-[0.5rem]" />
+
+        {/* Action Buttons - Always at bottom */}
         {(onViewDetails || onEdit) && (
-          <div className="w-full flex gap-2 mt-4">
+          <div className="w-full flex gap-2 mt-auto">
             {onViewDetails && (
               <button
                 onClick={() => onViewDetails(id)}
