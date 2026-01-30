@@ -15,50 +15,81 @@ export interface PetPhoto {
 
 /**
  * DTO da API - Campos em português conforme retornado pelo backend
+ * APENAS campos que a API realmente retorna
  */
 export interface PetApiDto {
   id: string;
   nome: string;
-  especie: 'dog' | 'cat' | 'bird' | 'other';
   raca?: string;
   idade?: number;
+  foto?: PetPhoto | null;
+  // Campos opcionais adicionais (se existirem)
   peso?: number;
   cor?: string;
-  tutorCpf: string;
-  tutorNome: string;
-  tutorTelefone: string;
-  tutorEmail: string;
-  dataCadastro: string;
-  vacinado: boolean;
-  castrado: boolean;
   microchipId?: string;
-  foto?: PetPhoto | null;
   observacoes?: string;
+  // Campos da lista (quando não vem detalhado)
+  tutorCpf?: string;
+  tutorNome?: string;
+  tutorTelefone?: string;
+  tutorEmail?: string;
+  // Array de tutores (quando vem detalhado - GET /pets/:id)
+  tutores?: Array<{
+    id: number;
+    nome: string;
+    cpf: string;
+    telefone?: string;
+    foto?: PetPhoto | null;
+  }>;
+}
+
+/**
+ * Informações do tutor (aninhado na resposta de detalhes do pet)
+ */
+export interface PetTutor {
+  id: number;
+  nome: string;
+  cpf: string;  // CPF do tutor
+  telefone?: string;
+  foto?: PetPhoto | null;
 }
 
 /**
  * Modelo de domínio - Campos em inglês para uso na aplicação
- * Interface Pet conforme estrutura real da API (mapeada do PetApiDto)
+ * Interface Pet conforme estrutura REAL da API (mapeada do PetApiDto)
+ * 
+ * Campos principais da API:
+ * - id: number
+ * - nome: string
+ * - raca: string
+ * - idade: number
+ * - foto: { url: string } | null
  */
 export interface Pet {
   id: string;
   name: string;
-  species: 'dog' | 'cat' | 'bird' | 'other';
   breed?: string;
   age?: number;
-  weight?: number;
-  color?: string;
-  ownerCpf: string;
-  ownerName: string;
-  ownerPhone: string;
-  ownerEmail: string;
-  registrationDate: string;
-  vaccinated: boolean;
-  neutered: boolean;
-  microchipId?: string;
   foto?: PetPhoto | null;  // API retorna 'foto', não 'photo'
   photo?: string;           // Mantido para compatibilidade (deprecated)
+  // Campos opcionais adicionais
+  weight?: number;
+  color?: string;
+  microchipId?: string;
   observations?: string;
+  // Campos básicos do tutor (quando vem da lista)
+  ownerCpf?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
+}
+
+/**
+ * Pet Detail - Estende Pet com informações aninhadas de tutores
+ * Usado na página de detalhes (/pets/:id)
+ */
+export interface PetDetail extends Pet {
+  tutores?: PetTutor[];  // Array de tutores vinculados (quando disponível na API)
 }
 
 export interface CreatePetDto {
@@ -85,10 +116,7 @@ export interface UpdatePetDto extends Partial<CreatePetDto> {
 
 export interface PetFilters {
   name?: string;
-  species?: Pet['species'];
   ownerCpf?: string;
-  vaccinated?: boolean;
-  neutered?: boolean;
 }
 
 /**

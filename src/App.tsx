@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { PetList } from './pages/PetList';
+import { PetDetails } from './pages/PetDetails';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
 
@@ -16,6 +17,7 @@ import { AppShell } from './components/layout/AppShell';
  * 
  * Arquitetura:
  * - "/" → PetList (protegida)
+ * - "/pets/:id" → PetDetails (protegida)
  * - "/login" → Login (pública)
  * - "/tutores" → Tutores (protegida)
  * - Todas as rotas protegidas usam AppShell
@@ -33,6 +35,18 @@ function App() {
           <ProtectedRoute>
             <AppShell>
               <PetList />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota de Detalhes do Pet - protegida */}
+      <Route
+        path="/pets/:id"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <PetDetails />
             </AppShell>
           </ProtectedRoute>
         }

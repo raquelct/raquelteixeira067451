@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePets } from '../hooks/usePets';
 import type { Pet } from '../types/pet.types';
 
@@ -21,7 +22,6 @@ export const PetList = () => {
     error,
     totalCount,
     fetchPets,
-    formatPetAge,
   } = usePets();
 
   // ✅ API usa paginação 0-indexed (page 0 = primeira página)
@@ -231,7 +231,7 @@ export const PetList = () => {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {pets.map((pet) => (
-              <PetCard key={pet.id} pet={pet} formatAge={formatPetAge} />
+              <PetCard key={pet.id} pet={pet} />
             ))}
           </div>
 
@@ -332,32 +332,17 @@ export const PetList = () => {
  */
 interface PetCardProps {
   pet: Pet;
-  formatAge: (age?: number) => string;
 }
 
-const PetCard = ({ pet, formatAge }: PetCardProps) => {
-  const getSpeciesIcon = (species: Pet['species']) => {
-    const icons = {
-      dog: '🐕',
-      cat: '🐈',
-      bird: '🐦',
-      other: '🐾',
-    };
-    return icons[species] || icons.other;
-  };
+const PetCard = ({ pet }: PetCardProps) => {
+  const navigate = useNavigate();
 
-  const getSpeciesName = (species: Pet['species']) => {
-    const names = {
-      dog: 'Cachorro',
-      cat: 'Gato',
-      bird: 'Pássaro',
-      other: 'Outro',
-    };
-    return names[species] || names.other;
+  const handleViewDetails = () => {
+    navigate(`/pets/${pet.id}`);
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group cursor-pointer">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
       {/* Pet Photo */}
       <div className="relative h-48 bg-gradient-to-br from-indigo-100 to-purple-100 overflow-hidden">
         {pet.foto?.url || pet.photo ? (
@@ -373,63 +358,38 @@ const PetCard = ({ pet, formatAge }: PetCardProps) => {
         ) : null}
         {!pet.foto?.url && !pet.photo && (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-6xl">{getSpeciesIcon(pet.species)}</span>
+            <span className="text-6xl">🐾</span>
           </div>
         )}
-        
-        {/* Badges */}
-        <div className="absolute top-2 right-2 flex flex-col gap-1">
-          {pet.vaccinated && (
-            <span className="bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-              💉 Vacinado
-            </span>
-          )}
-          {pet.neutered && (
-            <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-              ✂️ Castrado
-            </span>
-          )}
-        </div>
       </div>
 
-      {/* Pet Info */}
-      <div className="p-4">
-        {/* Name */}
-        <h3 className="text-xl font-bold text-gray-800 mb-2 truncate" title={pet.name}>
+      {/* Pet Info - Centralizado */}
+      <div className="p-6 flex flex-col items-center text-center">
+        {/* Name - Principal e destacado */}
+        <h3 className="text-xl font-bold text-gray-900 mb-2" title={pet.name}>
           {pet.name}
         </h3>
 
-        {/* Species */}
-        <div className="flex items-center space-x-2 text-gray-600 mb-2">
-          <span className="text-lg">{getSpeciesIcon(pet.species)}</span>
-          <span className="text-sm font-medium">{getSpeciesName(pet.species)}</span>
-          {pet.breed && <span className="text-xs text-gray-500">• {pet.breed}</span>}
-        </div>
-
-        {/* Age */}
-        <div className="flex items-center space-x-2 text-gray-600 mb-3">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <span className="text-sm">{formatAge(pet.age)}</span>
-        </div>
-
-        {/* Owner Info */}
-        <div className="pt-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">Tutor</p>
-          <p className="text-sm font-medium text-gray-700 truncate" title={pet.ownerName}>
-            {pet.ownerName}
+        {/* Breed - Subtítulo */}
+        {pet.breed && (
+          <p className="text-sm text-gray-600 mb-2">
+            {pet.breed}
           </p>
-        </div>
+        )}
+
+        {/* Age - Info secundária */}
+        {pet.age !== undefined && (
+          <p className="text-sm text-gray-500 mb-4">
+            {pet.age} {pet.age === 1 ? 'ano' : 'anos'}
+          </p>
+        )}
 
         {/* Action Buttons */}
-        <div className="mt-4 flex space-x-2">
-          <button className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors">
+        <div className="w-full flex space-x-2">
+          <button 
+            onClick={handleViewDetails}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+          >
             Ver Detalhes
           </button>
           <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">

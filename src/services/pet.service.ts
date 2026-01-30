@@ -27,28 +27,40 @@ export class PetService {
 
   /**
    * Transforma PetApiDto (campos em português) para Pet (campos em inglês)
+   * Mapeia APENAS campos que a API realmente retorna
    */
   private transformPetDto(dto: PetApiDto): Pet {
-    return {
+    const pet: Pet = {
       id: dto.id,
       name: dto.nome,
-      species: dto.especie,
       breed: dto.raca,
       age: dto.idade,
-      weight: dto.peso,
-      color: dto.cor,
-      ownerCpf: dto.tutorCpf,
-      ownerName: dto.tutorNome,
-      ownerPhone: dto.tutorTelefone,
-      ownerEmail: dto.tutorEmail,
-      registrationDate: dto.dataCadastro,
-      vaccinated: dto.vacinado,
-      neutered: dto.castrado,
-      microchipId: dto.microchipId,
       foto: dto.foto,
       photo: dto.foto?.url, // Mantido para compatibilidade
+      weight: dto.peso,
+      color: dto.cor,
+      microchipId: dto.microchipId,
       observations: dto.observacoes,
     };
+
+    // Campos opcionais do tutor (quando vem da lista)
+    if (dto.tutorCpf) pet.ownerCpf = dto.tutorCpf;
+    if (dto.tutorNome) pet.ownerName = dto.tutorNome;
+    if (dto.tutorTelefone) pet.ownerPhone = dto.tutorTelefone;
+    if (dto.tutorEmail) pet.ownerEmail = dto.tutorEmail;
+
+    // Array de tutores (quando vem do GET /pets/:id)
+    if (dto.tutores && Array.isArray(dto.tutores)) {
+      (pet as any).tutores = dto.tutores.map(tutor => ({
+        id: tutor.id,
+        nome: tutor.nome,
+        cpf: tutor.cpf,
+        telefone: tutor.telefone,
+        foto: tutor.foto,
+      }));
+    }
+
+    return pet;
   }
 
   /**
@@ -64,12 +76,7 @@ export class PetService {
     const params = new URLSearchParams();
     
     if (filters?.name) params.append('nome', filters.name);
-    if (filters?.species) params.append('species', filters.species);
     if (filters?.ownerCpf) params.append('ownerCpf', filters.ownerCpf);
-    if (filters?.vaccinated !== undefined)
-      params.append('vaccinated', String(filters.vaccinated));
-    if (filters?.neutered !== undefined)
-      params.append('neutered', String(filters.neutered));
     
     params.append('page', String(page));
     params.append('size', String(size));
