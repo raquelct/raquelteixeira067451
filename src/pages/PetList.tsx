@@ -10,6 +10,7 @@ import { EmptyState } from '../components/shared/EmptyState';
 import { ErrorState } from '../components/shared/ErrorState';
 import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { containerStyles } from '../styles/theme';
+import { petFacade } from '../facades/pet.facade';
 
 /**
  * PetList - Listagem de Pets com Paginação e Busca
@@ -170,6 +171,11 @@ export const PetList = () => {
                 imageUrl={pet.foto?.url || pet.photo}
                 onViewDetails={(id) => navigate(`/pets/${id}`)}
                 onEdit={(id) => navigate(`/pets/${id}/edit`)}
+                onDelete={(id) => {
+                  if (window.confirm(`Tem certeza que deseja excluir o pet ${pet.name}?`)) {
+                    petFacade.deletePet(id);
+                  }
+                }}
               />
             ))}
           </div>

@@ -66,6 +66,7 @@ export interface PetTutor {
  * - foto: { url: string } | null
  */
 export interface Pet {
+  nome: string;
   id: number;
   name: string;
   breed?: string;

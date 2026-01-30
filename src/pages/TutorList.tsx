@@ -10,6 +10,7 @@ import { ErrorState } from '../components/shared/ErrorState';
 import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { Button } from '../components/shared/Button';
 import { containerStyles } from '../styles/theme';
+import { tutorFacade } from '../facades/tutor.facade';
 
 /**
  * TutorList - Listagem de Tutores com Paginação e Busca
@@ -180,6 +181,11 @@ export const TutorList = () => {
                 icon="👤"
                 onViewDetails={(id) => navigate(`/tutores/${id}`)}
                 onEdit={(id) => navigate(`/tutores/${id}/edit`)}
+                onDelete={(id) => {
+                  if (window.confirm(`Tem certeza que deseja excluir o tutor ${tutor.name}?`)) {
+                    tutorFacade.deleteTutor(id);
+                  }
+                }}
                 additionalInfo={
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
                     <p>CPF: {tutor.cpf}</p>

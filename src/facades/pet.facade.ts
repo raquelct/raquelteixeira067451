@@ -284,7 +284,7 @@ export class PetFacade {
       if (imageFile) {
         try {
           console.log('[PetFacade] Fazendo upload da foto...');
-          await petService.uploadPhoto(String(updatedPet.id), imageFile);
+          await petService.uploadPhoto(Number(updatedPet.id), imageFile);
           console.log('[PetFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[PetFacade] Falha no upload da foto:', uploadError);
