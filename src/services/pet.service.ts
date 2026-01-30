@@ -129,6 +129,23 @@ export class PetService {
   }
 
   /**
+   * Upload de foto para um pet existente
+   * POST /v1/pets/:petId/fotos
+   * @param petId - ID do pet
+   * @param file - Arquivo de imagem
+   */
+  async uploadPhoto(petId: string, file: File): Promise<void> {
+    const formData = new FormData();
+    formData.append('foto', file);  // Key "foto" conforme Swagger
+
+    await apiClient.post(`${this.baseUrl}/${petId}/fotos`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  /**
    * Remove um pet
    * DELETE /v1/pets/:id
    */

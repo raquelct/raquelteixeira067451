@@ -1,6 +1,6 @@
 import { petService } from '../services/pet.service';
 import { petStore } from '../state/PetStore';
-import type { Pet, CreatePetDto, PetFilters } from '../types/pet.types';
+import type { Pet, CreatePetDto, PetFormData, PetFilters } from '../types/pet.types';
 import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
 
@@ -194,26 +194,61 @@ export class PetFacade {
   }
 
   /**
-   * Cria um novo pet
-   * Inclui validações e transformações de negócio
+   * Cria um novo pet com upload de foto opcional
+   * 
+   * Fluxo Sequential (Create-then-Upload):
+   * 1. Valida e normaliza dados
+   * 2. Cria o pet (POST /v1/pets) - obtém o ID
+   * 3. Se há imagem: faz upload usando o ID (POST /v1/pets/:id/fotos)
+   * 4. Atualiza lista (fetchPets)
+   * 
+   * @param data - Dados do formulário (nome, raca, idade)
+   * @param imageFile - Arquivo de imagem opcional
+   * @returns Pet criado
    */
-  async createPet(data: CreatePetDto): Promise<Pet> {
+  async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
+    let createdPet: Pet | null = null;
+
     try {
       petStore.setLoading(true);
       petStore.setError(null);
 
-      // Validações de negócio
-      this.validatePetData(data);
+      // 1. Prepara dados para criação (apenas campos válidos)
+      const createData: CreatePetDto = {
+        nome: data.nome,
+        raca: data.raca,
+        idade: data.idade,
+      };
 
-      // Transformações (ex: normalizar CPF)
-      const normalizedData = this.normalizePetData(data);
+      // 2. Validações de negócio
+      this.validatePetData(createData);
 
-      const pet = await petService.create(normalizedData);
-      
-      // Adiciona à lista local
-      petStore.addPet(pet);
+      // 3. Transformações (normalização)
+      const normalizedData = this.normalizePetData(createData);
 
-      return pet;
+      // 4. PRIMEIRO: Cria o pet (obtém ID)
+      console.log('[PetFacade] Criando pet com dados:', normalizedData);
+      createdPet = await petService.create(normalizedData);
+      console.log('[PetFacade] Pet criado com sucesso, ID:', createdPet.id);
+
+      // 5. DEPOIS: Upload da foto (se fornecida)
+      if (imageFile && createdPet.id) {
+        console.log('[PetFacade] Iniciando upload de foto para pet ID:', createdPet.id);
+        try {
+          await petService.uploadPhoto(createdPet.id, imageFile);
+          console.log('[PetFacade] Upload de foto concluído com sucesso');
+        } catch (uploadError) {
+          console.error('[PetFacade] Erro no upload da foto:', uploadError);
+          // Pet já foi criado, então apenas avisamos sobre a falha do upload
+          alert('Pet criado com sucesso, mas houve erro ao enviar a foto. Tente adicionar a foto depois.');
+        }
+      }
+
+      // 6. Atualiza a lista (refresh)
+      console.log('[PetFacade] Atualizando lista de pets...');
+      await this.fetchPets(undefined, 0, 10);
+
+      return createdPet;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar pet');
       petStore.setError(errorMessage);
@@ -295,36 +330,31 @@ export class PetFacade {
 
   /**
    * Valida dados do pet antes de enviar à API
+   * Apenas campos suportados: nome, raca, idade
    */
   private validatePetData(data: Partial<CreatePetDto>): void {
-    if (data.name && data.name.trim().length < 2) {
-      throw new Error('Nome do pet deve ter no mínimo 2 caracteres');
+    if (data.nome && data.nome.trim().length < 3) {
+      throw new Error('Nome do pet deve ter no mínimo 3 caracteres');
     }
 
-    if (data.age !== undefined && (data.age < 0 || data.age > 50)) {
-      throw new Error('Idade do pet deve estar entre 0 e 50 anos');
+    if (data.raca && data.raca.trim().length < 2) {
+      throw new Error('Raça do pet deve ter no mínimo 2 caracteres');
     }
 
-    if (data.weight !== undefined && (data.weight <= 0 || data.weight > 200)) {
-      throw new Error('Peso do pet deve estar entre 0 e 200kg');
-    }
-
-    if (data.ownerCpf && !this.isValidCpf(data.ownerCpf)) {
-      throw new Error('CPF do tutor inválido');
+    if (data.idade !== undefined && (data.idade < 0 || data.idade > 100)) {
+      throw new Error('Idade do pet deve estar entre 0 e 100 anos');
     }
   }
 
   /**
    * Normaliza dados do pet (transformações)
+   * Apenas campos suportados: nome, raca, idade
    */
   private normalizePetData<T extends Partial<CreatePetDto>>(data: T): T {
     return {
       ...data,
-      name: data.name?.trim() as T['name'],
-      breed: data.breed?.trim() || undefined,
-      color: data.color?.trim() || undefined,
-      ownerCpf: data.ownerCpf ? this.normalizeCpf(data.ownerCpf) : undefined,
-      ownerPhone: data.ownerPhone ? this.normalizePhone(data.ownerPhone) : undefined,
+      nome: data.nome?.trim() as T['nome'],
+      raca: data.raca?.trim() as T['raca'],
     } as T;
   }
 
@@ -342,28 +372,6 @@ export class PetFacade {
     }
 
     return defaultMessage;
-  }
-
-  /**
-   * Valida CPF (algoritmo simplificado)
-   */
-  private isValidCpf(cpf: string): boolean {
-    const cleaned = cpf.replace(/\D/g, '');
-    return cleaned.length === 11 && /^\d+$/.test(cleaned);
-  }
-
-  /**
-   * Normaliza CPF (remove formatação)
-   */
-  private normalizeCpf(cpf: string): string {
-    return cpf.replace(/\D/g, '');
-  }
-
-  /**
-   * Normaliza telefone (remove formatação)
-   */
-  private normalizePhone(phone: string): string {
-    return phone.replace(/\D/g, '');
   }
 
   /**

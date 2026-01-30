@@ -92,22 +92,23 @@ export interface PetDetail extends Pet {
   tutores?: PetTutor[];  // Array de tutores vinculados (quando disponível na API)
 }
 
+/**
+ * DTO para criação de pet - Apenas campos suportados pela API
+ */
 export interface CreatePetDto {
-  name: string;
-  species: 'dog' | 'cat' | 'bird' | 'other';
-  breed?: string;
-  age?: number;
-  weight?: number;
-  color?: string;
-  ownerCpf: string;
-  ownerName: string;
-  ownerPhone: string;
-  ownerEmail: string;
-  vaccinated: boolean;
-  neutered: boolean;
-  microchipId?: string;
-  photo?: string;
-  observations?: string;
+  nome: string;
+  raca: string;
+  idade: number;
+}
+
+/**
+ * Dados do formulário de criação de pet (UI)
+ * Mesmos campos que CreatePetDto (imagem é enviada separadamente)
+ */
+export interface PetFormData {
+  nome: string;
+  raca: string;
+  idade: number;
 }
 
 export interface UpdatePetDto extends Partial<CreatePetDto> {

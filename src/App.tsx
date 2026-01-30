@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { PetList } from './pages/PetList';
+import { PetForm } from './pages/PetForm';
 import { PetDetails } from './pages/PetDetails';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
@@ -35,6 +36,18 @@ function App() {
           <ProtectedRoute>
             <AppShell>
               <PetList />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota de Criação de Pet - protegida (ANTES de /pets/:id) */}
+      <Route
+        path="/pets/new"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <PetForm />
             </AppShell>
           </ProtectedRoute>
         }

@@ -16,6 +16,7 @@ import type { Pet } from '../types/pet.types';
  * - Facade Pattern: UI → Hook → Facade → Service
  */
 export const PetList = () => {
+  const navigate = useNavigate();
   const {
     pets,
     isLoading,
@@ -77,14 +78,32 @@ export const PetList = () => {
     <div className="w-full">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-          🐾 Pets Cadastrados
-        </h1>
-        <p className="text-gray-600">
-          {totalCount > 0 
-            ? `${totalCount} ${totalCount === 1 ? 'pet encontrado' : 'pets encontrados'}`
-            : 'Nenhum pet cadastrado'}
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+              🐾 Pets Cadastrados
+            </h1>
+            <p className="text-gray-600">
+              {totalCount > 0 
+                ? `${totalCount} ${totalCount === 1 ? 'pet encontrado' : 'pets encontrados'}`
+                : 'Nenhum pet cadastrado'}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/pets/new')}
+            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-md hover:shadow-lg"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Novo Pet
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
