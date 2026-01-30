@@ -1,9 +1,11 @@
 import apiClient from '../api/axiosInstance';
 import type {
   Pet,
+  PetApiDto,
   CreatePetDto,
   PetFilters,
   PetListResponse,
+  PetListApiResponse,
 } from '../types/pet.types';
 
 /**
@@ -12,6 +14,7 @@ import type {
  * Responsabilidades (Single Responsibility):
  * - Única camada autorizada a usar axiosInstance
  * - Chamadas puras à API (GET, POST, PUT, DELETE)
+ * - Transforma PetApiDto (português) para Pet (inglês)
  * - Retorna dados tipados conforme OpenAPI
  * - NENHUMA lógica de negócio (isso fica na Facade)
  * - NENHUM gerenciamento de estado (isso fica no Store)
@@ -23,15 +26,41 @@ export class PetService {
   private readonly baseUrl = '/v1/pets';
 
   /**
+   * Transforma PetApiDto (campos em português) para Pet (campos em inglês)
+   */
+  private transformPetDto(dto: PetApiDto): Pet {
+    return {
+      id: dto.id,
+      name: dto.nome,
+      species: dto.especie,
+      breed: dto.raca,
+      age: dto.idade,
+      weight: dto.peso,
+      color: dto.cor,
+      ownerCpf: dto.tutorCpf,
+      ownerName: dto.tutorNome,
+      ownerPhone: dto.tutorTelefone,
+      ownerEmail: dto.tutorEmail,
+      registrationDate: dto.dataCadastro,
+      vaccinated: dto.vacinado,
+      neutered: dto.castrado,
+      microchipId: dto.microchipId,
+      foto: dto.foto,
+      photo: dto.foto?.url, // Mantido para compatibilidade
+      observations: dto.observacoes,
+    };
+  }
+
+  /**
    * Lista todos os pets com filtros opcionais
    * GET /v1/pets
    * 
    * Parâmetros conforme OpenAPI:
-   * - page: número da página
+   * - page: número da página (0-indexed)
    * - size: quantidade de itens por página
    * - nome: filtro por nome (opcional)
    */
-  async getAll(filters?: PetFilters, page = 1, size = 20): Promise<PetListResponse> {
+  async getAll(filters?: PetFilters, page = 0, size = 20): Promise<PetListResponse> {
     const params = new URLSearchParams();
     
     if (filters?.name) params.append('nome', filters.name);
@@ -45,10 +74,15 @@ export class PetService {
     params.append('page', String(page));
     params.append('size', String(size));
 
-    const response = await apiClient.get<PetListResponse>(
+    const response = await apiClient.get<PetListApiResponse>(
       `${this.baseUrl}?${params.toString()}`
     );
-    return response.data;
+
+    // Transforma PetApiDto[] para Pet[]
+    return {
+      ...response.data,
+      content: response.data.content.map((dto) => this.transformPetDto(dto)),
+    };
   }
 
   /**
@@ -56,8 +90,8 @@ export class PetService {
    * GET /v1/pets/:id
    */
   async getById(id: string): Promise<Pet> {
-    const response = await apiClient.get<Pet>(`${this.baseUrl}/${id}`);
-    return response.data;
+    const response = await apiClient.get<PetApiDto>(`${this.baseUrl}/${id}`);
+    return this.transformPetDto(response.data);
   }
 
   /**
@@ -65,8 +99,8 @@ export class PetService {
    * GET /v1/pets/tutor/:cpf
    */
   async getByTutorCpf(cpf: string): Promise<Pet[]> {
-    const response = await apiClient.get<Pet[]>(`${this.baseUrl}/tutor/${cpf}`);
-    return response.data;
+    const response = await apiClient.get<PetApiDto[]>(`${this.baseUrl}/tutor/${cpf}`);
+    return response.data.map((dto) => this.transformPetDto(dto));
   }
 
   /**
@@ -74,8 +108,8 @@ export class PetService {
    * POST /v1/pets
    */
   async create(data: CreatePetDto): Promise<Pet> {
-    const response = await apiClient.post<Pet>(this.baseUrl, data);
-    return response.data;
+    const response = await apiClient.post<PetApiDto>(this.baseUrl, data);
+    return this.transformPetDto(response.data);
   }
 
   /**
@@ -83,8 +117,8 @@ export class PetService {
    * PUT /v1/pets/:id
    */
   async update(id: string, data: Partial<CreatePetDto>): Promise<Pet> {
-    const response = await apiClient.put<Pet>(`${this.baseUrl}/${id}`, data);
-    return response.data;
+    const response = await apiClient.put<PetApiDto>(`${this.baseUrl}/${id}`, data);
+    return this.transformPetDto(response.data);
   }
 
   /**
