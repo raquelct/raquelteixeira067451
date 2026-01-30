@@ -45,7 +45,7 @@ export class TutorFacade {
     }
   }
 
-  async fetchTutorById(id: string): Promise<void> {
+  async fetchTutorById(id: string): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
@@ -53,6 +53,8 @@ export class TutorFacade {
       const tutor = await tutorService.getById(id);
       
       tutorStore.setCurrentTutor(tutor);
+      
+      return tutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutor');
       tutorStore.setError(errorMessage);
@@ -63,7 +65,7 @@ export class TutorFacade {
     }
   }
 
-  async createTutor(data: TutorFormData, imageFile?: File): Promise<Tutor> {
+  async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: string[]): Promise<Tutor> {
     let createdTutor: Tutor | null = null;
 
     try {
@@ -96,6 +98,20 @@ export class TutorFacade {
         }
       }
 
+      // Vincular pets selecionados durante a criação
+      if (pendingPetIds && pendingPetIds.length > 0 && createdTutor?.id) {
+        console.log('[TutorFacade] Vinculando pets:', pendingPetIds);
+        try {
+          await Promise.all(
+            pendingPetIds.map((petId) => tutorService.linkPet(createdTutor!.id, petId))
+          );
+          console.log('[TutorFacade] Pets vinculados com sucesso');
+        } catch (linkError) {
+          console.error('[TutorFacade] Erro ao vincular pets:', linkError);
+          alert('Tutor criado com sucesso, mas houve erro ao vincular alguns pets.');
+        }
+      }
+
       console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
@@ -104,6 +120,50 @@ export class TutorFacade {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar tutor');
       tutorStore.setError(errorMessage);
       console.error('[TutorFacade] createTutor error:', error);
+      throw error;
+    } finally {
+      tutorStore.setLoading(false);
+    }
+  }
+
+  /**
+   * Atualiza tutor existente (sequencial: Update → Upload Photo se necessário)
+   */
+  async updateTutor(id: string, data: TutorFormData, imageFile?: File): Promise<Tutor> {
+    try {
+      tutorStore.setLoading(true);
+      tutorStore.setError(null);
+
+      console.log('[TutorFacade] Validando dados do tutor...');
+      this.validateTutorData(data);
+      
+      console.log('[TutorFacade] Normalizando dados do tutor...');
+      const normalizedData = this.normalizeTutorData(data);
+
+      console.log('[TutorFacade] Atualizando tutor via API...');
+      const updatedTutor = await tutorService.update(id, normalizedData);
+      console.log('[TutorFacade] Tutor atualizado:', updatedTutor);
+
+      // Se houver imagem, fazer upload após atualização
+      if (imageFile) {
+        try {
+          console.log('[TutorFacade] Fazendo upload da foto...');
+          await tutorService.uploadPhoto(String(updatedTutor.id), imageFile);
+          console.log('[TutorFacade] Foto enviada com sucesso');
+        } catch (uploadError) {
+          console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
+          alert('Tutor atualizado com sucesso, mas houve erro ao enviar a foto.');
+        }
+      }
+
+      console.log('[TutorFacade] Atualizando lista...');
+      await this.fetchTutores(undefined, 0, 10);
+
+      return updatedTutor;
+    } catch (error) {
+      const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar tutor');
+      tutorStore.setError(errorMessage);
+      console.error('[TutorFacade] updateTutor error:', error);
       throw error;
     } finally {
       tutorStore.setLoading(false);
@@ -128,6 +188,58 @@ export class TutorFacade {
     }
   }
 
+  /**
+   * Vincula um pet a um tutor
+   */
+  async linkPetToTutor(tutorId: string, petId: string): Promise<void> {
+    try {
+      tutorStore.setLoading(true);
+      tutorStore.setError(null);
+
+      console.log('[TutorFacade] Vinculando pet', petId, 'ao tutor', tutorId);
+      
+      await tutorService.linkPet(tutorId, petId);
+      
+      // Recarrega dados do tutor para atualizar lista de pets
+      await this.fetchTutorById(tutorId);
+      
+      console.log('[TutorFacade] Pet vinculado com sucesso');
+    } catch (error) {
+      const errorMessage = this.formatErrorMessage(error, 'Erro ao vincular pet');
+      tutorStore.setError(errorMessage);
+      console.error('[TutorFacade] linkPetToTutor error:', error);
+      throw error;
+    } finally {
+      tutorStore.setLoading(false);
+    }
+  }
+
+  /**
+   * Remove vínculo de um pet com um tutor
+   */
+  async removePetFromTutor(tutorId: string, petId: string): Promise<void> {
+    try {
+      tutorStore.setLoading(true);
+      tutorStore.setError(null);
+
+      console.log('[TutorFacade] Removendo vínculo do pet', petId, 'do tutor', tutorId);
+      
+      await tutorService.unlinkPet(tutorId, petId);
+      
+      // Recarrega dados do tutor para atualizar lista de pets
+      await this.fetchTutorById(tutorId);
+      
+      console.log('[TutorFacade] Vínculo removido com sucesso');
+    } catch (error) {
+      const errorMessage = this.formatErrorMessage(error, 'Erro ao remover vínculo');
+      tutorStore.setError(errorMessage);
+      console.error('[TutorFacade] removePetFromTutor error:', error);
+      throw error;
+    } finally {
+      tutorStore.setLoading(false);
+    }
+  }
+
   setCurrentTutor(tutor: Tutor | null): void {
     tutorStore.setCurrentTutor(tutor);
   }
@@ -144,6 +256,8 @@ export class TutorFacade {
     if (data.email && !this.isValidEmail(data.email)) {
       throw new Error('Email inválido');
     }
+
+
 
     if (data.telefone && data.telefone.trim().length < 10) {
       throw new Error('Telefone inválido');
@@ -166,30 +280,7 @@ export class TutorFacade {
     return emailRegex.test(email);
   }
 
-  private isValidCPF(cpf: string): boolean {
-    const cleaned = cpf.replace(/\D/g, '');
-    
-    if (cleaned.length !== 11) return false;
-    if (/^(\d)\1{10}$/.test(cleaned)) return false;
-    
-    let sum = 0;
-    for (let i = 0; i < 9; i++) {
-      sum += parseInt(cleaned.charAt(i)) * (10 - i);
-    }
-    let digit = 11 - (sum % 11);
-    if (digit >= 10) digit = 0;
-    if (digit !== parseInt(cleaned.charAt(9))) return false;
-    
-    sum = 0;
-    for (let i = 0; i < 10; i++) {
-      sum += parseInt(cleaned.charAt(i)) * (11 - i);
-    }
-    digit = 11 - (sum % 11);
-    if (digit >= 10) digit = 0;
-    if (digit !== parseInt(cleaned.charAt(10))) return false;
-    
-    return true;
-  }
+
 
   private formatErrorMessage(error: unknown, defaultMessage: string): string {
     if (error instanceof Error) {

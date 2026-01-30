@@ -7,6 +7,7 @@ import type {
   TutorListResponse,
   TutorListApiResponse 
 } from '../types/tutor.types';
+import type { Pet, PetApiDto } from '../types/pet.types';
 
 /**
  * TutorService - Camada de comunicação com a API de Tutores
@@ -21,6 +22,20 @@ class TutorService {
   private baseUrl = '/v1/tutores';
 
   /**
+   * Transforma PetApiDto para Pet (reutiliza lógica do PetService)
+   */
+  private transformPetDto(dto: PetApiDto): Pet {
+    return {
+      id: dto.id,
+      name: dto.nome,
+      breed: dto.raca,
+      age: dto.idade,
+      foto: dto.foto,
+      photo: dto.foto?.url,
+    };
+  }
+
+  /**
    * Transforma TutorApiDto (campos em português) para Tutor (campos em inglês)
    */
   private transformTutorDto(dto: TutorApiDto): Tutor {
@@ -33,6 +48,8 @@ class TutorService {
       cpf: dto.cpf,
       foto: dto.foto,
       photo: dto.foto?.url,
+      // Transforma pets vinculados (de português para inglês)
+      pets: dto.pets?.map((petDto) => this.transformPetDto(petDto)),
     };
 
     return tutor;
@@ -81,6 +98,15 @@ class TutorService {
   }
 
   /**
+   * Atualiza um tutor existente
+   * PUT /v1/tutores/:id
+   */
+  async update(id: string, data: CreateTutorDto): Promise<Tutor> {
+    const response = await apiClient.put<TutorApiDto>(`${this.baseUrl}/${id}`, data);
+    return this.transformTutorDto(response.data);
+  }
+
+  /**
    * Upload de foto para um tutor existente
    * POST /v1/tutores/:tutorId/fotos
    */
@@ -101,6 +127,22 @@ class TutorService {
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Vincula um pet a um tutor
+   * POST /v1/tutores/:tutorId/pets/:petId
+   */
+  async linkPet(tutorId: string, petId: string): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${tutorId}/pets/${petId}`);
+  }
+
+  /**
+   * Desvincula um pet de um tutor
+   * DELETE /v1/tutores/:tutorId/pets/:petId
+   */
+  async unlinkPet(tutorId: string, petId: string): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/${tutorId}/pets/${petId}`);
   }
 }
 

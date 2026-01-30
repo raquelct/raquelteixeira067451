@@ -20,10 +20,12 @@ import { AppShell } from './components/layout/AppShell';
  * 
  * Arquitetura:
  * - "/" → PetList (protegida)
- * - "/pets/new" → PetForm (protegida)
+ * - "/pets/new" → PetForm criar (protegida)
+ * - "/pets/:id/edit" → PetForm editar (protegida)
  * - "/pets/:id" → PetDetails (protegida)
  * - "/tutores" → TutorList (protegida)
- * - "/tutores/new" → TutorForm (protegida)
+ * - "/tutores/new" → TutorForm criar (protegida)
+ * - "/tutores/:id/edit" → TutorForm editar (protegida)
  * - "/login" → Login (pública)
  * - Todas as rotas protegidas usam AppShell
  */
@@ -48,6 +50,18 @@ function App() {
       {/* Rota de Criação de Pet - protegida (ANTES de /pets/:id) */}
       <Route
         path="/pets/new"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <PetForm />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota de Edição de Pet - protegida (ANTES de /pets/:id) */}
+      <Route
+        path="/pets/:id/edit"
         element={
           <ProtectedRoute>
             <AppShell>
@@ -84,6 +98,18 @@ function App() {
       {/* Rota de Criação de Tutor - protegida (ANTES de /tutores/:id) */}
       <Route
         path="/tutores/new"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <TutorForm />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota de Edição de Tutor - protegida (ANTES de /tutores/:id) */}
+      <Route
+        path="/tutores/:id/edit"
         element={
           <ProtectedRoute>
             <AppShell>

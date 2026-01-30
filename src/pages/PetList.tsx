@@ -6,6 +6,9 @@ import { SearchBar } from '../components/shared/SearchBar';
 import { Pagination } from '../components/shared/Pagination';
 import { PageHeader } from '../components/shared/PageHeader';
 import { Button } from '../components/shared/Button';
+import { EmptyState } from '../components/shared/EmptyState';
+import { ErrorState } from '../components/shared/ErrorState';
+import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { containerStyles } from '../styles/theme';
 
 /**
@@ -106,94 +109,51 @@ export const PetList = () => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-6">
-          <div className="flex items-center space-x-3">
-            <svg
-              className="h-6 w-6 text-red-600 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>
-              <h3 className="font-semibold text-red-800">Erro ao carregar pets</h3>
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          </div>
-          <Button
-            variant="danger"
-            onClick={() => fetchPets(
-              debouncedSearchTerm ? { name: debouncedSearchTerm } : undefined,
-              currentPage,
-              PAGE_SIZE
-            )}
-            className="mt-4"
-          >
-            Tentar Novamente
-          </Button>
-        </div>
+        <ErrorState
+          title="Erro ao carregar pets"
+          message={error}
+          onRetry={() => fetchPets(
+            debouncedSearchTerm ? { name: debouncedSearchTerm } : undefined,
+            currentPage,
+            PAGE_SIZE
+          )}
+        />
       )}
 
       {/* Loading Skeleton */}
-      {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse"
-            >
-              <div className="h-48 bg-gray-300" />
-              <div className="p-4 space-y-3">
-                <div className="h-6 bg-gray-300 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {isLoading && <LoadingSkeleton type="card" count={PAGE_SIZE} />}
 
       {/* Empty State */}
       {!isLoading && !error && pets.length === 0 && (
-        <div className="bg-gray-50 rounded-xl p-12 text-center">
-          <svg
-            className="mx-auto h-24 w-24 text-gray-400 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
-            />
-          </svg>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
-            {debouncedSearchTerm
+        <EmptyState
+          icon={
+            <svg className="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
+              />
+            </svg>
+          }
+          title={
+            debouncedSearchTerm
               ? `Nenhum pet encontrado com "${debouncedSearchTerm}"`
-              : 'Nenhum pet cadastrado'}
-          </h3>
-          <p className="text-gray-500 mb-6">
-            {debouncedSearchTerm
+              : 'Nenhum pet cadastrado'
+          }
+          description={
+            debouncedSearchTerm
               ? 'Tente buscar com outros termos'
-              : 'Comece cadastrando o primeiro pet'}
-          </p>
-          {debouncedSearchTerm && (
-            <Button
-              variant="primary"
-              onClick={clearSearch}
-            >
-              Limpar Busca
-            </Button>
-          )}
-        </div>
+              : 'Comece cadastrando o primeiro pet'
+          }
+          action={
+            debouncedSearchTerm ? (
+              <Button variant="primary" onClick={clearSearch}>
+                Limpar Busca
+              </Button>
+            ) : null
+          }
+        />
       )}
 
       {/* Pet Grid */}

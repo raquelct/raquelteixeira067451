@@ -1,29 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { petSchema, type PetFormSchema } from '../schemas/petSchema';
 import { petFacade } from '../facades/pet.facade';
 
 /**
- * PetForm - Formulário de criação de pet com upload de imagem
+ * PetForm - Formulário de criação/edição de pet com upload de imagem
  * 
  * Features:
+ * - Modo criar e editar (detecta ID na URL)
  * - Validação com React Hook Form + Zod
  * - Upload de imagem com preview
+ * - Pré-carregamento de dados em modo edição
  * - Estados de loading e erro
  * - Navegação após sucesso
  */
 export const PetForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = Boolean(id);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(isEditMode);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<PetFormSchema>({
     resolver: zodResolver(petSchema),
@@ -33,6 +40,45 @@ export const PetForm = () => {
       idade: 0,
     },
   });
+
+  /**
+   * Carrega dados do pet em modo de edição
+   */
+  useEffect(() => {
+    if (!isEditMode || !id) {
+      return;
+    }
+
+    const loadPetData = async () => {
+      try {
+        setIsLoadingData(true);
+        console.log('[PetForm] Carregando pet:', id);
+        
+        const pet = await petFacade.fetchPetById(id);
+        
+        // Pré-preenche o formulário
+        reset({
+          nome: pet.name,
+          raca: pet.breed,
+          idade: pet.age,
+        });
+
+        // Pré-preenche a imagem se existir
+        if (pet.foto?.url) {
+          setImagePreview(pet.foto.url);
+        }
+
+        console.log('[PetForm] Dados carregados:', pet);
+      } catch (error) {
+        console.error('[PetForm] Erro ao carregar pet:', error);
+        setSubmitError('Erro ao carregar dados do pet');
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadPetData();
+  }, [id, isEditMode, reset]);
 
   /**
    * Manipula seleção de imagem
@@ -73,26 +119,33 @@ export const PetForm = () => {
   };
 
   /**
-   * Submit do formulário
+   * Submit do formulário (modo criar ou editar)
    */
   const onSubmit = async (data: PetFormSchema) => {
     try {
       setIsSubmitting(true);
       setSubmitError(null);
 
-      console.log('[PetForm] Enviando dados:', data);
+      console.log(`[PetForm] ${isEditMode ? 'Atualizando' : 'Criando'} pet:`, data);
       
-      // Chama facade com dados e imagem opcional
-      await petFacade.createPet(data, imageFile || undefined);
-
-      console.log('[PetForm] Pet criado com sucesso');
+      if (isEditMode && id) {
+        // Modo edição: atualiza pet existente
+        await petFacade.updatePet(id, data, imageFile || undefined);
+        console.log('[PetForm] Pet atualizado com sucesso');
+      } else {
+        // Modo criação: cria novo pet
+        await petFacade.createPet(data, imageFile || undefined);
+        console.log('[PetForm] Pet criado com sucesso');
+      }
       
       // Redireciona para lista
       navigate('/');
     } catch (error) {
-      console.error('[PetForm] Erro ao criar pet:', error);
+      console.error(`[PetForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet:`, error);
       setSubmitError(
-        error instanceof Error ? error.message : 'Erro ao criar pet. Tente novamente.'
+        error instanceof Error 
+          ? error.message 
+          : `Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet. Tente novamente.`
       );
     } finally {
       setIsSubmitting(false);
@@ -105,6 +158,25 @@ export const PetForm = () => {
   const handleCancel = () => {
     navigate('/');
   };
+
+  // Loading state enquanto carrega dados do pet em modo edição
+  if (isLoadingData) {
+    return (
+      <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-300 rounded w-1/3" />
+            <div className="h-4 bg-gray-200 rounded w-2/3" />
+            <div className="space-y-4">
+              <div className="h-12 bg-gray-200 rounded" />
+              <div className="h-12 bg-gray-200 rounded" />
+              <div className="h-12 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -124,8 +196,12 @@ export const PetForm = () => {
           </svg>
           Voltar
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Cadastrar Novo Pet</h1>
-        <p className="text-gray-600 mt-2">Preencha os dados do pet abaixo</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEditMode ? 'Editar Pet' : 'Cadastrar Novo Pet'}
+        </h1>
+        <p className="text-gray-600 mt-2">
+          {isEditMode ? 'Atualize os dados do pet abaixo' : 'Preencha os dados do pet abaixo'}
+        </p>
       </div>
 
       {/* Form */}
@@ -280,10 +356,10 @@ export const PetForm = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Cadastrando...
+                {isEditMode ? 'Atualizando...' : 'Cadastrando...'}
               </>
             ) : (
-              'Cadastrar Pet'
+              isEditMode ? 'Atualizar Pet' : 'Cadastrar Pet'
             )}
           </button>
           <button

@@ -3,6 +3,8 @@
  * Alinhados com a API real
  */
 
+import type { Pet, PetApiDto } from './pet.types';
+
 /**
  * Foto do tutor (estrutura similar à de Pet)
  */
@@ -24,6 +26,7 @@ export interface TutorApiDto {
   endereco: string;
   cpf: string;
   foto?: TutorPhoto | null;
+  pets?: PetApiDto[]; // Lista de pets vinculados (formato API - português)
 }
 
 /**
@@ -38,6 +41,7 @@ export interface Tutor {
   cpf: string;
   foto?: TutorPhoto | null;
   photo?: string; // Compatibilidade (deprecated)
+  pets?: Pet[]; // Lista de pets vinculados ao tutor
 }
 
 /**

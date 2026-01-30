@@ -1,30 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { tutorSchema, type TutorFormSchema } from '../schemas/tutorSchema';
 import { tutorFacade } from '../facades/tutor.facade';
+import { LinkedPetsSection } from '../components/tutor/LinkedPetsSection';
+import type { Tutor } from '../types/tutor.types';
+import type { Pet } from '../types/pet.types';
 
 /**
- * TutorForm - Formulário de criação de tutor com upload de imagem
+ * TutorForm - Formulário de criação/edição de tutor com upload de imagem
  * 
  * Features:
+ * - Modo criar e editar (detecta ID na URL)
  * - Validação com React Hook Form + Zod
  * - Upload de imagem com preview
+ * - Pré-carregamento de dados em modo edição
  * - Estados de loading e erro
  * - Navegação após sucesso
  * - Alto contraste (text-gray-900)
  */
 export const TutorForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = Boolean(id);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(isEditMode);
+  const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
+  
+  // Estado local para pets selecionados durante criação
+  const [selectedPets, setSelectedPets] = useState<Pet[]>([]);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<TutorFormSchema>({
     resolver: zodResolver(tutorSchema),
@@ -36,6 +50,50 @@ export const TutorForm = () => {
       cpf: '',
     },
   });
+
+  /**
+   * Carrega dados do tutor em modo de edição
+   */
+  useEffect(() => {
+    if (!isEditMode || !id) {
+      return;
+    }
+
+    const loadTutorData = async () => {
+      try {
+        setIsLoadingData(true);
+        console.log('[TutorForm] Carregando tutor:', id);
+        
+        const tutor = await tutorFacade.fetchTutorById(id);
+        
+        // Armazena tutor no estado local
+        setCurrentTutor(tutor);
+        
+        // Pré-preenche o formulário
+        reset({
+          nome: tutor.name,
+          email: tutor.email,
+          telefone: tutor.phone,
+          endereco: tutor.address,
+          cpf: tutor.cpf,
+        });
+
+        // Pré-preenche a imagem se existir
+        if (tutor.foto?.url) {
+          setImagePreview(tutor.foto.url);
+        }
+
+        console.log('[TutorForm] Dados carregados:', tutor);
+      } catch (error) {
+        console.error('[TutorForm] Erro ao carregar tutor:', error);
+        setSubmitError('Erro ao carregar dados do tutor');
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadTutorData();
+  }, [id, isEditMode, reset]);
 
   /**
    * Manipula seleção de imagem
@@ -76,6 +134,20 @@ export const TutorForm = () => {
   };
 
   /**
+   * Adiciona pet ao estado local (modo criação)
+   */
+  const handleAddPet = (pet: Pet) => {
+    setSelectedPets((prev) => [...prev, pet]);
+  };
+
+  /**
+   * Remove pet do estado local (modo criação)
+   */
+  const handleRemovePet = (petId: string) => {
+    setSelectedPets((prev) => prev.filter((p) => p.id !== petId));
+  };
+
+  /**
    * Submit do formulário
    */
   const onSubmit = async (data: TutorFormSchema) => {
@@ -83,22 +155,46 @@ export const TutorForm = () => {
       setIsSubmitting(true);
       setSubmitError(null);
 
-      console.log('[TutorForm] Enviando dados:', data);
+      console.log(`[TutorForm] ${isEditMode ? 'Atualizando' : 'Criando'} tutor:`, data);
       
-      // Chama facade com dados e imagem opcional
-      await tutorFacade.createTutor(data, imageFile || undefined);
-
-      console.log('[TutorForm] Tutor criado com sucesso');
+      if (isEditMode && id) {
+        // Modo edição: atualiza tutor existente
+        await tutorFacade.updateTutor(id, data, imageFile || undefined);
+        console.log('[TutorForm] Tutor atualizado com sucesso');
+      } else {
+        // Modo criação: cria novo tutor e vincula pets selecionados
+        const petIds = selectedPets.map((pet) => pet.id);
+        await tutorFacade.createTutor(data, imageFile || undefined, petIds);
+        console.log('[TutorForm] Tutor criado com sucesso, pets vinculados:', petIds);
+      }
       
       // Redireciona para lista
       navigate('/tutores');
     } catch (error) {
-      console.error('[TutorForm] Erro ao criar tutor:', error);
+      console.error(`[TutorForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor:`, error);
       setSubmitError(
-        error instanceof Error ? error.message : 'Erro ao criar tutor. Tente novamente.'
+        error instanceof Error 
+          ? error.message 
+          : `Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor. Tente novamente.`
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * Recarrega dados do tutor (usado após vincular/desvincular pets)
+   */
+  const handleRefreshTutor = async () => {
+    if (!id) return;
+
+    try {
+      console.log('[TutorForm] Recarregando dados do tutor...');
+      const tutor = await tutorFacade.fetchTutorById(id);
+      setCurrentTutor(tutor);
+      console.log('[TutorForm] Dados atualizados:', tutor);
+    } catch (error) {
+      console.error('[TutorForm] Erro ao recarregar tutor:', error);
     }
   };
 
@@ -109,8 +205,45 @@ export const TutorForm = () => {
     navigate('/tutores');
   };
 
+  // Loading state enquanto carrega dados do tutor em modo edição
+  if (isLoadingData) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="animate-pulse space-y-6">
+                <div className="h-8 bg-gray-300 rounded w-1/3" />
+                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded" />
+                  <div className="h-12 bg-gray-200 rounded" />
+                  <div className="h-12 bg-gray-200 rounded" />
+                  <div className="h-32 bg-gray-200 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-gray-300 rounded w-2/3" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+                <div className="space-y-3">
+                  <div className="h-16 bg-gray-200 rounded" />
+                  <div className="h-16 bg-gray-200 rounded" />
+                  <div className="h-16 bg-gray-200 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <button
@@ -127,12 +260,19 @@ export const TutorForm = () => {
           </svg>
           Voltar
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Cadastrar Novo Tutor</h1>
-        <p className="text-gray-600 mt-2">Preencha os dados do tutor abaixo</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEditMode ? 'Editar Tutor' : 'Cadastrar Novo Tutor'}
+        </h1>
+        <p className="text-gray-600 mt-2">
+          {isEditMode ? 'Atualize os dados do tutor abaixo' : 'Preencha os dados do tutor abaixo'}
+        </p>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+      {/* Grid Layout: Form (2 cols) + Linked Pets (1 col) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Coluna Esquerda: Formulário (2/3 da largura em desktop) */}
+        <div className="lg:col-span-2">
+          <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
         {/* Erro geral */}
         {submitError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -316,10 +456,10 @@ export const TutorForm = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Cadastrando...
+                {isEditMode ? 'Atualizando...' : 'Cadastrando...'}
               </>
             ) : (
-              'Cadastrar Tutor'
+              isEditMode ? 'Atualizar Tutor' : 'Cadastrar Tutor'
             )}
           </button>
           <button
@@ -331,7 +471,29 @@ export const TutorForm = () => {
             Cancelar
           </button>
         </div>
-      </form>
+          </form>
+        </div>
+
+        {/* Coluna Direita: Pets Vinculados (1/3 da largura em desktop, sticky) */}
+        <div className="lg:col-span-1">
+          <div className="lg:sticky lg:top-6">
+            {isEditMode && currentTutor ? (
+              <LinkedPetsSection
+                mode="edit"
+                tutor={currentTutor}
+                onRefresh={handleRefreshTutor}
+              />
+            ) : (
+              <LinkedPetsSection
+                mode="create"
+                selectedPets={selectedPets}
+                onAddPet={handleAddPet}
+                onRemovePet={handleRemovePet}
+              />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

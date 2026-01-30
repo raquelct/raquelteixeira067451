@@ -262,24 +262,40 @@ export class PetFacade {
   /**
    * Atualiza um pet existente
    */
-  async updatePet(id: string, data: Partial<CreatePetDto>): Promise<Pet> {
+  /**
+   * Atualiza pet existente (sequencial: Update → Upload Photo se necessário)
+   */
+  async updatePet(id: string, data: PetFormData, imageFile?: File): Promise<Pet> {
     try {
       petStore.setLoading(true);
       petStore.setError(null);
 
-      // Validações parciais
-      if (Object.keys(data).length === 0) {
-        throw new Error('Nenhum dado para atualizar');
-      }
-
+      console.log('[PetFacade] Validando dados do pet...');
+      this.validatePetData(data);
+      
+      console.log('[PetFacade] Normalizando dados do pet...');
       const normalizedData = this.normalizePetData(data);
 
-      const pet = await petService.update(id, normalizedData);
-      
-      // Atualiza na lista local
-      petStore.updatePet(pet);
+      console.log('[PetFacade] Atualizando pet via API...');
+      const updatedPet = await petService.update(id, normalizedData);
+      console.log('[PetFacade] Pet atualizado:', updatedPet);
 
-      return pet;
+      // Se houver imagem, fazer upload após atualização
+      if (imageFile) {
+        try {
+          console.log('[PetFacade] Fazendo upload da foto...');
+          await petService.uploadPhoto(String(updatedPet.id), imageFile);
+          console.log('[PetFacade] Foto enviada com sucesso');
+        } catch (uploadError) {
+          console.warn('[PetFacade] Falha no upload da foto:', uploadError);
+          alert('Pet atualizado com sucesso, mas houve erro ao enviar a foto.');
+        }
+      }
+
+      console.log('[PetFacade] Atualizando lista...');
+      await this.fetchPets(undefined, 0, 10);
+
+      return updatedPet;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar pet');
       petStore.setError(errorMessage);
