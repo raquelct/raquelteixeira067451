@@ -3,16 +3,18 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AppShell } from './components/layout/AppShell';
 import { authStore } from './state/AuthStore';
 import type { AuthState } from './types/auth.types';
 
 /**
  * Componente principal da aplicação
  * 
- * Features:
+ * Features de Nível Sênior:
  * - Roteamento com react-router-dom
  * - Proteção de rotas com ProtectedRoute
- * - Indicador visual de autenticação
+ * - AppShell para rotas autenticadas
+ * - Login fullscreen (sem layout)
  * - Subscrição ao AuthStore (BehaviorSubject)
  */
 function App() {
@@ -33,45 +35,70 @@ function App() {
   }, []);
 
   return (
-    <>
-      {/* Indicador de autenticação */}
-      {authState.isAuthenticated && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          ✅ Autenticado como {authState.user?.name || authState.user?.email}
-        </div>
-      )}
+    <Routes>
+      {/* Rota pública - Login (fullscreen, sem AppShell) */}
+      <Route path="/login" element={<Login />} />
 
-      {/* Rotas da aplicação */}
-      <Routes>
-        {/* Rota pública - Login */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Rota protegida - Home */}
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
+      {/* Rotas protegidas com AppShell */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <AppShell>
               <Home />
-            </ProtectedRoute>
-          }
-        />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Rota raiz - Redireciona baseado em autenticação */}
-        <Route
-          path="/"
-          element={
-            authState.isAuthenticated ? (
-              <Navigate to="/home" replace />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+      {/* Placeholder para rotas futuras */}
+      <Route
+        path="/pets"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <div className="text-center py-12">
+                <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                  🐾 Página de Pets
+                </h1>
+                <p className="text-gray-600">Em desenvolvimento...</p>
+              </div>
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Rota 404 - Página não encontrada */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
+      <Route
+        path="/tutores"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <div className="text-center py-12">
+                <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                  👥 Página de Tutores
+                </h1>
+                <p className="text-gray-600">Em desenvolvimento...</p>
+              </div>
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota raiz - Redireciona baseado em autenticação */}
+      <Route
+        path="/"
+        element={
+          authState.isAuthenticated ? (
+            <Navigate to="/home" replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      {/* Rota 404 - Página não encontrada */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

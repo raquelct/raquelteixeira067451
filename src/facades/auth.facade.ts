@@ -3,7 +3,6 @@ import { authService } from '../services/auth.service';
 import { authStore } from '../state/AuthStore';
 import type { AuthRequestDto, AuthState, User } from '../types/auth.types';
 import type { Observable } from 'rxjs';
-import type { AuthTokens } from '../types/auth.types';
 
 /**
  * AuthFacade - Padrão Facade para Autenticação
@@ -68,24 +67,57 @@ export class AuthFacade {
     }
   }
 
+  // ========== Observables Reativos ==========
+
   /**
-   * Retorna Observable do estado de autenticação
+   * Observable do estado de autenticação completo
    */
   getAuthState(): Observable<AuthState> {
     return authStore.getAuthState();
   }
 
   /**
-   * Verifica se o usuário está autenticado
+   * Observable específico para status de autenticação
+   * Emite apenas quando isAuthenticated muda
+   */
+  get isAuthenticated$(): Observable<boolean> {
+    return authStore.isAuthenticated$;
+  }
+
+  /**
+   * Observable específico para dados do usuário
+   */
+  get user$(): Observable<User | null> {
+    return authStore.user$;
+  }
+
+  /**
+   * Observable específico para loading state
+   */
+  get isLoading$(): Observable<boolean> {
+    return authStore.isLoading$;
+  }
+
+  // ========== Getters Síncronos (Snapshots) ==========
+
+  /**
+   * Verifica se o usuário está autenticado (snapshot)
    */
   isAuthenticated(): boolean {
     return authStore.getCurrentAuthState().isAuthenticated;
   }
 
   /**
-   * Obtém informações do usuário atual
+   * Obtém usuário atual (snapshot)
    */
-  async getCurrentUser(): Promise<void> {
+  getCurrentUser(): User | null {
+    return authStore.getCurrentAuthState().user;
+  }
+
+  /**
+   * Busca e atualiza informações do usuário atual da API
+   */
+  async fetchCurrentUser(): Promise<void> {
     try {
       const user = await authService.getCurrentUser();
       const currentState = authStore.getCurrentAuthState();
@@ -94,10 +126,27 @@ export class AuthFacade {
         authStore.setAuth(user, currentState.tokens);
       }
     } catch (error) {
-      console.error('Erro ao obter usuário atual:', error);
+      console.error('[AuthFacade] Erro ao buscar usuário atual:', error);
       // Se falhar ao obter usuário, limpa autenticação
       authStore.clearAuth();
       throw error;
+    }
+  }
+
+  /**
+   * Valida se a sessão atual ainda é válida
+   * Útil para verificar ao inicializar a app
+   */
+  async validateSession(): Promise<boolean> {
+    if (!this.isAuthenticated()) {
+      return false;
+    }
+
+    try {
+      await this.fetchCurrentUser();
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 }
