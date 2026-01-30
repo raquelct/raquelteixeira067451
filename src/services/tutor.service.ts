@@ -1,116 +1,106 @@
 import apiClient from '../api/axiosInstance';
-import type {
-  Tutor,
-  CreateTutorDto,
-  TutorFilters,
+import type { 
+  Tutor, 
+  TutorApiDto, 
+  CreateTutorDto, 
+  TutorFilters, 
   TutorListResponse,
+  TutorListApiResponse 
 } from '../types/tutor.types';
 
 /**
- * TutorService - Service Layer para API de Tutores
+ * TutorService - Camada de comunicação com a API de Tutores
  * 
- * Responsabilidades (Single Responsibility):
- * - Única camada autorizada a usar axiosInstance
- * - Chamadas puras à API (GET, POST, PUT, DELETE)
- * - Retorna dados tipados conforme OpenAPI
- * - NENHUMA lógica de negócio (isso fica na Facade)
- * - NENHUM gerenciamento de estado (isso fica no Store)
- * 
- * UI Components NÃO devem importar este service diretamente.
- * Sempre usar TutorFacade como intermediário.
+ * Responsabilidades:
+ * - Encapsula todas as chamadas HTTP para /v1/tutores
+ * - Retorna DTOs tipados
+ * - Transforma dados da API (português) para domínio (inglês)
+ * - Mantém a responsabilidade única (Single Responsibility)
  */
-export class TutorService {
-  private readonly baseUrl = '/tutores';
+class TutorService {
+  private baseUrl = '/v1/tutores';
 
   /**
-   * Lista todos os tutores com filtros opcionais
-   * GET /tutores
+   * Transforma TutorApiDto (campos em português) para Tutor (campos em inglês)
    */
-  async getAll(filters?: TutorFilters, page = 1, limit = 20): Promise<TutorListResponse> {
+  private transformTutorDto(dto: TutorApiDto): Tutor {
+    const tutor: Tutor = {
+      id: dto.id,
+      name: dto.nome,
+      email: dto.email,
+      phone: dto.telefone,
+      address: dto.endereco,
+      cpf: dto.cpf,
+      foto: dto.foto,
+      photo: dto.foto?.url,
+    };
+
+    return tutor;
+  }
+
+  /**
+   * Busca todos os tutores com paginação
+   * GET /v1/tutores
+   */
+  async getAll(filters?: TutorFilters, page = 0, size = 20): Promise<TutorListResponse> {
     const params = new URLSearchParams();
     
+    if (filters?.nome) params.append('nome', filters.nome);
     if (filters?.cpf) params.append('cpf', filters.cpf);
-    if (filters?.name) params.append('name', filters.name);
-    if (filters?.email) params.append('email', filters.email);
-    if (filters?.active !== undefined)
-      params.append('active', String(filters.active));
     
     params.append('page', String(page));
-    params.append('limit', String(limit));
+    params.append('size', String(size));
 
-    const response = await apiClient.get<TutorListResponse>(
+    const response = await apiClient.get<TutorListApiResponse>(
       `${this.baseUrl}?${params.toString()}`
     );
-    return response.data;
+
+    // Transforma TutorApiDto[] para Tutor[]
+    return {
+      ...response.data,
+      content: response.data.content.map((dto) => this.transformTutorDto(dto)),
+    };
   }
 
   /**
-   * Busca um tutor específico por ID
-   * GET /tutores/:id
+   * Busca tutor por ID
+   * GET /v1/tutores/:id
    */
   async getById(id: string): Promise<Tutor> {
-    const response = await apiClient.get<Tutor>(`${this.baseUrl}/${id}`);
-    return response.data;
-  }
-
-  /**
-   * Busca um tutor por CPF
-   * GET /tutores/cpf/:cpf
-   */
-  async getByCpf(cpf: string): Promise<Tutor> {
-    const response = await apiClient.get<Tutor>(`${this.baseUrl}/cpf/${cpf}`);
-    return response.data;
+    const response = await apiClient.get<TutorApiDto>(`${this.baseUrl}/${id}`);
+    return this.transformTutorDto(response.data);
   }
 
   /**
    * Cria um novo tutor
-   * POST /tutores
+   * POST /v1/tutores
    */
   async create(data: CreateTutorDto): Promise<Tutor> {
-    const response = await apiClient.post<Tutor>(this.baseUrl, data);
-    return response.data;
+    const response = await apiClient.post<TutorApiDto>(this.baseUrl, data);
+    return this.transformTutorDto(response.data);
   }
 
   /**
-   * Atualiza um tutor existente
-   * PUT /tutores/:id
+   * Upload de foto para um tutor existente
+   * POST /v1/tutores/:tutorId/fotos
    */
-  async update(id: string, data: Partial<CreateTutorDto>): Promise<Tutor> {
-    const response = await apiClient.put<Tutor>(`${this.baseUrl}/${id}`, data);
-    return response.data;
+  async uploadPhoto(tutorId: string, file: File): Promise<void> {
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    await apiClient.post(`${this.baseUrl}/${tutorId}/fotos`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 
   /**
    * Remove um tutor
-   * DELETE /tutores/:id
+   * DELETE /v1/tutores/:id
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
-  }
-
-  /**
-   * Ativa/Desativa um tutor
-   * PATCH /tutores/:id/status
-   */
-  async toggleActive(id: string, active: boolean): Promise<Tutor> {
-    const response = await apiClient.patch<Tutor>(`${this.baseUrl}/${id}/status`, {
-      active,
-    });
-    return response.data;
-  }
-
-  /**
-   * Busca estatísticas de tutores
-   * GET /tutores/stats
-   */
-  async getStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    byCity: Record<string, number>;
-  }> {
-    const response = await apiClient.get(`${this.baseUrl}/stats`);
-    return response.data;
   }
 }
 

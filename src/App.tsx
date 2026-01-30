@@ -3,6 +3,8 @@ import { Login } from './pages/Login';
 import { PetList } from './pages/PetList';
 import { PetForm } from './pages/PetForm';
 import { PetDetails } from './pages/PetDetails';
+import { TutorList } from './pages/TutorList';
+import { TutorForm } from './pages/TutorForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
 
@@ -18,9 +20,11 @@ import { AppShell } from './components/layout/AppShell';
  * 
  * Arquitetura:
  * - "/" → PetList (protegida)
+ * - "/pets/new" → PetForm (protegida)
  * - "/pets/:id" → PetDetails (protegida)
+ * - "/tutores" → TutorList (protegida)
+ * - "/tutores/new" → TutorForm (protegida)
  * - "/login" → Login (pública)
- * - "/tutores" → Tutores (protegida)
  * - Todas as rotas protegidas usam AppShell
  */
 function App() {
@@ -65,18 +69,25 @@ function App() {
         }
       />
 
-      {/* Rota de Tutores - protegida */}
+      {/* Rota de Listagem de Tutores - protegida */}
       <Route
         path="/tutores"
         element={
           <ProtectedRoute>
             <AppShell>
-              <div className="text-center py-12">
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                  👥 Página de Tutores
-                </h1>
-                <p className="text-gray-600">Em desenvolvimento...</p>
-              </div>
+              <TutorList />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rota de Criação de Tutor - protegida (ANTES de /tutores/:id) */}
+      <Route
+        path="/tutores/new"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <TutorForm />
             </AppShell>
           </ProtectedRoute>
         }

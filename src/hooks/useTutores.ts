@@ -1,33 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { tutorFacade } from '../facades/tutor.facade';
-import type { Tutor } from '../types/tutor.types';
+import type { Tutor, TutorFilters, TutorFormData } from '../types/tutor.types';
 
 /**
- * Hook customizado para gerenciar tutores
+ * Hook customizado para interagir com TutorFacade
  * 
- * IMPORTANTE: Este hook demonstra o uso CORRETO da arquitetura.
- * - NÃO importa axios
- * - NÃO importa TutorService
- * - USA APENAS TutorFacade
- * - Subscribe aos Observables do Facade
+ * Encapsula:
+ * - Subscriptions aos observables do Facade
+ * - Estado reativo (tutores, loading, error, etc)
+ * - Métodos bound do Facade (fetchTutores, createTutor, etc)
  * 
- * UI Components devem seguir este padrão.
+ * UI Components devem usar este hook ao invés de importar o Facade diretamente.
  */
 export const useTutores = () => {
   const [tutores, setTutores] = useState<Tutor[]>([]);
-  const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
+  const [currentTutorState, setCurrentTutorState] = useState<Tutor | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Subscribe to observables on mount
   useEffect(() => {
-    // Subscribe aos observables do TutorFacade
     const tutoresSubscription = tutorFacade.tutores$.subscribe((data) => {
       setTutores(data);
     });
 
     const currentTutorSubscription = tutorFacade.currentTutor$.subscribe((data) => {
-      setCurrentTutor(data);
+      setCurrentTutorState(data);
     });
 
     const loadingSubscription = tutorFacade.isLoading$.subscribe((data) => {
@@ -42,7 +41,7 @@ export const useTutores = () => {
       setTotalCount(data);
     });
 
-    // Cleanup: Unsubscribe ao desmontar
+    // Cleanup subscriptions on unmount
     return () => {
       tutoresSubscription.unsubscribe();
       currentTutorSubscription.unsubscribe();
@@ -52,29 +51,45 @@ export const useTutores = () => {
     };
   }, []);
 
+  // Memoize facade methods to prevent infinite re-renders
+  const fetchTutores = useCallback(
+    (filters?: TutorFilters, page?: number, size?: number) => {
+      return tutorFacade.fetchTutores(filters, page, size);
+    },
+    []
+  );
+
+  const fetchTutorById = useCallback((id: string) => {
+    return tutorFacade.fetchTutorById(id);
+  }, []);
+
+  const createTutor = useCallback((data: TutorFormData, imageFile?: File) => {
+    return tutorFacade.createTutor(data, imageFile);
+  }, []);
+
+  const deleteTutor = useCallback((id: string) => {
+    return tutorFacade.deleteTutor(id);
+  }, []);
+
+  const setCurrentTutor = useCallback((tutor: Tutor | null) => {
+    tutorFacade.setCurrentTutor(tutor);
+  }, []);
+
+  const clear = useCallback(() => {
+    tutorFacade.clear();
+  }, []);
+
   return {
-    // Estado reativo
     tutores,
-    currentTutor,
+    currentTutor: currentTutorState,
     isLoading,
     error,
     totalCount,
-    
-    // Métodos do Facade (expostos diretamente)
-    fetchTutores: tutorFacade.fetchTutores.bind(tutorFacade),
-    fetchTutorById: tutorFacade.fetchTutorById.bind(tutorFacade),
-    fetchTutorByCpf: tutorFacade.fetchTutorByCpf.bind(tutorFacade),
-    createTutor: tutorFacade.createTutor.bind(tutorFacade),
-    updateTutor: tutorFacade.updateTutor.bind(tutorFacade),
-    deleteTutor: tutorFacade.deleteTutor.bind(tutorFacade),
-    toggleTutorActive: tutorFacade.toggleTutorActive.bind(tutorFacade),
-    setCurrentTutor: tutorFacade.setCurrentTutor.bind(tutorFacade),
-    clear: tutorFacade.clear.bind(tutorFacade),
-    
-    // Helpers de formatação
-    formatCpf: tutorFacade.formatCpf.bind(tutorFacade),
-    formatPhone: tutorFacade.formatPhone.bind(tutorFacade),
-    formatZipCode: tutorFacade.formatZipCode.bind(tutorFacade),
-    formatAddress: tutorFacade.formatAddress.bind(tutorFacade),
+    fetchTutores,
+    fetchTutorById,
+    createTutor,
+    deleteTutor,
+    setCurrentTutor,
+    clear,
   };
 };
