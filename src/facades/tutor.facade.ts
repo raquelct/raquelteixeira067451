@@ -255,29 +255,37 @@ export class TutorFacade {
   }
 
   private validateTutorData(data: Partial<CreateTutorDto>): void {
-    if (data.nome && data.nome.trim().length < 3) {
+    if (data.nome && String(data.nome).trim().length < 3) {
       throw new Error('Nome do tutor deve ter no mínimo 3 caracteres');
     }
 
-    if (data.email && !this.isValidEmail(data.email)) {
+    if (data.email && !this.isValidEmail(String(data.email))) {
       throw new Error('Email inválido');
     }
 
-
-
-    if (data.telefone && data.telefone.trim().length < 10) {
+    if (data.telefone && String(data.telefone).replace(/\D/g, '').length < 10) {
       throw new Error('Telefone inválido');
     }
   }
 
   private normalizeTutorData<T extends Partial<CreateTutorDto>>(data: T): T {
+    const normalizeString = (value: unknown) => {
+      if (!value) return undefined;
+      return String(value).trim();
+    };
+
+    const normalizeDigits = (value: unknown) => {
+      if (!value) return undefined;
+      return String(value).replace(/\D/g, '');
+    };
+
     return {
       ...data,
-      nome: data.nome?.trim() as T['nome'],
-      email: data.email?.trim().toLowerCase() as T['email'],
-      telefone: data.telefone?.replace(/\D/g, '') as T['telefone'],
-      endereco: data.endereco?.trim() as T['endereco'],
-      cpf: data.cpf?.replace(/\D/g, '') as T['cpf'],
+      nome: normalizeString(data.nome) as T['nome'],
+      email: normalizeString(data.email)?.toLowerCase() as T['email'],
+      telefone: normalizeDigits(data.telefone) as T['telefone'],
+      endereco: normalizeString(data.endereco) as T['endereco'],
+      cpf: normalizeDigits(data.cpf) as T['cpf'],
     } as T;
   }
 

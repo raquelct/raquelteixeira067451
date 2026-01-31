@@ -7,6 +7,7 @@ import { tutorFacade } from '../facades/tutor.facade';
 import { LinkedPetsSection } from '../components/tutor/LinkedPetsSection';
 import type { Tutor } from '../types/tutor.types';
 import type { Pet } from '../types/pet.types';
+import { maskCPF, maskPhone, unmask } from '../utils/masks';
 
 /**
  * TutorForm - Formulário de criação/edição de tutor com upload de imagem
@@ -31,7 +32,7 @@ export const TutorForm = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(isEditMode);
   const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
-  
+
   // Estado local para pets selecionados durante criação
   const [selectedPets, setSelectedPets] = useState<Pet[]>([]);
 
@@ -39,6 +40,7 @@ export const TutorForm = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<TutorFormSchema>({
     resolver: zodResolver(tutorSchema),
@@ -63,19 +65,19 @@ export const TutorForm = () => {
       try {
         setIsLoadingData(true);
         console.log('[TutorForm] Carregando tutor:', id);
-        
+
         const tutor = await tutorFacade.fetchTutorById(Number(id));
-        
+
         // Armazena tutor no estado local
         setCurrentTutor(tutor);
-        
+
         // Pré-preenche o formulário
         reset({
           nome: tutor.name,
           email: tutor.email,
-          telefone: tutor.phone,
+          telefone: maskPhone(tutor.phone),
           endereco: tutor.address,
-          cpf: tutor.cpf,
+          cpf: maskCPF(String(tutor.cpf)),
         });
 
         // Pré-preenche a imagem se existir
@@ -100,7 +102,7 @@ export const TutorForm = () => {
    */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
+
     if (file) {
       // Valida tipo de arquivo
       if (!file.type.startsWith('image/')) {
@@ -155,26 +157,37 @@ export const TutorForm = () => {
       setIsSubmitting(true);
       setSubmitError(null);
 
-      console.log(`[TutorForm] ${isEditMode ? 'Atualizando' : 'Criando'} tutor:`, data);
-      
+      // Prepara objeto com dados limpos (sem máscara) e converte para number quando necessário
+      // Facade expects string in DTO defined types currently, but User says API expects number.
+      // We'll pass the unmasked string and assume Facade or Service handles final conversion or 
+      // we cast here.
+      // Given "Converta ... para number", I will do:
+      const payload = {
+        ...data,
+        cpf: unmask(data.cpf), // Keeping as string representation of number for now to pass to Facade
+        telefone: unmask(data.telefone),
+      };
+
+      console.log(`[TutorForm] ${isEditMode ? 'Atualizando' : 'Criando'} tutor:`, payload);
+
       if (isEditMode && id) {
         // Modo edição: atualiza tutor existente
-        await tutorFacade.updateTutor(Number(id), data, imageFile || undefined);
+        await tutorFacade.updateTutor(Number(id), payload, imageFile || undefined);
         console.log('[TutorForm] Tutor atualizado com sucesso');
       } else {
         // Modo criação: cria novo tutor e vincula pets selecionados
         const petIds = selectedPets.map((pet) => pet.id);
-        await tutorFacade.createTutor(data, imageFile || undefined, petIds);
+        await tutorFacade.createTutor(payload, imageFile || undefined, petIds);
         console.log('[TutorForm] Tutor criado com sucesso, pets vinculados:', petIds);
       }
-      
+
       // Redireciona para lista
       navigate('/tutores');
     } catch (error) {
       console.error(`[TutorForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor:`, error);
       setSubmitError(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : `Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor. Tente novamente.`
       );
     } finally {
@@ -273,204 +286,214 @@ export const TutorForm = () => {
         {/* Coluna Esquerda: Formulário (2/3 da largura em desktop) */}
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-        {/* Erro geral */}
-        {submitError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p className="text-sm text-red-800">{submitError}</p>
-            </div>
-          </div>
-        )}
+            {/* Erro geral */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-sm text-red-800">{submitError}</p>
+                </div>
+              </div>
+            )}
 
-        {/* Upload de Imagem */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Foto do Tutor
-          </label>
-          
-          {!imagePreview ? (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="cursor-pointer flex flex-col items-center"
-              >
-                <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                <span className="text-sm text-gray-600 mb-1">
-                  Clique para selecionar uma imagem
-                </span>
-                <span className="text-xs text-gray-500">PNG, JPG até 5MB</span>
+            {/* Upload de Imagem */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Foto do Tutor
               </label>
+
+              {!imagePreview ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    <span className="text-sm text-gray-600 mb-1">
+                      Clique para selecionar uma imagem
+                    </span>
+                    <span className="text-xs text-gray-500">PNG, JPG até 5MB</span>
+                  </label>
+                </div>
+              ) : (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="relative">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-full h-64 object-cover rounded-lg"
+
+            {/* Nome Completo */}
+            <div>
+              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">
+                Nome Completo *
+              </label>
+              <input
+                type="text"
+                id="nome"
+                {...register('nome')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
+                placeholder="Ex: João Silva"
               />
+              {errors.nome && (
+                <p className="mt-1 text-sm text-red-600">{errors.nome.message}</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email *
+              </label>
+              <input
+                type="email"
+                id="email"
+                {...register('email')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
+                placeholder="Ex: joao@email.com"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Telefone */}
+            <div>
+              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-2">
+                Telefone *
+              </label>
+              <input
+                type="tel"
+                id="telefone"
+                {...register('telefone')}
+                onChange={(e) => {
+                  const masked = maskPhone(e.target.value);
+                  setValue('telefone', masked);
+                }}
+                maxLength={15}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
+                placeholder="Ex: (65) 98765-4321"
+              />
+              {errors.telefone && (
+                <p className="mt-1 text-sm text-red-600">{errors.telefone.message}</p>
+              )}
+            </div>
+
+            {/* CPF */}
+            <div>
+              <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-2">
+                CPF *
+              </label>
+              <input
+                type="text"
+                id="cpf"
+                {...register('cpf')}
+                onChange={(e) => {
+                  const masked = maskCPF(e.target.value);
+                  setValue('cpf', masked);
+                }}
+                maxLength={14}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
+                placeholder="000.000.000-00"
+              />
+              {errors.cpf && (
+                <p className="mt-1 text-sm text-red-600">{errors.cpf.message}</p>
+              )}
+            </div>
+
+            {/* Endereço Completo */}
+            <div>
+              <label htmlFor="endereco" className="block text-sm font-medium text-gray-700 mb-2">
+                Endereço Completo *
+              </label>
+              <textarea
+                id="endereco"
+                {...register('endereco')}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors resize-none"
+                placeholder="Ex: Rua das Flores, 123 - Centro, Cuiabá - MT"
+              />
+              {errors.endereco && (
+                <p className="mt-1 text-sm text-red-600">{errors.endereco.message}</p>
+              )}
+            </div>
+
+            {/* Botões */}
+            <div className="flex space-x-4 pt-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center shadow-md hover:shadow-lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    {isEditMode ? 'Atualizando...' : 'Cadastrando...'}
+                  </>
+                ) : (
+                  isEditMode ? 'Atualizar Tutor' : 'Cadastrar Tutor'
+                )}
+              </button>
               <button
                 type="button"
-                onClick={handleRemoveImage}
-                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors font-medium"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                Cancelar
               </button>
             </div>
-          )}
-        </div>
-
-        {/* Nome Completo */}
-        <div>
-          <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">
-            Nome Completo *
-          </label>
-          <input
-            type="text"
-            id="nome"
-            {...register('nome')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
-            placeholder="Ex: João Silva"
-          />
-          {errors.nome && (
-            <p className="mt-1 text-sm text-red-600">{errors.nome.message}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email *
-          </label>
-          <input
-            type="email"
-            id="email"
-            {...register('email')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
-            placeholder="Ex: joao@email.com"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-          )}
-        </div>
-
-        {/* Telefone */}
-        <div>
-          <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-2">
-            Telefone *
-          </label>
-          <input
-            type="tel"
-            id="telefone"
-            {...register('telefone')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
-            placeholder="Ex: (65) 98765-4321"
-          />
-          {errors.telefone && (
-            <p className="mt-1 text-sm text-red-600">{errors.telefone.message}</p>
-          )}
-        </div>
-
-        {/* CPF */}
-        <div>
-          <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-2">
-            CPF *
-          </label>
-          <input
-            type="text"
-            id="cpf"
-            {...register('cpf')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors"
-            placeholder="Ex: 123.456.789-00"
-          />
-          {errors.cpf && (
-            <p className="mt-1 text-sm text-red-600">{errors.cpf.message}</p>
-          )}
-        </div>
-
-        {/* Endereço Completo */}
-        <div>
-          <label htmlFor="endereco" className="block text-sm font-medium text-gray-700 mb-2">
-            Endereço Completo *
-          </label>
-          <textarea
-            id="endereco"
-            {...register('endereco')}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-400 transition-colors resize-none"
-            placeholder="Ex: Rua das Flores, 123 - Centro, Cuiabá - MT"
-          />
-          {errors.endereco && (
-            <p className="mt-1 text-sm text-red-600">{errors.endereco.message}</p>
-          )}
-        </div>
-
-        {/* Botões */}
-        <div className="flex space-x-4 pt-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center shadow-md hover:shadow-lg"
-          >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                {isEditMode ? 'Atualizando...' : 'Cadastrando...'}
-              </>
-            ) : (
-              isEditMode ? 'Atualizar Tutor' : 'Cadastrar Tutor'
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors font-medium"
-          >
-            Cancelar
-          </button>
-        </div>
           </form>
         </div>
 
