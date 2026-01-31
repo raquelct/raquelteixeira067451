@@ -95,7 +95,7 @@ export class TutorFacade {
           console.log('[TutorFacade] Upload concluído');
         } catch (uploadError) {
           console.error('[TutorFacade] Erro no upload:', uploadError);
-          toast.error('Tutor criado, mas houve erro ao enviar a foto.');
+          // Toast via Interceptor
         }
       }
 
@@ -109,7 +109,7 @@ export class TutorFacade {
           console.log('[TutorFacade] Pets vinculados com sucesso');
         } catch (linkError) {
           console.error('[TutorFacade] Erro ao vincular pets:', linkError);
-          toast.error('Tutor criado, mas houve erro ao vincular alguns pets.');
+          // Toast via Interceptor
         }
       }
 
@@ -154,7 +154,7 @@ export class TutorFacade {
           console.log('[TutorFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
-          toast.error('Tutor atualizado, mas houve erro ao enviar a foto.');
+          // Toast via Interceptor
         }
       }
 

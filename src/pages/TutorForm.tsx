@@ -12,6 +12,7 @@ import { FormInput } from '../components/shared/FormInput';
 import { FormTextarea } from '../components/shared/FormTextarea';
 import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
+import { toast } from 'react-hot-toast';
 
 /**
  * TutorForm - Formulário de criação/edição de tutor com upload de imagem
@@ -25,7 +26,6 @@ export const TutorForm = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(isEditMode);
   const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
 
@@ -76,7 +76,6 @@ export const TutorForm = () => {
         console.log('[TutorForm] Dados carregados:', tutor);
       } catch (error) {
         console.error('[TutorForm] Erro ao carregar tutor:', error);
-        setSubmitError('Erro ao carregar dados do tutor');
       } finally {
         setIsLoadingData(false);
       }
@@ -90,12 +89,12 @@ export const TutorForm = () => {
 
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecione apenas arquivos de imagem');
+        toast.error('Por favor, selecione apenas arquivos de imagem');
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB');
+        toast.error('A imagem deve ter no máximo 5MB');
         return;
       }
 
@@ -125,7 +124,6 @@ export const TutorForm = () => {
   const onSubmit = async (data: TutorFormSchema) => {
     try {
       setIsSubmitting(true);
-      setSubmitError(null);
 
       const payload = {
         ...data,
@@ -147,11 +145,6 @@ export const TutorForm = () => {
       navigate('/tutores');
     } catch (error) {
       console.error(`[TutorForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor:`, error);
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : `Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor. Tente novamente.`
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -224,17 +217,6 @@ export const TutorForm = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-            {submitError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-sm text-red-800">{submitError}</p>
-                </div>
-              </div>
-            )}
-
             {/* Upload de Imagem Reutilizável */}
             <ImageUpload
               label="Foto do Tutor"

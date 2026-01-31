@@ -7,6 +7,7 @@ import { petFacade } from '../facades/pet.facade';
 import { FormInput } from '../components/shared/FormInput';
 import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
+import { toast } from 'react-hot-toast';
 
 /**
  * PetForm - Formulário de criação/edição de pet com upload de imagem
@@ -20,7 +21,6 @@ export const PetForm = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(isEditMode);
 
   const {
@@ -65,7 +65,6 @@ export const PetForm = () => {
         console.log('[PetForm] Dados carregados:', pet);
       } catch (error) {
         console.error('[PetForm] Erro ao carregar pet:', error);
-        setSubmitError('Erro ao carregar dados do pet');
       } finally {
         setIsLoadingData(false);
       }
@@ -82,12 +81,12 @@ export const PetForm = () => {
 
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecione apenas arquivos de imagem');
+        toast.error('Por favor, selecione apenas arquivos de imagem');
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB');
+        toast.error('A imagem deve ter no máximo 5MB');
         return;
       }
 
@@ -115,7 +114,6 @@ export const PetForm = () => {
   const onSubmit = async (data: PetFormSchema) => {
     try {
       setIsSubmitting(true);
-      setSubmitError(null);
 
       console.log(`[PetForm] ${isEditMode ? 'Atualizando' : 'Criando'} pet:`, data);
 
@@ -130,11 +128,6 @@ export const PetForm = () => {
       navigate('/');
     } catch (error) {
       console.error(`[PetForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet:`, error);
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : `Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet. Tente novamente.`
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -185,18 +178,6 @@ export const PetForm = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-        {/* Erro geral */}
-        {submitError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-red-800">{submitError}</p>
-            </div>
-          </div>
-        )}
-
         {/* Upload de Imagem Reutilizável (DRY) */}
         <ImageUpload
           label="Foto do Pet"

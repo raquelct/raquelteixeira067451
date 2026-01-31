@@ -240,8 +240,8 @@ export class PetFacade {
           console.log('[PetFacade] Upload de foto concluído com sucesso');
         } catch (uploadError) {
           console.error('[PetFacade] Erro no upload da foto:', uploadError);
-          // Pet já foi criado, então apenas avisamos sobre a falha do upload
-          toast.error('Pet criado com sucesso, mas houve erro ao enviar a foto.');
+          // Pet já foi criado, então apenas avisamos sobre a falha do upload (logs)
+          // Toast de erro será exibido pelo Interceptor Global se for erro de API
         }
       }
 
@@ -290,7 +290,7 @@ export class PetFacade {
           console.log('[PetFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[PetFacade] Falha no upload da foto:', uploadError);
-          toast.error('Pet atualizado, mas houve erro ao enviar a foto.');
+          // Toast manipulado pelo Interceptor
         }
       }
 

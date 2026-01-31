@@ -1,4 +1,4 @@
-import apiClient from '../api/axiosInstance';
+import apiClient from './api';
 import type { AuthRequestDto, AuthResponseDto, User, AuthTokens } from '../types/auth.types';
 
 /**

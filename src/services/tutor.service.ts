@@ -1,4 +1,4 @@
-import apiClient from '../api/axiosInstance';
+import apiClient from './api';
 import type {
   Tutor,
   TutorApiDto,
