@@ -28,6 +28,7 @@ interface LinkedPetsSectionProps {
   selectedPets?: Pet[];
   onAddPet?: (pet: Pet) => void;
   onRemovePet?: (petId: number) => void;
+  onAddClick?: () => void;
 }
 
 export const LinkedPetsSection = ({
@@ -36,7 +37,8 @@ export const LinkedPetsSection = ({
   mode = 'edit',
   selectedPets = [],
   onAddPet,
-  onRemovePet
+  onRemovePet,
+  onAddClick
 }: LinkedPetsSectionProps) => {
   const [isAddingPet, setIsAddingPet] = useState(false);
   const [availablePets, setAvailablePets] = useState<Pet[]>([]);
@@ -174,7 +176,7 @@ export const LinkedPetsSection = ({
         <Button
           variant="primary"
           size="sm"
-          onClick={() => setIsAddingPet(true)}
+          onClick={() => onAddClick ? onAddClick() : setIsAddingPet(true)}
           leftIcon={
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

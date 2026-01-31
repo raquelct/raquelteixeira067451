@@ -13,10 +13,11 @@ import { FormTextarea } from '../components/shared/FormTextarea';
 import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
 import { toast } from 'react-hot-toast';
+import { PetSelectModal } from '../components/shared/PetSelectModal';
 
 /**
  * TutorForm - Formulário de criação/edição de tutor com upload de imagem
- * Refatorado com componentes compartilhados (DRY)
+ * Refatorado com componentes compartilhados (DRY) e Modal de Seleção de Pets
  */
 export const TutorForm = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export const TutorForm = () => {
   const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
 
   const [selectedPets, setSelectedPets] = useState<Pet[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const {
     register,
@@ -118,6 +120,25 @@ export const TutorForm = () => {
     setSelectedPets((prev) => prev.filter((p) => p.id !== petId));
   };
 
+  // Lógica de Vinculação via Modal
+  const handleSelectPet = async (pet: Pet) => {
+    if (isEditMode && id) {
+      // Cenário 1: Edição (Vincular imediatamente)
+      try {
+        await tutorFacade.linkPetToTutor(Number(id), pet.id);
+        toast.success('Pet vinculado com sucesso!');
+        handleRefreshTutor(); // Atualiza a lista
+      } catch (error) {
+        console.error('Erro ao vincular pet:', error);
+        toast.error('Erro ao vincular pet');
+      }
+    } else {
+      // Cenário 2: Criação (Adicionar à memória)
+      handleAddPet(pet);
+      toast.success('Pet adicionado à lista');
+    }
+  };
+
   const onSubmit = async (data: TutorFormSchema) => {
     try {
       setIsSubmitting(true);
@@ -158,9 +179,11 @@ export const TutorForm = () => {
     navigate('/tutores');
   };
 
-  // ... (Skeleton Loading logic remains similar if complex, or extracted to LoadingSkeleton usage?)
-  // Keeping Skeleton logic inline for now as it's structure-specific, or could replace with <LoadingSkeleton> but grid layout differs.
-  // I will keep inline skeleton for stability, but using standard HTML elements to match existing layout.
+  // Lista de IDs vinculados para passar ao modal (evitar duplicatas)
+  const linkedPetIds = isEditMode && currentTutor 
+    ? currentTutor.pets?.map(p => p.id) || []
+    : selectedPets.map(p => p.id);
+
   if (isLoadingData) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -296,6 +319,7 @@ export const TutorForm = () => {
                 mode="edit"
                 tutor={currentTutor}
                 onRefresh={handleRefreshTutor}
+                onAddClick={() => setIsModalOpen(true)}
               />
             ) : (
               <LinkedPetsSection
@@ -303,11 +327,19 @@ export const TutorForm = () => {
                 selectedPets={selectedPets}
                 onAddPet={handleAddPet}
                 onRemovePet={handleRemovePet}
+                onAddClick={() => setIsModalOpen(true)}
               />
             )}
           </div>
         </div>
       </div>
+
+      <PetSelectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelect={handleSelectPet}
+        alreadyLinkedPetIds={linkedPetIds}
+      />
     </div>
   );
 };
