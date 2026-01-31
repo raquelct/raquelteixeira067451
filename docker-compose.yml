@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: pet_registry_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_API_BASE_URL=https://pet-manager-api.geia.vip
+    restart: always
