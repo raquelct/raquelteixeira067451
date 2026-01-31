@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { petFacade } from '../../facades/pet.facade';
 import type { Pet } from '../../types/pet.types';
 import { Button } from './Button';
@@ -21,6 +21,9 @@ export const PetSelectModal = ({
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Ref para o input de busca
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   // Fecha com ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -32,10 +35,14 @@ export const PetSelectModal = ({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
-  // Carrega pets ao abrir
+  // Carrega pets ao abrir e foca no input
   useEffect(() => {
     if (isOpen) {
       loadPets();
+      // Pequeno timeout para garantir que o modal montou
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
     }
   }, [isOpen]);
 
@@ -43,9 +50,6 @@ export const PetSelectModal = ({
     try {
       setIsLoading(true);
       // Busca uma lista inicial grande para seleção (idealmente seria paginado ou busca server-side)
-      // Aqui usamos a busca client-side no array retornado para simplificar conforme o requisito
-      // Mas o facade tem fetchPets. Vamos usar o observable ou fetch direto?
-      // O requisito diz: "Buscar todos os pets via PetFacade"
       await petFacade.fetchPets(undefined, 0, 100); 
     } catch (error) {
       console.error('Erro ao carregar pets para seleção', error);
@@ -86,8 +90,8 @@ export const PetSelectModal = ({
           <h3 className="text-lg font-bold text-gray-900">Selecionar Pet</h3>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Fechar"
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:ring-2 focus:ring-indigo-500 rounded p-1"
+            aria-label="Fechar modal"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -98,12 +102,12 @@ export const PetSelectModal = ({
         {/* Search */}
         <div className="p-4 border-b bg-gray-50">
           <FormInput
+            ref={searchInputRef}
             label=""
             placeholder="Buscar pet por nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="mb-0"
-            autoFocus
           />
         </div>
 
@@ -119,16 +123,21 @@ export const PetSelectModal = ({
             </div>
           ) : (
             filteredPets.map((pet) => (
-              <div 
+              <button 
                 key={pet.id} 
-                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all"
+                onClick={() => {
+                  onSelect(pet);
+                  onClose();
+                }}
+                className="w-full flex items-center justify-between p-3 hover:bg-indigo-50 active:bg-indigo-100 rounded-lg border border-transparent hover:border-indigo-200 transition-all text-left focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label={`Selecionar pet ${pet.name}`}
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
                     {pet.foto?.url || pet.photo ? (
-                      <img src={pet.foto?.url || pet.photo} alt={pet.name} className="h-full w-full object-cover" />
+                      <img src={pet.foto?.url || pet.photo} alt="" aria-hidden="true" className="h-full w-full object-cover" />
                     ) : (
-                      <span className="text-lg">🐾</span>
+                      <span className="text-lg" aria-hidden="true">🐾</span>
                     )}
                   </div>
                   <div className="min-w-0">
@@ -136,17 +145,13 @@ export const PetSelectModal = ({
                     <p className="text-sm text-gray-500 truncate">{pet.breed}</p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    onSelect(pet);
-                    onClose();
-                  }}
-                >
-                  Selecionar
-                </Button>
-              </div>
+                <div className="text-indigo-600">
+                  <span className="sr-only">Selecionar</span>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+              </button>
             ))
           )}
         </div>
