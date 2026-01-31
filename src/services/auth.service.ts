@@ -36,12 +36,10 @@ export class AuthService {
     };
   }
 
-  /**
-   * Realiza logout do usuário
-   * POST /v1/auth/logout
-   */
   async logout(): Promise<void> {
-    await apiClient.post('/v1/auth/logout');
+    // Logout é stateless (JWT), apenas removemos tokens no cliente
+    // Não há endpoint de logout na API
+    return Promise.resolve();
   }
 
   /**

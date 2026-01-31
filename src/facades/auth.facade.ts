@@ -51,19 +51,20 @@ export class AuthFacade {
   }
 
   /**
-   * Realiza logout completo:
-   * 1. Chama o serviço de logout
-   * 2. Limpa o store
-   * 3. Remove tokens do localStorage
+   * Realiza logout completo (Client-Side Only)
+   * 1. Limpa tokens e estado no AuthStore
+   * 2. Redireciona para login
    */
   async logout(): Promise<void> {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Erro ao fazer logout na API:', error);
-    } finally {
-      // Limpa estado local independente do resultado da API
-      authStore.clearAuth();
+    // Serviço não faz mais chamada de API, mas mantemos a chamada por consistência de contrato
+    await authService.logout();
+
+    // Limpa estado reativo e localStorage
+    authStore.clearAuth();
+
+    // Redireciona para login
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
     }
   }
 
