@@ -56,7 +56,6 @@ export const TutorForm = () => {
     const loadTutorData = async () => {
       try {
         setIsLoadingData(true);
-        console.log('[TutorForm] Carregando tutor:', id);
 
         const tutor = await tutorFacade.fetchTutorById(Number(id));
         setCurrentTutor(tutor);
@@ -72,8 +71,6 @@ export const TutorForm = () => {
         if (tutor.foto?.url) {
           setImagePreview(tutor.foto.url);
         }
-
-        console.log('[TutorForm] Dados carregados:', tutor);
       } catch (error) {
         console.error('[TutorForm] Erro ao carregar tutor:', error);
       } finally {
@@ -131,15 +128,11 @@ export const TutorForm = () => {
         telefone: unmask(data.telefone),
       };
 
-      console.log(`[TutorForm] ${isEditMode ? 'Atualizando' : 'Criando'} tutor:`, payload);
-
       if (isEditMode && id) {
         await tutorFacade.updateTutor(Number(id), payload, imageFile || undefined);
-        console.log('[TutorForm] Tutor atualizado com sucesso');
       } else {
         const petIds = selectedPets.map((pet) => pet.id);
         await tutorFacade.createTutor(payload, imageFile || undefined, petIds);
-        console.log('[TutorForm] Tutor criado com sucesso, pets vinculados:', petIds);
       }
 
       navigate('/tutores');
@@ -154,10 +147,8 @@ export const TutorForm = () => {
     if (!id) return;
 
     try {
-      console.log('[TutorForm] Recarregando dados do tutor...');
       const tutor = await tutorFacade.fetchTutorById(Number(id));
       setCurrentTutor(tutor);
-      console.log('[TutorForm] Dados atualizados:', tutor);
     } catch (error) {
       console.error('[TutorForm] Erro ao recarregar tutor:', error);
     }

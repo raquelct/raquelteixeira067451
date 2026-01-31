@@ -38,7 +38,7 @@ export const PetList = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  
+
   const PAGE_SIZE = 10; // Conforme edital
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -57,14 +57,12 @@ export const PetList = () => {
   useEffect(() => {
     // Guard: previne chamadas durante loading
     if (isLoading) {
-      console.log('[PetList] Skipping fetch - already loading');
       return;
     }
 
     const filters = debouncedSearchTerm ? { name: debouncedSearchTerm } : undefined;
-    console.log('[PetList] Fetching page:', currentPage, 'filters:', filters);
     fetchPets(filters, currentPage, PAGE_SIZE);
-    
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearchTerm]);
 
@@ -85,7 +83,7 @@ export const PetList = () => {
       <PageHeader
         title="Pets Cadastrados"
         subtitle={
-          totalCount > 0 
+          totalCount > 0
             ? `${totalCount} ${totalCount === 1 ? 'pet encontrado' : 'pets encontrados'}`
             : 'Nenhum pet cadastrado'
         }

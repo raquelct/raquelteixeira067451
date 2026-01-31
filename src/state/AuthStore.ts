@@ -38,10 +38,10 @@ class AuthStore {
   constructor() {
     // Inicializa o BehaviorSubject com estado inicial
     this.authState$ = new BehaviorSubject<AuthState>(initialAuthState);
-    
+
     // Carrega tokens do localStorage se existirem
     this.loadStoredAuth();
-    
+
     // Configura listener para sincronização entre tabs
     this.setupStorageListener();
   }
@@ -119,10 +119,10 @@ class AuthStore {
       isAuthenticated: true,
       isLoading: false,
     };
-    
+
     // Emite imediatamente via BehaviorSubject
     this.authState$.next(newState);
-    
+
     // Persiste de forma segura
     this.saveTokens(tokens, user);
   }
@@ -135,7 +135,7 @@ class AuthStore {
     try {
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokens.accessToken);
       localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
-      
+
       if (user) {
         localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
       }
@@ -150,15 +150,15 @@ class AuthStore {
    */
   public updateTokens(tokens: AuthTokens): void {
     const currentState = this.authState$.getValue();
-    
+
     const newState: AuthState = {
       ...currentState,
       tokens,
     };
-    
+
     // Emite imediatamente via BehaviorSubject
     this.authState$.next(newState);
-    
+
     // Persiste
     this.saveTokens(tokens);
   }
@@ -175,7 +175,7 @@ class AuthStore {
     } catch (error) {
       console.error('[AuthStore] Erro ao limpar tokens:', error);
     }
-    
+
     // Emite estado inicial imediatamente
     this.authState$.next(initialAuthState);
   }
@@ -264,11 +264,8 @@ class AuthStore {
         return;
       }
 
-      console.log('[AuthStore] Storage event detectado:', event.key);
-
       // Se tokens foram removidos em outra aba
       if (event.key === STORAGE_KEYS.ACCESS_TOKEN && !event.newValue) {
-        console.log('[AuthStore] Logout detectado em outra aba');
         this.authState$.next(initialAuthState);
         return;
       }
@@ -279,7 +276,6 @@ class AuthStore {
           event.key === STORAGE_KEYS.REFRESH_TOKEN) &&
         event.newValue
       ) {
-        console.log('[AuthStore] Login/refresh detectado em outra aba');
         // Recarrega estado do localStorage
         this.loadStoredAuth();
       }

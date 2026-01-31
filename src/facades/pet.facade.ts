@@ -228,16 +228,12 @@ export class PetFacade {
       const normalizedData = this.normalizePetData(createData);
 
       // 4. PRIMEIRO: Cria o pet (obtém ID)
-      console.log('[PetFacade] Criando pet com dados:', normalizedData);
       createdPet = await petService.create(normalizedData);
-      console.log('[PetFacade] Pet criado com sucesso, ID:', createdPet.id);
 
       // 5. DEPOIS: Upload da foto (se fornecida)
       if (imageFile && createdPet.id) {
-        console.log('[PetFacade] Iniciando upload de foto para pet ID:', createdPet.id);
         try {
           await petService.uploadPhoto(createdPet.id, imageFile);
-          console.log('[PetFacade] Upload de foto concluído com sucesso');
         } catch (uploadError) {
           console.error('[PetFacade] Erro no upload da foto:', uploadError);
           // Pet já foi criado, então apenas avisamos sobre a falha do upload (logs)
@@ -246,7 +242,6 @@ export class PetFacade {
       }
 
       // 6. Atualiza a lista (refresh)
-      console.log('[PetFacade] Atualizando lista de pets...');
       await this.fetchPets(undefined, 0, 10);
 
       toast.success('Pet criado com sucesso!');
@@ -272,29 +267,22 @@ export class PetFacade {
       petStore.setLoading(true);
       petStore.setError(null);
 
-      console.log('[PetFacade] Validando dados do pet...');
       this.validatePetData(data);
 
-      console.log('[PetFacade] Normalizando dados do pet...');
       const normalizedData = this.normalizePetData(data);
 
-      console.log('[PetFacade] Atualizando pet via API...');
       const updatedPet = await petService.update(id, normalizedData);
-      console.log('[PetFacade] Pet atualizado:', updatedPet);
 
       // Se houver imagem, fazer upload após atualização
       if (imageFile) {
         try {
-          console.log('[PetFacade] Fazendo upload da foto...');
           await petService.uploadPhoto(Number(updatedPet.id), imageFile);
-          console.log('[PetFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[PetFacade] Falha no upload da foto:', uploadError);
           // Toast manipulado pelo Interceptor
         }
       }
 
-      console.log('[PetFacade] Atualizando lista...');
       await this.fetchPets(undefined, 0, 10);
 
       toast.success('Pet atualizado com sucesso!');

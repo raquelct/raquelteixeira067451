@@ -53,14 +53,13 @@ export const TutorList = () => {
   }, [searchTerm]);
 
   // Fetch tutores quando página ou busca mudar
+  // Fetch tutores quando página ou busca mudar
   useEffect(() => {
     if (isLoading) {
-      console.log('[TutorList] Skipping fetch - already loading');
       return;
     }
 
     const filters = debouncedSearchTerm ? { nome: debouncedSearchTerm } : undefined;
-    console.log('[TutorList] Fetching page:', currentPage, 'filters:', filters);
     fetchTutores(filters, currentPage, PAGE_SIZE);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearchTerm]);
