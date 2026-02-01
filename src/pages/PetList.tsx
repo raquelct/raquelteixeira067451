@@ -93,13 +93,15 @@ export const PetList = () => {
       />
 
       {/* Search Bar */}
-      <SearchBar
-        value={searchTerm}
-        onChange={setSearchTerm}
-        onClear={clearSearch}
-        placeholder="Buscar pet por nome..."
-        className="mb-6"
-      />
+      <div className="max-w-2xl mx-auto mb-6">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onClear={clearSearch}
+          placeholder="Buscar pet por nome..."
+          className="w-full"
+        />
+      </div>
       {debouncedSearchTerm && (
         <p className="mb-6 text-sm text-gray-500">
           Buscando por: <span className="font-semibold">"{debouncedSearchTerm}"</span>
@@ -170,9 +172,7 @@ export const PetList = () => {
                 onViewDetails={(id) => navigate(`/pets/${id}`)}
                 onEdit={(id) => navigate(`/pets/${id}/edit`)}
                 onDelete={(id) => {
-                  if (window.confirm(`Tem certeza que deseja excluir o pet ${pet.name}?`)) {
-                    petFacade.deletePet(id);
-                  }
+                  petFacade.deletePet(id);
                 }}
               />
             ))}
