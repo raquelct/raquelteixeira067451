@@ -7,6 +7,7 @@
  * Estrutura da foto do pet conforme API
  */
 export interface PetPhoto {
+  id?: number;
   url: string;
   nome?: string;
   tamanho?: number;

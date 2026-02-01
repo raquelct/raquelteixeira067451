@@ -123,6 +123,14 @@ class TutorService {
   }
 
   /**
+   * Remove a foto de um tutor
+   * DELETE /v1/tutores/:tutorId/fotos/:fotoId
+   */
+  async deletePhoto(tutorId: number, fotoId: number): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/${tutorId}/fotos/${fotoId}`);
+  }
+
+  /**
    * Remove um tutor
    * DELETE /v1/tutores/:id
    */

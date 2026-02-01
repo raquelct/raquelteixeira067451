@@ -72,6 +72,10 @@ export const TutorForm = () => {
 
         if (tutor.foto?.url) {
           setImagePreview(tutor.foto.url);
+          // Captura ID da foto se disponível
+          if (tutor.foto.id) {
+            setCurrentPhotoId(tutor.foto.id);
+          }
         }
       } catch (error) {
         console.error('[TutorForm] Erro ao carregar tutor:', error);
@@ -82,6 +86,10 @@ export const TutorForm = () => {
 
     loadTutorData();
   }, [id, isEditMode, reset]);
+
+  // Estado para controlar se a imagem foi removida (apenas em edição)
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,6 +106,7 @@ export const TutorForm = () => {
       }
 
       setImageFile(file);
+      setIsImageRemoved(false);
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -110,6 +119,9 @@ export const TutorForm = () => {
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    if (isEditMode) {
+      setIsImageRemoved(true);
+    }
   };
 
   const handleAddPet = (pet: Pet) => {
@@ -150,7 +162,13 @@ export const TutorForm = () => {
       };
 
       if (isEditMode && id) {
-        await tutorFacade.updateTutor(Number(id), payload, imageFile || undefined);
+        await tutorFacade.updateTutor(
+          Number(id), 
+          payload, 
+          imageFile || undefined,
+          isImageRemoved,
+          currentPhotoId
+        );
       } else {
         const petIds = selectedPets.map((pet) => pet.id);
         await tutorFacade.createTutor(payload, imageFile || undefined, petIds);

@@ -9,10 +9,6 @@ import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
 import { toast } from 'react-hot-toast';
 
-/**
- * PetForm - Formulário de criação/edição de pet com upload de imagem
- * Refatorado para usar componentes compartilhados (DRY)
- */
 export const PetForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -60,6 +56,10 @@ export const PetForm = () => {
 
         if (pet.foto?.url) {
           setImagePreview(pet.foto.url);
+          // Captura ID da foto se disponível
+          if (pet.foto.id) {
+            setCurrentPhotoId(pet.foto.id);
+          }
         }
 
         console.log('[PetForm] Dados carregados:', pet);
@@ -72,6 +72,10 @@ export const PetForm = () => {
 
     loadPetData();
   }, [id, isEditMode, reset]);
+
+  // Estado para controlar se a imagem foi removida (apenas em edição)
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
 
   /**
    * Manipula seleção de imagem
@@ -91,6 +95,7 @@ export const PetForm = () => {
       }
 
       setImageFile(file);
+      setIsImageRemoved(false); // Reset flg se nova imagem selecionada
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -106,6 +111,9 @@ export const PetForm = () => {
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    if (isEditMode) {
+      setIsImageRemoved(true);
+    }
   };
 
   /**
@@ -118,7 +126,14 @@ export const PetForm = () => {
       console.log(`[PetForm] ${isEditMode ? 'Atualizando' : 'Criando'} pet:`, data);
 
       if (isEditMode && id) {
-        await petFacade.updatePet(Number(id), data, imageFile || undefined);
+        // Passa flags de remoção e ID da foto atual
+        await petFacade.updatePet(
+          Number(id), 
+          data, 
+          imageFile || undefined, 
+          isImageRemoved, 
+          currentPhotoId
+        );
         console.log('[PetForm] Pet atualizado com sucesso');
       } else {
         await petFacade.createPet(data, imageFile || undefined);

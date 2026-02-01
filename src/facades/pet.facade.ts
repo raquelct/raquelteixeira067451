@@ -5,26 +5,7 @@ import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
 import { toast } from 'react-hot-toast';
 
-/**
- * PetFacade - Padrão Facade para Pets
- * 
- * Responsabilidades de Nível Sênior:
- * - Interface única entre UI Components e a camada de dados
- * - Orquestra PetService + PetStore
- * - Gerencia loading states e error handling
- * - Transforma dados e aplica lógica de negócio
- * - Expõe observables reativos para a UI
- * - Implementa retry logic e validações
- * - Previne requisições duplicadas
- * 
- * UI Components DEVEM usar APENAS este Facade.
- * NUNCA importar PetService ou axios diretamente.
- * 
- * Arquitetura:
- * Component → Facade → Service → API
- *                ↓
- *              Store (BehaviorSubject)
- */
+
 export class PetFacade {
   // ========== Controle de Estado Interno ==========
   private pendingRequests: Map<string, Promise<unknown>> = new Map();
@@ -94,8 +75,6 @@ export class PetFacade {
 
   /**
    * Busca todos os pets com filtros opcionais
-   * 
-   * Features de Nível Sênior:
    * - Previne requisições duplicadas com request deduplication
    * - Gerencia loading state automaticamente
    * - Error handling com mensagens user-friendly
@@ -260,20 +239,33 @@ export class PetFacade {
    * Atualiza um pet existente
    */
   /**
-   * Atualiza pet existente (sequencial: Update → Upload Photo se necessário)
+   * Atualiza pet existente (sequencial: Delete Photo se necessário → Update → Upload Photo se necessário)
    */
-  async updatePet(id: number, data: PetFormData, imageFile?: File): Promise<Pet> {
+  async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
     try {
       petStore.setLoading(true);
       petStore.setError(null);
 
       this.validatePetData(data);
 
+      // 1. Verificar se precisa deletar a foto atual
+      if (isImageRemoved && currentPhotoId) {
+        try {
+          console.log(`[PetFacade] Removendo foto ${currentPhotoId} do pet ${id}...`);
+          await petService.deletePhoto(id, currentPhotoId);
+          console.log('[PetFacade] Foto removida com sucesso');
+        } catch (deleteError) {
+          console.warn('[PetFacade] Falha ao remover foto (pode já ter sido removida):', deleteError);
+          // Não lançamos erro aqui para permitir que a atualização do texto continue (Fail Safe)
+        }
+      }
+
       const normalizedData = this.normalizePetData(data);
 
+      // 2. Atualizar dados do pet
       const updatedPet = await petService.update(id, normalizedData);
 
-      // Se houver imagem, fazer upload após atualização
+      // 3. Se houver NOVA imagem, fazer upload
       if (imageFile) {
         try {
           await petService.uploadPhoto(Number(updatedPet.id), imageFile);

@@ -147,6 +147,14 @@ export class PetService {
   }
 
   /**
+   * Remove a foto de um pet
+   * DELETE /v1/pets/:petId/fotos/:fotoId
+   */
+  async deletePhoto(petId: number, fotoId: number): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/${petId}/fotos/${fotoId}`);
+  }
+
+  /**
    * Remove um pet
    * DELETE /v1/pets/:id
    */

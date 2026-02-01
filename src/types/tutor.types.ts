@@ -9,6 +9,7 @@ import type { Pet, PetApiDto } from './pet.types';
  * Foto do tutor (estrutura similar à de Pet)
  */
 export interface TutorPhoto {
+  id?: number;
   url: string;
   nome?: string;
   tamanho?: number;

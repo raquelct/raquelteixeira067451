@@ -129,15 +129,27 @@ export class TutorFacade {
   }
 
   /**
-   * Atualiza tutor existente (sequencial: Update → Upload Photo se necessário)
+   * Atualiza tutor existente (sequencial: Delete Photo se necessário → Update → Upload Photo se necessário)
    */
-  async updateTutor(id: number, data: TutorFormData, imageFile?: File): Promise<Tutor> {
+  async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
 
       console.log('[TutorFacade] Validando dados do tutor...');
       this.validateTutorData(data);
+
+      // 1. Verificar se precisa deletar a foto atual
+      if (isImageRemoved && currentPhotoId) {
+        try {
+          console.log(`[TutorFacade] Removendo foto ${currentPhotoId} do tutor ${id}...`);
+          await tutorService.deletePhoto(id, currentPhotoId);
+          console.log('[TutorFacade] Foto removida com sucesso');
+        } catch (deleteError) {
+          console.warn('[TutorFacade] Falha ao remover foto (pode já ter sido removida):', deleteError);
+          // Fail Safe
+        }
+      }
 
       console.log('[TutorFacade] Normalizando dados do tutor...');
       const normalizedData = this.normalizeTutorData(data);
