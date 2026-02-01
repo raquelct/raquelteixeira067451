@@ -93,7 +93,7 @@ export const PetList = () => {
       />
 
       {/* Search Bar */}
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-xl mx-auto mt-8 mb-8">
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}

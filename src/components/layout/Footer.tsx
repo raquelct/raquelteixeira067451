@@ -13,8 +13,8 @@ export const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           {/* Copyright */}
           <div className="text-center md:text-left">
-            <p className="text-sm text-gray-600">
-              © {currentYear} <span className="font-semibold text-gray-800">SEPLAG/MT Pet Registry</span>
+            <p className="text-sm text-gray-500">
+              © {currentYear} <span className="font-semibold text-gray-700">SEPLAG/MT Pet Registry</span>
             </p>
             <p className="text-xs text-gray-500 mt-1">
               Sistema de Registro de Animais de Estimação

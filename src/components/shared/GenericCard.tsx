@@ -123,15 +123,15 @@ export const GenericCard = ({
           </div>
         )}
 
-        {/* Floating Actions (Top Right) - Visible on Hover (Desktop) or Always (Touch) */}
-        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+        {/* Floating Actions (Top Right) - Visible on Mobile (Standard) / Hover on Desktop */}
+        <div className="absolute top-2 right-2 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 z-10">
           {onEdit && (
             <button
               onClick={handleEditClick}
-              className="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-indigo-600 rounded-full shadow-sm hover:shadow-md transition-all"
+              className="p-3 lg:p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-indigo-600 rounded-full shadow-sm hover:shadow-md transition-all min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 flex items-center justify-center"
               title="Editar"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </button>
@@ -139,10 +139,10 @@ export const GenericCard = ({
           {onDelete && (
             <button
               onClick={handleDeleteClick}
-              className="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-red-600 rounded-full shadow-sm hover:shadow-md transition-all"
+              className="p-3 lg:p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-red-600 rounded-full shadow-sm hover:shadow-md transition-all min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 flex items-center justify-center"
               title="Excluir"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
