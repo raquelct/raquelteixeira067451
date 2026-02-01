@@ -25,6 +25,7 @@ interface ButtonProps {
   loading?: boolean;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  fullWidth?: boolean;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -51,6 +52,7 @@ export const Button = ({
   onClick,
   disabled = false,
   loading = false,
+  fullWidth = false,
   className = '',
   type = 'button',
 }: ButtonProps) => {
@@ -65,6 +67,7 @@ export const Button = ({
         ${baseStyles}
         ${variantStyles[variant]}
         ${sizeStyles[size]}
+        ${fullWidth ? 'w-full' : ''}
         ${className}
       `}
     >
