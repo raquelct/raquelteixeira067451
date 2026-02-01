@@ -11,19 +11,9 @@ import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { Button } from '../components/shared/Button';
 import { containerStyles } from '../styles/theme';
 import { tutorFacade } from '../facades/tutor.facade';
+import { maskCPF, maskPhone } from '../utils/masks';
 
-/**
- * TutorList - Listagem de Tutores com Paginação e Busca
- * 
- * Features:
- * - Grid responsivo usando GenericCard
- * - Busca por nome com debounce (500ms)
- * - Paginação (10 items/página)
- * - Loading skeleton
- * - Empty & Error states
- * - Subscribe aos Observables via useTutores hook
- * - Facade Pattern: UI → Hook → Facade → Service
- */
+
 export const TutorList = () => {
   const navigate = useNavigate();
   const {
@@ -34,7 +24,6 @@ export const TutorList = () => {
     fetchTutores,
   } = useTutores();
 
-  // API usa paginação 0-indexed (page 0 = primeira página)
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -42,18 +31,15 @@ export const TutorList = () => {
   const PAGE_SIZE = 10;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Debounce do search (500ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(0); // Reset para página 0 quando buscar
+      setCurrentPage(0);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Fetch tutores quando página ou busca mudar
-  // Fetch tutores quando página ou busca mudar
   useEffect(() => {
     if (isLoading) {
       return;
@@ -61,7 +47,6 @@ export const TutorList = () => {
 
     const filters = debouncedSearchTerm ? { nome: debouncedSearchTerm } : undefined;
     fetchTutores(filters, currentPage, PAGE_SIZE);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearchTerm]);
 
   const handlePageChange = useCallback((page: number) => {
@@ -175,17 +160,17 @@ export const TutorList = () => {
                 id={tutor.id}
                 title={tutor.name}
                 subtitle={tutor.email}
-                description={tutor.phone}
+                description={maskPhone(tutor.phone)}
                 imageUrl={tutor.foto?.url || tutor.photo}
                 icon="👤"
-                onViewDetails={(id) => navigate(`/tutores/${id}`)}
+                onViewDetails={(id) => navigate(`/tutores/${id}/edit`)}
                 onEdit={(id) => navigate(`/tutores/${id}/edit`)}
                 onDelete={(id) => {
                   tutorFacade.deleteTutor(id);
                 }}
                 additionalInfo={
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
-                    <p>CPF: {tutor.cpf}</p>
+                    <p>CPF: {maskCPF(tutor.cpf)}</p>
                   </div>
                 }
               />
