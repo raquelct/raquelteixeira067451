@@ -12,18 +12,6 @@ import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { containerStyles } from '../styles/theme';
 import { petFacade } from '../facades/pet.facade';
 
-/**
- * PetList - Listagem de Pets com Paginação e Busca
- * 
- * Features de Nível Sênior:
- * - Grid responsivo (mobile-first)
- * - Search com debounce (500ms)
- * - Paginação conforme edital (10 items/page)
- * - Loading skeleton
- * - Empty & Error states
- * - Subscribe aos Observables via usePets hook
- * - Facade Pattern: UI → Hook → Facade → Service
- */
 export const PetList = () => {
   const navigate = useNavigate();
   const {
@@ -34,28 +22,24 @@ export const PetList = () => {
     fetchPets,
   } = usePets();
 
-  // ✅ API usa paginação 0-indexed (page 0 = primeira página)
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const PAGE_SIZE = 10; // Conforme edital
+  const PAGE_SIZE = 10; 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   // Debounce do search (500ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(0); // ✅ Reset para página 0 (primeira página)
+      setCurrentPage(0);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // ✅ Fetch pets quando página ou busca mudar
-  // CRÍTICO: Sem fetchPets nas dependências para evitar loop
   useEffect(() => {
-    // Guard: previne chamadas durante loading
     if (isLoading) {
       return;
     }
@@ -63,7 +47,6 @@ export const PetList = () => {
     const filters = debouncedSearchTerm ? { name: debouncedSearchTerm } : undefined;
     fetchPets(filters, currentPage, PAGE_SIZE);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearchTerm]);
 
   const handlePageChange = useCallback((page: number) => {
@@ -93,7 +76,7 @@ export const PetList = () => {
       />
 
       {/* Search Bar */}
-      <div className="max-w-xl mx-auto mt-8 mb-8">
+      <div className="max-full mb-6">
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}

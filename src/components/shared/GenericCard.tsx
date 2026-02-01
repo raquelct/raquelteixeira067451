@@ -118,7 +118,7 @@ export const GenericCard = ({
         {!imageUrl && (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
             <span className="text-white font-bold text-xl tracking-wider">
-              {getInitials(title) || icon || '🐾'}
+              {getInitials(title) || icon  }
             </span>
           </div>
         )}

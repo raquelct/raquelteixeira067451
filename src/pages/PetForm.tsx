@@ -210,14 +210,14 @@ export const PetForm = () => {
         />
 
         <FormInput
-          label="Raça *"
+          label="Raça"
           placeholder="Ex: Labrador"
           error={errors.raca?.message}
           {...register('raca')}
         />
 
         <FormInput
-          label="Idade (anos) *"
+          label="Idade (anos)"
           placeholder="Ex: 3"
           type="number"
           min="0"

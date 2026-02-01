@@ -19,8 +19,6 @@ interface PaginationProps {
 export const Pagination = ({
   currentPage,
   totalPages,
-  totalItems,
-  pageSize,
   onPageChange,
 }: PaginationProps) => {
   /**

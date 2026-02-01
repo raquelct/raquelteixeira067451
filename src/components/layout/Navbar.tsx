@@ -120,6 +120,16 @@ export const Navbar = () => {
                 >
                   Tutores
                 </Link>
+                <Link
+                  to="/status"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActivePath('/status')
+                      ? 'bg-indigo-700 text-white'
+                      : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
+                  }`}
+                >
+                  Status
+                </Link>
 
                 {/* User Info */}
                 <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-indigo-500">
@@ -255,6 +265,16 @@ export const Navbar = () => {
                   }`}
                 >
                   Tutores
+                </Link>
+                <Link
+                  to="/status"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActivePath('/status')
+                      ? 'bg-indigo-700 text-white'
+                      : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
+                  }`}
+                >
+                  Status
                 </Link>
 
                 {/* Logout Button Mobile */}

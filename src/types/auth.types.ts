@@ -1,23 +1,8 @@
-/**
- * Tipos relacionados à autenticação
- * Conforme requisitos do edital SEPLAG/MT e OpenAPI da Pet Manager API
- */
-
-// === DTOs da API (conforme OpenAPI) ===
-
-/**
- * AuthRequestDto - Payload de login
- * POST /autenticacao/login
- */
 export interface AuthRequestDto {
   username: string;
   password: string;
 }
 
-/**
- * AuthResponseDto - Resposta de login
- * POST /autenticacao/login
- */
 export interface AuthResponseDto {
   access_token: string;
   refresh_token: string;
@@ -25,17 +10,10 @@ export interface AuthResponseDto {
   refresh_expires_in: number;
 }
 
-/**
- * RefreshTokenRequestDto - Payload de refresh
- * POST /v1/auth/refresh
- */
 export interface RefreshTokenRequestDto {
   refresh_token: string;
 }
 
-/**
- * RefreshTokenResponse - Resposta de refresh
- */
 export interface RefreshTokenResponse {
   access_token: string;
   refresh_token: string;
@@ -43,7 +21,6 @@ export interface RefreshTokenResponse {
   refresh_expires_in: number;
 }
 
-// === Tipos do domínio ===
 
 export interface User {
   id: number;
@@ -58,6 +35,20 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  refreshExpiresIn: number;
+}
+
+export interface RawRefreshResponse {
+  access_token?: string;
+  accessToken?: string;
+  refresh_token?: string;
+  refreshToken?: string;
+}
+
 export interface AuthState {
   user: User | null;
   tokens: AuthTokens | null;
@@ -65,5 +56,4 @@ export interface AuthState {
   isLoading: boolean;
 }
 
-// Alias para manter compatibilidade
 export type LoginCredentials = AuthRequestDto;

@@ -219,7 +219,6 @@ export const LinkedPetsSection = ({
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                    <span className="text-xl">🐾</span>
                   </div>
                 )}
               </div>

@@ -11,6 +11,7 @@ const PetForm = lazy(() => import('./pages/PetForm').then(m => ({ default: m.Pet
 const PetDetails = lazy(() => import('./pages/PetDetails').then(m => ({ default: m.PetDetails })));
 const TutorList = lazy(() => import('./pages/TutorList').then(m => ({ default: m.TutorList })));
 const TutorForm = lazy(() => import('./pages/TutorForm').then(m => ({ default: m.TutorForm })));
+const StatusPage = lazy(() => import('./pages/StatusPage').then(m => ({ default: m.StatusPage })));
 
 const PublicRoute = () => {
   if (authFacade.isAuthenticated()) {
@@ -38,6 +39,9 @@ export const AppRoutes = () => {
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
       </Route>
+
+      {/* Rota Pública e Privada (Acessível por todos) */}
+      <Route path="/status" element={<StatusPage />} />
 
       {/* 2. Rotas Privadas (Com AppShell) */}
       <Route element={<AuthenticatedLayout />}>
