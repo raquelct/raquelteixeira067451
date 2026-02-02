@@ -12,6 +12,7 @@ import { Button } from '../components/shared/Button';
 import { containerStyles } from '../styles/theme';
 import { tutorFacade } from '../facades/tutor.facade';
 import { maskCPF, maskPhone } from '../utils/masks';
+import { ConfirmationModal } from '../components/shared/ConfirmationModal';
 
 
 export const TutorList = () => {
@@ -27,6 +28,9 @@ export const TutorList = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [tutorToDelete, setTutorToDelete] = useState<{id: number, name: string} | null>(null);
 
   const PAGE_SIZE = 10;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
@@ -166,7 +170,8 @@ export const TutorList = () => {
                 onViewDetails={(id) => navigate(`/tutores/${id}/edit`)}
                 onEdit={(id) => navigate(`/tutores/${id}/edit`)}
                 onDelete={(id) => {
-                  tutorFacade.deleteTutor(id);
+                  setTutorToDelete({ id, name: tutor.name });
+                  setDeleteModalOpen(true);
                 }}
                 additionalInfo={
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
@@ -187,6 +192,33 @@ export const TutorList = () => {
           />
         </>
       )}
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+            setDeleteModalOpen(false);
+            setTutorToDelete(null);
+        }}
+        onConfirm={() => {
+            if (tutorToDelete) {
+                tutorFacade.deleteTutor(tutorToDelete.id);
+                setDeleteModalOpen(false);
+                setTutorToDelete(null);
+            }
+        }}
+        title="Excluir Tutor"
+        message={
+            <span>
+                Tem certeza que deseja excluir o tutor <b>{tutorToDelete?.name}</b>?
+                <br />
+                <span className="text-sm text-red-600 mt-2 block">
+                    Esta ação não pode ser desfeita e removerá todos os pets vinculados.
+                </span>
+            </span>
+        }
+        confirmLabel="Excluir"
+        variant="danger"
+      />
     </div>
   );
 };

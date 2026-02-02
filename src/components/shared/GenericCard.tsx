@@ -1,21 +1,3 @@
-/**
- * GenericCard - Componente de card polimórfico e reutilizável
- * 
- * Features:
- * - Altura consistente (h-full) para grid perfeito
- * - Truncamento automático de texto longo (line-clamp-2 no título, truncate no resto)
- * - Tooltip no hover para ver texto completo
- * - Imagem com aspect ratio fixo (h-48)
- * - Botões sempre alinhados no bottom do card
- * - Suporta ícone fallback quando sem imagem
- * 
- * Uso:
- * - Pets: title={nome}, subtitle={raca}, description={idade}
- * - Tutors: title={nome}, subtitle={email}, description={telefone}
- */
-
-import { toast } from 'react-hot-toast';
-
 interface GenericCardProps {
   id: number;
   title: string;
@@ -43,47 +25,16 @@ export const GenericCard = ({
 }: GenericCardProps) => {
 
   const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previne navegação ao clicar em excluir
+    e.stopPropagation(); 
     if (!onDelete) return;
-
-    toast((t) => (
-      <div className="flex flex-col gap-2">
-        <p className="font-medium text-gray-800">
-          Tem certeza que deseja excluir <b>{title}</b>?
-        </p>
-        <div className="flex gap-2 justify-end mt-2">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => {
-              onDelete(id);
-              toast.dismiss(t.id);
-            }}
-            className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
-          >
-            Excluir
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: 5000,
-      icon: '⚠️',
-      style: {
-        minWidth: '300px',
-      },
-    });
+    onDelete(id);
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previne navegação
+    e.stopPropagation();
     onEdit?.(id);
   };
 
-  // Helper para obter iniciais
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -103,7 +54,6 @@ export const GenericCard = ({
       className="bg-white rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group flex flex-col h-full cursor-pointer relative"
       onClick={handleCardClick}
     >
-      {/* Image or Icon - Aspect Square or 4/3 */}
       <div className="relative aspect-[4/3] flex-shrink-0 bg-gray-100 overflow-hidden">
         {imageUrl ? (
           <img
@@ -123,7 +73,6 @@ export const GenericCard = ({
           </div>
         )}
 
-        {/* Floating Actions (Top Right) - Visible on Mobile (Standard) / Hover on Desktop */}
         <div className="absolute top-2 right-2 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 z-10">
           {onEdit && (
             <button

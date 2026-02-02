@@ -11,6 +11,7 @@ import { ErrorState } from '../components/shared/ErrorState';
 import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { containerStyles } from '../styles/theme';
 import { petFacade } from '../facades/pet.facade';
+import { ConfirmationModal } from '../components/shared/ConfirmationModal';
 
 export const PetList = () => {
   const navigate = useNavigate();
@@ -26,10 +27,12 @@ export const PetList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [petToDelete, setPetToDelete] = useState<{id: number, name: string} | null>(null);
+
   const PAGE_SIZE = 10; 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Debounce do search (500ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -152,10 +155,12 @@ export const PetList = () => {
                 subtitle={pet.breed}
                 description={pet.age !== undefined ? `${pet.age} ${pet.age === 1 ? 'ano' : 'anos'}` : undefined}
                 imageUrl={pet.foto?.url || pet.photo}
+                icon="🐾"
                 onViewDetails={(id) => navigate(`/pets/${id}`)}
                 onEdit={(id) => navigate(`/pets/${id}/edit`)}
                 onDelete={(id) => {
-                  petFacade.deletePet(id);
+                  setPetToDelete({ id, name: pet.name });
+                  setDeleteModalOpen(true);
                 }}
               />
             ))}
@@ -171,6 +176,33 @@ export const PetList = () => {
           />
         </>
       )}
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+            setDeleteModalOpen(false);
+            setPetToDelete(null);
+        }}
+        onConfirm={() => {
+            if (petToDelete) {
+                petFacade.deletePet(petToDelete.id);
+                setDeleteModalOpen(false);
+                setPetToDelete(null);
+            }
+        }}
+        title="Excluir Pet"
+        message={
+            <span>
+                Tem certeza que deseja excluir o pet <b>{petToDelete?.name}</b>?
+                <br />
+                <span className="text-sm text-red-600 mt-2 block">
+                    Esta ação não pode ser desfeita.
+                </span>
+            </span>
+        }
+        confirmLabel="Excluir"
+        variant="danger"
+      />
     </div>
   );
 };
