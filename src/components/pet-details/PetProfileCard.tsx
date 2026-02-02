@@ -4,9 +4,10 @@ import type { Pet } from '../../types/pet.types';
 interface PetProfileCardProps {
   pet: Pet;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-export const PetProfileCard = ({ pet, onEdit }: PetProfileCardProps) => {
+export const PetProfileCard = ({ pet, onEdit, onDelete }: PetProfileCardProps) => {
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
       {/* Pet Image */}
@@ -44,13 +45,22 @@ export const PetProfileCard = ({ pet, onEdit }: PetProfileCardProps) => {
           </span>
         </div>
 
-        {/* Action button */}
-        <button 
-          onClick={onEdit}
-          className="w-full mt-8 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-xl transition-all active:scale-95 shadow-lg hover:shadow-xl"
-        >
-          Editar Informações
-        </button>
+        {/* Action buttons */}
+        <div className="space-y-3 mt-8">
+          <button 
+            onClick={onEdit}
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-xl transition-all active:scale-95 shadow-lg hover:shadow-xl"
+          >
+            Editar Informações
+          </button>
+
+          <button 
+            onClick={onDelete}
+            className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-medium py-3 rounded-xl transition-colors active:scale-95 border border-red-100"
+          >
+            Excluir Pet
+          </button>
+        </div>
       </div>
     </div>
   );

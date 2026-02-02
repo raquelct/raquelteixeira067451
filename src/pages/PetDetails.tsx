@@ -1,16 +1,34 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { usePetDetails } from '../hooks/usePetDetails';
 import { PetProfileCard } from '../components/pet-details/PetProfileCard';
 import { TutorList } from '../components/pet-details/TutorList';
+import { ConfirmationModal } from '../components/shared/ConfirmationModal';
+import { petFacade } from '../facades/pet.facade';
 
 
 export const PetDetails = () => {
   const navigate = useNavigate();
   const { pet, isLoading, error, notFound, reload } = usePetDetails();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const handleGoBack = () => navigate('/');
   const handleEdit = () => pet && navigate(`/pets/${pet.id}/edit`);
+  
+  const handleDelete = async () => {
+    if (!pet) return;
+    
+    try {
+      await petFacade.deletePet(pet.id);
+      toast.success('Pet removido com sucesso!');
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao remover pet:', error);
+      toast.error('Erro ao remover pet. Tente novamente.');
+    }
+  };
 
   // ========== Loading State ==========
   if (isLoading) {
@@ -95,7 +113,11 @@ export const PetDetails = () => {
         
         {/* Left Column - Pet Card (Sticky) */}
         <div className="lg:col-span-1 lg:sticky lg:top-6 space-y-6">
-          <PetProfileCard pet={pet} onEdit={handleEdit} />
+          <PetProfileCard 
+            pet={pet} 
+            onEdit={handleEdit} 
+            onDelete={() => setDeleteModalOpen(true)}
+          />
         </div>
 
         {/* Right Column - Tutors & Details */}
@@ -121,6 +143,24 @@ export const PetDetails = () => {
 
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Excluir Pet"
+        message={
+          <span>
+            Tem certeza que deseja excluir <b>{pet.name}</b>?
+            <br />
+            <span className="text-sm text-red-600 mt-2 block">
+              Esta ação não pode ser desfeita.
+            </span>
+          </span>
+        }
+        confirmLabel="Excluir"
+        variant="danger"
+      />
     </div>
   );
 };
