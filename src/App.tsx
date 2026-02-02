@@ -1,8 +1,10 @@
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
 function App() {
   return (
-    <>
+    <ErrorBoundary>
       <Toaster 
         position="top-right" 
         toastOptions={{ 
@@ -11,7 +13,7 @@ function App() {
       />
       
       <AppRoutes />
-    </>
+    </ErrorBoundary>
   );
 }
 
