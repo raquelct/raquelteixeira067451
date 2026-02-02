@@ -1,41 +1,26 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import type { Pet } from '../types/pet.types';
+import type { Optional } from '../types/optional';
 
-/**
- * Estado do gerenciamento de Pets
- */
 export interface PetState {
   pets: Pet[];
-  currentPet: Pet | null;
+  currentPet: Optional<Pet>;
   isLoading: boolean;
-  error: string | null;
+  error: Optional<string>;
   totalCount: number;
   currentPage: number;
 }
 
-/**
- * Estado inicial
- */
 const initialPetState: PetState = {
   pets: [],
-  currentPet: null,
+  currentPet: undefined,
   isLoading: false,
-  error: null,
+  error: undefined,
   totalCount: 0,
   currentPage: 1,
 };
 
-/**
- * PetStore - Gerenciamento Global de Estado de Pets
- * 
- * Features de Nível Sênior:
- * - RxJS BehaviorSubject para estado reativo
- * - Observables granulares (pets$, currentPet$, isLoading$)
- * - Type safety completo
- * - Emissão imediata para todos os subscribers
- * - Singleton pattern
- */
 class PetStore {
   private petState$: BehaviorSubject<PetState>;
 
@@ -43,18 +28,10 @@ class PetStore {
     this.petState$ = new BehaviorSubject<PetState>(initialPetState);
   }
 
-  // ========== Observables ==========
-
-  /**
-   * Observable do estado completo
-   */
   public getPetState(): Observable<PetState> {
     return this.petState$.asObservable();
   }
 
-  /**
-   * Observable da lista de pets
-   */
   public get pets$(): Observable<Pet[]> {
     return this.petState$.pipe(
       map((state) => state.pets),
@@ -62,19 +39,15 @@ class PetStore {
     );
   }
 
-  /**
-   * Observable do pet atual
-   */
-  public get currentPet$(): Observable<Pet | null> {
+
+  public get currentPet$(): Observable<Optional<Pet>> {
     return this.petState$.pipe(
       map((state) => state.currentPet),
       distinctUntilChanged()
     );
   }
 
-  /**
-   * Observable do loading state
-   */
+
   public get isLoading$(): Observable<boolean> {
     return this.petState$.pipe(
       map((state) => state.isLoading),
@@ -82,19 +55,15 @@ class PetStore {
     );
   }
 
-  /**
-   * Observable do error state
-   */
-  public get error$(): Observable<string | null> {
+
+  public get error$(): Observable<Optional<string>> {
     return this.petState$.pipe(
       map((state) => state.error),
       distinctUntilChanged()
     );
   }
 
-  /**
-   * Observable do total count
-   */
+
   public get totalCount$(): Observable<number> {
     return this.petState$.pipe(
       map((state) => state.totalCount),
@@ -102,34 +71,20 @@ class PetStore {
     );
   }
 
-  // ========== Getters Síncronos ==========
-
-  /**
-   * Retorna snapshot do estado atual
-   */
+ 
   public getCurrentState(): PetState {
     return this.petState$.getValue();
   }
 
-  /**
-   * Retorna lista de pets atual
-   */
+
   public getPets(): Pet[] {
     return this.petState$.getValue().pets;
   }
 
-  /**
-   * Retorna pet atual
-   */
-  public getCurrentPet(): Pet | null {
+  public getCurrentPet(): Optional<Pet> {
     return this.petState$.getValue().currentPet;
   }
 
-  // ========== Setters ==========
-
-  /**
-   * Define lista de pets
-   */
   public setPets(pets: Pet[], totalCount?: number, page?: number): void {
     const currentState = this.petState$.getValue();
     this.petState$.next({
@@ -138,13 +93,10 @@ class PetStore {
       totalCount: totalCount ?? pets.length,
       currentPage: page ?? currentState.currentPage,
       isLoading: false,
-      error: null,
+      error: undefined,
     });
   }
 
-  /**
-   * Adiciona um pet à lista
-   */
   public addPet(pet: Pet): void {
     const currentState = this.petState$.getValue();
     this.petState$.next({
@@ -154,9 +106,6 @@ class PetStore {
     });
   }
 
-  /**
-   * Atualiza um pet na lista
-   */
   public updatePet(updatedPet: Pet): void {
     const currentState = this.petState$.getValue();
     const pets = currentState.pets.map((pet) =>
@@ -172,9 +121,6 @@ class PetStore {
     });
   }
 
-  /**
-   * Remove um pet da lista
-   */
   public removePet(petId: number): void {
     const currentState = this.petState$.getValue();
     const pets = currentState.pets.filter((pet) => pet.id !== petId);
@@ -182,14 +128,11 @@ class PetStore {
       ...currentState,
       pets,
       totalCount: Math.max(0, currentState.totalCount - 1),
-      currentPet: currentState.currentPet?.id === petId ? null : currentState.currentPet,
+      currentPet: currentState.currentPet?.id === petId ? undefined : currentState.currentPet,
     });
   }
 
-  /**
-   * Define o pet atual (para detalhes/edição)
-   */
-  public setCurrentPet(pet: Pet | null): void {
+  public setCurrentPet(pet: Optional<Pet>): void {
     const currentState = this.petState$.getValue();
     this.petState$.next({
       ...currentState,
@@ -197,9 +140,6 @@ class PetStore {
     });
   }
 
-  /**
-   * Define loading state
-   */
   public setLoading(isLoading: boolean): void {
     const currentState = this.petState$.getValue();
     this.petState$.next({
@@ -208,10 +148,7 @@ class PetStore {
     });
   }
 
-  /**
-   * Define error state
-   */
-  public setError(error: string | null): void {
+  public setError(error: Optional<string>): void {
     const currentState = this.petState$.getValue();
     this.petState$.next({
       ...currentState,
@@ -220,20 +157,14 @@ class PetStore {
     });
   }
 
-  /**
-   * Limpa o estado (reset)
-   */
   public clear(): void {
     this.petState$.next(initialPetState);
   }
 
-  /**
-   * Cleanup (para testes)
-   */
   public destroy(): void {
     this.petState$.complete();
   }
 }
 
-// Exporta instância singleton
+
 export const petStore = new PetStore();

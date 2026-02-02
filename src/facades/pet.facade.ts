@@ -3,6 +3,7 @@ import { petStore } from '../state/PetStore';
 import type { Pet, CreatePetDto, PetFormData, PetFilters } from '../types/pet.types';
 import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
+import type { Optional } from '../types/optional';
 import { toast } from 'react-hot-toast';
 
 
@@ -17,7 +18,7 @@ export class PetFacade {
     return petStore.pets$;
   }
 
-  get currentPet$(): Observable<Pet | null> {
+  get currentPet$(): Observable<Optional<Pet>> {
     return petStore.currentPet$;
   }
 
@@ -25,7 +26,7 @@ export class PetFacade {
     return petStore.isLoading$;
   }
 
-  get error$(): Observable<string | null> {
+  get error$(): Observable<Optional<string>> {
     return petStore.error$;
   }
 
@@ -39,7 +40,7 @@ export class PetFacade {
   }
 
 
-  getCurrentPet(): Pet | null {
+  getCurrentPet(): Optional<Pet> {
     return petStore.getCurrentPet();
   }
 
@@ -55,7 +56,7 @@ export class PetFacade {
     const requestPromise = (async () => {
       try {
         petStore.setLoading(true);
-        petStore.setError(null);
+        petStore.setError(undefined);
 
         const response = await petService.getAll(filters, page, size);
 
@@ -78,7 +79,7 @@ export class PetFacade {
   async fetchPetById(id: number): Promise<Pet> {
     try {
       petStore.setLoading(true);
-      petStore.setError(null);
+      petStore.setError(undefined);
 
       const pet = await petService.getById(id);
 
@@ -97,7 +98,7 @@ export class PetFacade {
   async fetchPetsByTutor(cpf: string): Promise<void> {
     try {
       petStore.setLoading(true);
-      petStore.setError(null);
+      petStore.setError(undefined);
 
       const pets = await petService.getByTutorCpf(cpf);
 
@@ -115,7 +116,7 @@ export class PetFacade {
   async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
     try {
       petStore.setLoading(true);
-      petStore.setError(null);
+      petStore.setError(undefined);
 
       const normalizedData = this.prepareCreateData(data);
 
@@ -143,7 +144,7 @@ export class PetFacade {
   async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
     try {
       petStore.setLoading(true);
-      petStore.setError(null);
+      petStore.setError(undefined);
 
       this.validatePetData(data);
 
@@ -186,11 +187,10 @@ export class PetFacade {
   async deletePet(id: number): Promise<void> {
     try {
       petStore.setLoading(true);
-      petStore.setError(null);
+      petStore.setError(undefined);
 
       await petService.delete(id);
 
-      // Remove da lista local
       petStore.removePet(id);
 
       toast.success('Pet removido com sucesso!');
@@ -204,7 +204,7 @@ export class PetFacade {
     }
   }
 
-  setCurrentPet(pet: Pet | null): void {
+  setCurrentPet(pet: Optional<Pet>): void {
     petStore.setCurrentPet(pet);
   }
 

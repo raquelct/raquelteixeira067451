@@ -2,6 +2,7 @@ import { tutorService } from '../services/tutor.service';
 import { tutorStore } from '../state/TutorStore';
 import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../types/tutor.types';
 import type { Observable } from 'rxjs';
+import type { Optional } from '../types/optional';
 import { toast } from 'react-hot-toast';
 
 export class TutorFacade {
@@ -9,7 +10,7 @@ export class TutorFacade {
     return tutorStore.tutores$;
   }
 
-  get currentTutor$(): Observable<Tutor | null> {
+  get currentTutor$(): Observable<Optional<Tutor>> {
     return tutorStore.currentTutor$;
   }
 
@@ -17,7 +18,7 @@ export class TutorFacade {
     return tutorStore.isLoading$;
   }
 
-  get error$(): Observable<string | null> {
+  get error$(): Observable<Optional<string>> {
     return tutorStore.error$;
   }
 
@@ -28,7 +29,7 @@ export class TutorFacade {
   async fetchTutores(filters?: TutorFilters, page = 0, size = 10): Promise<void> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
 
       const response = await tutorService.getAll(filters, page, size);
 
@@ -46,7 +47,7 @@ export class TutorFacade {
   async fetchTutorById(id: number): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
 
       const tutor = await tutorService.getById(id);
 
@@ -66,7 +67,7 @@ export class TutorFacade {
   async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
       const normalizedData = this.prepareCreateData(data);
 
       console.log('[TutorFacade] Criando tutor...');
@@ -100,12 +101,11 @@ export class TutorFacade {
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
 
       console.log('[TutorFacade] Validando dados do tutor...');
       this.validateTutorData(data);
 
-      // 1. Verificar se precisa deletar a foto atual
       if (isImageRemoved && currentPhotoId) {
         try {
           console.log(`[TutorFacade] Removendo foto ${currentPhotoId} do tutor ${id}...`);
@@ -113,7 +113,6 @@ export class TutorFacade {
           console.log('[TutorFacade] Foto removida com sucesso');
         } catch (deleteError) {
           console.warn('[TutorFacade] Falha ao remover foto (pode já ter sido removida):', deleteError);
-          // Fail Safe
         }
       }
 
@@ -124,7 +123,6 @@ export class TutorFacade {
       const updatedTutor = await tutorService.update(id, normalizedData);
       console.log('[TutorFacade] Tutor atualizado:', updatedTutor);
 
-      // Se houver imagem, fazer upload após atualização
       if (imageFile) {
         try {
           console.log('[TutorFacade] Fazendo upload da foto...');
@@ -132,7 +130,6 @@ export class TutorFacade {
           console.log('[TutorFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
-          // Toast via Interceptor
         }
       }
 
@@ -154,7 +151,7 @@ export class TutorFacade {
   async deleteTutor(id: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
 
       await tutorService.delete(id);
 
@@ -170,13 +167,10 @@ export class TutorFacade {
     }
   }
 
-  /**
-   * Vincula um pet a um tutor
-   */
   async linkPetToTutor(tutorId: number, petId: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
 
       console.log('[TutorFacade] Vinculando pet', petId, 'ao tutor', tutorId);
 
@@ -199,7 +193,7 @@ export class TutorFacade {
   async removePetFromTutor(tutorId: number, petId: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
-      tutorStore.setError(null);
+      tutorStore.setError(undefined);
 
       console.log('[TutorFacade] Removendo vínculo do pet', petId, 'do tutor', tutorId);
 
@@ -219,7 +213,7 @@ export class TutorFacade {
     }
   }
 
-  setCurrentTutor(tutor: Tutor | null): void {
+  setCurrentTutor(tutor: Optional<Tutor>): void {
     tutorStore.setCurrentTutor(tutor);
   }
 

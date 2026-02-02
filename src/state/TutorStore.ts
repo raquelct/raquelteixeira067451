@@ -1,34 +1,26 @@
 import { BehaviorSubject } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import type { Tutor } from '../types/tutor.types';
+import type { Optional } from '../types/optional';
 
-/**
- * Estado global dos tutores
- */
 export interface TutorState {
   tutores: Tutor[];
-  currentTutor: Tutor | null;
+  currentTutor: Optional<Tutor>;
   isLoading: boolean;
-  error: string | null;
+  error: Optional<string>;
   totalCount: number;
   currentPage: number;
 }
 
-/**
- * Estado inicial
- */
 const initialTutorState: TutorState = {
   tutores: [],
-  currentTutor: null,
+  currentTutor: undefined,
   isLoading: false,
-  error: null,
+  error: undefined,
   totalCount: 0,
   currentPage: 0,
 };
 
-/**
- * TutorStore - Gerenciamento de estado global para Tutores
- */
 class TutorStore {
   private tutorState$ = new BehaviorSubject<TutorState>(initialTutorState);
 
@@ -100,11 +92,11 @@ class TutorStore {
       ...currentState,
       tutores,
       totalCount: Math.max(0, currentState.totalCount - 1),
-      currentTutor: currentState.currentTutor?.id === tutorId ? null : currentState.currentTutor,
+      currentTutor: currentState.currentTutor?.id === tutorId ? undefined : currentState.currentTutor,
     });
   }
 
-  setCurrentTutor(tutor: Tutor | null): void {
+  setCurrentTutor(tutor: Optional<Tutor>): void {
     const currentState = this.tutorState$.getValue();
     this.tutorState$.next({
       ...currentState,
@@ -120,7 +112,7 @@ class TutorStore {
     });
   }
 
-  setError(error: string | null): void {
+  setError(error: Optional<string>): void {
     const currentState = this.tutorState$.getValue();
     this.tutorState$.next({
       ...currentState,
