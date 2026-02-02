@@ -15,10 +15,6 @@ import { Button } from '../components/shared/Button';
 import { toast } from 'react-hot-toast';
 import { PetSelectModal } from '../components/shared/PetSelectModal';
 
-/**
- * TutorForm - Formulário de criação/edição de tutor com upload de imagem
- * Refatorado com componentes compartilhados (DRY) e Modal de Seleção de Pets
- */
 export const TutorForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -72,7 +68,6 @@ export const TutorForm = () => {
 
         if (tutor.foto?.url) {
           setImagePreview(tutor.foto.url);
-          // Captura ID da foto se disponível
           if (tutor.foto.id) {
             setCurrentPhotoId(tutor.foto.id);
           }
@@ -87,7 +82,6 @@ export const TutorForm = () => {
     loadTutorData();
   }, [id, isEditMode, reset]);
 
-  // Estado para controlar se a imagem foi removida (apenas em edição)
   const [isImageRemoved, setIsImageRemoved] = useState(false);
   const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
 
@@ -132,20 +126,18 @@ export const TutorForm = () => {
     setSelectedPets((prev) => prev.filter((p) => p.id !== petId));
   };
 
-  // Lógica de Vinculação via Modal
   const handleSelectPet = async (pet: Pet) => {
     if (isEditMode && id) {
-      // Cenário 1: Edição (Vincular imediatamente)
+
       try {
         await tutorFacade.linkPetToTutor(Number(id), pet.id);
-        toast.success('Pet vinculado com sucesso!');
-        handleRefreshTutor(); // Atualiza a lista
+        handleRefreshTutor(); 
       } catch (error) {
         console.error('Erro ao vincular pet:', error);
         toast.error('Erro ao vincular pet');
       }
     } else {
-      // Cenário 2: Criação (Adicionar à memória)
+
       handleAddPet(pet);
       toast.success('Pet adicionado à lista');
     }
@@ -197,7 +189,6 @@ export const TutorForm = () => {
     navigate('/tutores');
   };
 
-  // Lista de IDs vinculados para passar ao modal (evitar duplicatas)
   const linkedPetIds = isEditMode && currentTutor 
     ? currentTutor.pets?.map(p => p.id) || []
     : selectedPets.map(p => p.id);

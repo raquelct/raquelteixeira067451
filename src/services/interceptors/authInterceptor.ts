@@ -57,6 +57,10 @@ const handleResponseError = async (error: AxiosError, axiosInstance: AxiosInstan
     return Promise.reject(error);
   }
 
+  if (originalRequest.url?.includes('/autenticacao/login')) {
+      return Promise.reject(error);
+  }
+
   if (originalRequest.url?.includes(REFRESH_ENDPOINT)) {
     handleLogout();
     return Promise.reject(error);

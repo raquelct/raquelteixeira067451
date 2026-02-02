@@ -1,18 +1,19 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AxiosError } from 'axios';
 import { authFacade } from '../facades/auth.facade';
 import { loginSchema, type LoginFormData } from '../schemas/authSchema';
+import { getErrorMessage } from '../utils/errorUtils';
 
 export const useLogin = () => {
   const navigate = useNavigate();
-  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors, isValid, isSubmitting }, 
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -20,18 +21,30 @@ export const useLogin = () => {
   });
 
   const handleLogin = async (data: LoginFormData) => {
-    setApiError(null);
+    clearErrors('root');
 
     try {
       await authFacade.login(data);
       navigate('/', { replace: true });
       return true;
     } catch (error) {
+      console.error('Login error:', error);
+      
+      const message = getErrorMessage(error);
+      
+      // Se for 401, mensagem específica (regra de negócio)
       if (error instanceof AxiosError && error.response?.status === 401) {
-        setApiError('Credenciais inválidas. Verifique seu usuário e senha.');
-        return false;
+         setError('root', { 
+           type: 'manual', 
+           message: 'Credenciais inválidas. Verifique seu usuário e senha.' 
+         });
+      } else {
+         setError('root', { 
+           type: 'manual', 
+           message 
+         });
       }
-    
+      
       return false;
     }
   };
@@ -42,6 +55,5 @@ export const useLogin = () => {
     errors,
     isValid,
     isSubmitting,
-    apiError,
   };
 };
