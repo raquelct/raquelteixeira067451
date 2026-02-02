@@ -154,7 +154,7 @@ export const PetList = () => {
                 title={pet.name}
                 subtitle={pet.breed}
                 description={pet.age !== undefined ? `${pet.age} ${pet.age === 1 ? 'ano' : 'anos'}` : undefined}
-                imageUrl={pet.foto?.url || pet.photo}
+                imageUrl={pet.photoUrl}
                 icon="🐾"
                 onViewDetails={(id) => navigate(`/pets/${id}`)}
                 onEdit={(id) => navigate(`/pets/${id}/edit`)}

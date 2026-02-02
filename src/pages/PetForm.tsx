@@ -33,9 +33,6 @@ export const PetForm = () => {
     },
   });
 
-  /**
-   * Carrega dados do pet em modo de edição
-   */
   useEffect(() => {
     if (!isEditMode || !id) {
       return;
@@ -54,11 +51,11 @@ export const PetForm = () => {
           idade: pet.age,
         });
 
-        if (pet.foto?.url) {
-          setImagePreview(pet.foto.url);
+        if (pet.photoUrl) {
+          setImagePreview(pet.photoUrl);
           // Captura ID da foto se disponível
-          if (pet.foto.id) {
-            setCurrentPhotoId(pet.foto.id);
+          if (pet.photoId) {
+            setCurrentPhotoId(pet.photoId);
           }
         }
 
@@ -73,13 +70,9 @@ export const PetForm = () => {
     loadPetData();
   }, [id, isEditMode, reset]);
 
-  // Estado para controlar se a imagem foi removida (apenas em edição)
   const [isImageRemoved, setIsImageRemoved] = useState(false);
   const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
 
-  /**
-   * Manipula seleção de imagem
-   */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
@@ -95,9 +88,10 @@ export const PetForm = () => {
       }
 
       setImageFile(file);
-      setIsImageRemoved(false); // Reset flg se nova imagem selecionada
+      setIsImageRemoved(false);
 
       const reader = new FileReader();
+
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
@@ -105,9 +99,6 @@ export const PetForm = () => {
     }
   };
 
-  /**
-   * Remove imagem selecionada
-   */
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
@@ -116,9 +107,6 @@ export const PetForm = () => {
     }
   };
 
-  /**
-   * Submit do formulário
-   */
   const onSubmit = async (data: PetFormSchema) => {
     try {
       setIsSubmitting(true);
@@ -126,7 +114,6 @@ export const PetForm = () => {
       console.log(`[PetForm] ${isEditMode ? 'Atualizando' : 'Criando'} pet:`, data);
 
       if (isEditMode && id) {
-        // Passa flags de remoção e ID da foto atual
         await petFacade.updatePet(
           Number(id), 
           data, 
@@ -193,7 +180,6 @@ export const PetForm = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-        {/* Upload de Imagem Reutilizável (DRY) */}
         <ImageUpload
           label="Foto do Pet"
           previewUrl={imagePreview}
@@ -201,7 +187,6 @@ export const PetForm = () => {
           onRemove={handleRemoveImage}
         />
 
-        {/* Form Inputs Reutilizáveis (DRY) */}
         <FormInput
           label="Nome do Pet *"
           placeholder="Ex: Bob"
@@ -225,7 +210,6 @@ export const PetForm = () => {
           {...register('idade', { valueAsNumber: true })}
         />
 
-        {/* Botões Reutilizáveis (DRY) */}
         <div className="flex space-x-4 pt-4">
           <Button
             type="submit"
