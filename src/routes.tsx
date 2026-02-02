@@ -11,6 +11,7 @@ const PetForm = lazy(() => import('./pages/PetForm').then(m => ({ default: m.Pet
 const PetDetails = lazy(() => import('./pages/PetDetails').then(m => ({ default: m.PetDetails })));
 const TutorList = lazy(() => import('./pages/TutorList').then(m => ({ default: m.TutorList })));
 const TutorForm = lazy(() => import('./pages/TutorForm').then(m => ({ default: m.TutorForm })));
+const TutorDetails = lazy(() => import('./pages/TutorDetails').then(m => ({ default: m.TutorDetails })));
 const StatusPage = lazy(() => import('./pages/StatusPage').then(m => ({ default: m.StatusPage })));
 
 const PublicRoute = () => {
@@ -56,6 +57,7 @@ export const AppRoutes = () => {
         <Route path="/tutores" element={<TutorList />} />
         <Route path="/tutores/new" element={<TutorForm />} />
         <Route path="/tutores/:id/edit" element={<TutorForm />} />
+        <Route path="/tutores/:id" element={<TutorDetails />} />
       </Route>
 
       {/* 3. Fallback 404 */}

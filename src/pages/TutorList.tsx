@@ -67,7 +67,6 @@ export const TutorList = () => {
 
   return (
     <div className="w-full">
-      {/* Header */}
       <PageHeader
         title="Tutores Cadastrados"
         subtitle={
@@ -80,7 +79,6 @@ export const TutorList = () => {
         navigateTo="/tutores/new"
       />
 
-      {/* Search Bar */}
       <SearchBar
         value={searchTerm}
         onChange={setSearchTerm}
@@ -94,7 +92,6 @@ export const TutorList = () => {
         </p>
       )}
 
-      {/* Error State */}
       {error && !isLoading && (
         <ErrorState
           title="Erro ao carregar tutores"
@@ -107,10 +104,8 @@ export const TutorList = () => {
         />
       )}
 
-      {/* Loading Skeleton */}
       {isLoading && <LoadingSkeleton type="card" count={PAGE_SIZE} />}
 
-      {/* Empty State */}
       {!isLoading && tutores.length === 0 && !error && (
         <EmptyState
           icon={
@@ -155,7 +150,6 @@ export const TutorList = () => {
         />
       )}
 
-      {/* Tutors Grid */}
       {!isLoading && !error && tutores.length > 0 && (
         <>
           <div className={containerStyles.grid}>
@@ -168,7 +162,7 @@ export const TutorList = () => {
                 description={maskPhone(tutor.phone)}
                 imageUrl={tutor.foto?.url || tutor.photo}
                 icon="👤"
-                onViewDetails={(id) => navigate(`/tutores/${id}/edit`)}
+                onViewDetails={(id) => navigate(`/tutores/${id}`)}
                 onEdit={(id) => navigate(`/tutores/${id}/edit`)}
                 onDelete={(id) => {
                   setTutorToDelete({ id, name: tutor.name });
@@ -183,7 +177,6 @@ export const TutorList = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
