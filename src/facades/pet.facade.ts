@@ -7,101 +7,51 @@ import { toast } from 'react-hot-toast';
 
 
 export class PetFacade {
-  // ========== Controle de Estado Interno ==========
   private pendingRequests: Map<string, Promise<unknown>> = new Map();
 
-  // ========== Observables Reativos ==========
-
-  /**
-   * Observable do estado completo
-   */
   getPetState(): Observable<PetState> {
     return petStore.getPetState();
   }
 
-  /**
-   * Observable da lista de pets
-   * UI subscribe para atualização automática
-   */
   get pets$(): Observable<Pet[]> {
     return petStore.pets$;
   }
 
-  /**
-   * Observable do pet atual (para detalhes/edição)
-   */
   get currentPet$(): Observable<Pet | null> {
     return petStore.currentPet$;
   }
 
-  /**
-   * Observable do loading state
-   */
   get isLoading$(): Observable<boolean> {
     return petStore.isLoading$;
   }
 
-  /**
-   * Observable do error state
-   */
   get error$(): Observable<string | null> {
     return petStore.error$;
   }
 
-  /**
-   * Observable do total count (para paginação)
-   */
+
   get totalCount$(): Observable<number> {
     return petStore.totalCount$;
   }
 
-  // ========== Getters Síncronos (Snapshots) ==========
-
-  /**
-   * Retorna lista de pets atual (snapshot)
-   */
   getPets(): Pet[] {
     return petStore.getPets();
   }
 
-  /**
-   * Retorna pet atual (snapshot)
-   */
+
   getCurrentPet(): Pet | null {
     return petStore.getCurrentPet();
   }
 
-  // ========== Métodos de Negócio ==========
 
-  /**
-   * Busca todos os pets com filtros opcionais
-   * - Previne requisições duplicadas com request deduplication
-   * - Gerencia loading state automaticamente
-   * - Error handling com mensagens user-friendly
-   * 
-   * Fluxo:
-   * 1. Verifica se requisição já está em andamento
-   * 2. Set loading = true
-   * 3. Chama PetService.getAll()
-   * 4. Atualiza PetStore com resultado
-   * 5. Set loading = false
-   * 6. Emite para todos os subscribers via BehaviorSubject
-   * 
-   * @param filters - Filtros opcionais (nome, espécie, etc)
-   * @param page - Número da página (default: 1)
-   * @param size - Quantidade de itens por página (default: 10 conforme edital)
-   */
   async fetchPets(filters?: PetFilters, page = 1, size = 10): Promise<void> {
-    // Cria chave única para deduplicação
     const requestKey = `fetchPets-${JSON.stringify(filters)}-${page}-${size}`;
 
-    // Se já existe requisição em andamento, retorna a Promise existente
     if (this.pendingRequests.has(requestKey)) {
       console.log('[PetFacade] Requisição duplicada detectada, aguardando existente...');
       return this.pendingRequests.get(requestKey) as Promise<void>;
     }
 
-    // Cria nova Promise e armazena
     const requestPromise = (async () => {
       try {
         petStore.setLoading(true);
@@ -109,7 +59,6 @@ export class PetFacade {
 
         const response = await petService.getAll(filters, page, size);
 
-        // API retorna 'content' em vez de 'pets'
         petStore.setPets(response.content, response.total, response.page);
       } catch (error) {
         const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets');
@@ -118,21 +67,14 @@ export class PetFacade {
         throw error;
       } finally {
         petStore.setLoading(false);
-        // Remove da lista de pendentes ao finalizar
         this.pendingRequests.delete(requestKey);
       }
     })();
-
-    // Armazena a Promise
     this.pendingRequests.set(requestKey, requestPromise);
 
     return requestPromise;
   }
 
-  /**
-   * Busca um pet específico por ID
-   * Atualiza o currentPet no store
-   */
   async fetchPetById(id: number): Promise<Pet> {
     try {
       petStore.setLoading(true);
@@ -152,9 +94,6 @@ export class PetFacade {
     }
   }
 
-  /**
-   * Busca pets de um tutor específico
-   */
   async fetchPetsByTutor(cpf: string): Promise<void> {
     try {
       petStore.setLoading(true);
@@ -173,54 +112,19 @@ export class PetFacade {
     }
   }
 
-  /**
-   * Cria um novo pet com upload de foto opcional
-   * 
-   * Fluxo Sequential (Create-then-Upload):
-   * 1. Valida e normaliza dados
-   * 2. Cria o pet (POST /v1/pets) - obtém o ID
-   * 3. Se há imagem: faz upload usando o ID (POST /v1/pets/:id/fotos)
-   * 4. Atualiza lista (fetchPets)
-   * 
-   * @param data - Dados do formulário (nome, raca, idade)
-   * @param imageFile - Arquivo de imagem opcional
-   * @returns Pet criado
-   */
   async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
-    let createdPet: Pet | null = null;
-
     try {
       petStore.setLoading(true);
       petStore.setError(null);
 
-      // 1. Prepara dados para criação (apenas campos válidos)
-      const createData: CreatePetDto = {
-        nome: data.nome,
-        raca: data.raca,
-        idade: data.idade,
-      };
+      const normalizedData = this.prepareCreateData(data);
 
-      // 2. Validações de negócio
-      this.validatePetData(createData);
+      const createdPet = await petService.create(normalizedData);
 
-      // 3. Transformações (normalização)
-      const normalizedData = this.normalizePetData(createData);
-
-      // 4. PRIMEIRO: Cria o pet (obtém ID)
-      createdPet = await petService.create(normalizedData);
-
-      // 5. DEPOIS: Upload da foto (se fornecida)
-      if (imageFile && createdPet.id) {
-        try {
-          await petService.uploadPhoto(createdPet.id, imageFile);
-        } catch (uploadError) {
-          console.error('[PetFacade] Erro no upload da foto:', uploadError);
-          // Pet já foi criado, então apenas avisamos sobre a falha do upload (logs)
-          // Toast de erro será exibido pelo Interceptor Global se for erro de API
-        }
+      if (imageFile) {
+        await this.uploadPetPhoto(createdPet.id, imageFile);
       }
 
-      // 6. Atualiza a lista (refresh)
       await this.fetchPets(undefined, 0, 10);
 
       toast.success('Pet criado com sucesso!');
@@ -235,12 +139,7 @@ export class PetFacade {
     }
   }
 
-  /**
-   * Atualiza um pet existente
-   */
-  /**
-   * Atualiza pet existente (sequencial: Delete Photo se necessário → Update → Upload Photo se necessário)
-   */
+
   async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
     try {
       petStore.setLoading(true);
@@ -248,7 +147,6 @@ export class PetFacade {
 
       this.validatePetData(data);
 
-      // 1. Verificar se precisa deletar a foto atual
       if (isImageRemoved && currentPhotoId) {
         try {
           console.log(`[PetFacade] Removendo foto ${currentPhotoId} do pet ${id}...`);
@@ -256,22 +154,18 @@ export class PetFacade {
           console.log('[PetFacade] Foto removida com sucesso');
         } catch (deleteError) {
           console.warn('[PetFacade] Falha ao remover foto (pode já ter sido removida):', deleteError);
-          // Não lançamos erro aqui para permitir que a atualização do texto continue (Fail Safe)
         }
       }
 
       const normalizedData = this.normalizePetData(data);
 
-      // 2. Atualizar dados do pet
       const updatedPet = await petService.update(id, normalizedData);
 
-      // 3. Se houver NOVA imagem, fazer upload
       if (imageFile) {
         try {
           await petService.uploadPhoto(Number(updatedPet.id), imageFile);
         } catch (uploadError) {
           console.warn('[PetFacade] Falha no upload da foto:', uploadError);
-          // Toast manipulado pelo Interceptor
         }
       }
 
@@ -289,9 +183,6 @@ export class PetFacade {
     }
   }
 
-  /**
-   * Remove um pet
-   */
   async deletePet(id: number): Promise<void> {
     try {
       petStore.setLoading(true);
@@ -313,26 +204,15 @@ export class PetFacade {
     }
   }
 
-  /**
-   * Define o pet atual (para edição/detalhes)
-   */
   setCurrentPet(pet: Pet | null): void {
     petStore.setCurrentPet(pet);
   }
 
-  /**
-   * Limpa o estado (útil ao desmontar componentes)
-   */
   clear(): void {
     petStore.clear();
   }
 
-  // ========== Métodos de Transformação (Business Logic) ==========
 
-  /**
-   * Valida dados do pet antes de enviar à API
-   * Apenas campos suportados: nome, raca, idade
-   */
   private validatePetData(data: Partial<CreatePetDto>): void {
     if (data.nome && data.nome.trim().length < 3) {
       throw new Error('Nome do pet deve ter no mínimo 3 caracteres');
@@ -347,10 +227,6 @@ export class PetFacade {
     }
   }
 
-  /**
-   * Normaliza dados do pet (transformações)
-   * Apenas campos suportados: nome, raca, idade
-   */
   private normalizePetData<T extends Partial<CreatePetDto>>(data: T): T {
     return {
       ...data,
@@ -359,9 +235,26 @@ export class PetFacade {
     } as T;
   }
 
-  /**
-   * Formata mensagem de erro para exibição ao usuário
-   */
+  private prepareCreateData(data: PetFormData): CreatePetDto {
+    const createData: CreatePetDto = {
+      nome: data.nome,
+      raca: data.raca,
+      idade: data.idade,
+    };
+
+    this.validatePetData(createData);
+    return this.normalizePetData(createData);
+  }
+
+  private async uploadPetPhoto(petId: number, file: File): Promise<void> {
+    try {
+      await petService.uploadPhoto(petId, file);
+    } catch (error) {
+      console.error('[PetFacade] Erro ao fazer upload da foto:', error);
+      toast.error('Pet criado, mas houve erro ao fazer upload da foto');
+    }
+  }
+
   private formatErrorMessage(error: unknown, defaultMessage: string): string {
     if (error instanceof Error) {
       return error.message;
@@ -375,10 +268,6 @@ export class PetFacade {
     return defaultMessage;
   }
 
-  /**
-   * Formata idade do pet para exibição (helper para UI)
-   * Exemplo: "2 anos", "6 meses"
-   */
   formatPetAge(ageInYears?: number): string {
     if (ageInYears === undefined || ageInYears === null) {
       return 'Idade não informada';
@@ -392,9 +281,7 @@ export class PetFacade {
     return `${ageInYears} ${ageInYears === 1 ? 'ano' : 'anos'}`;
   }
 
-  /**
-   * Formata peso do pet para exibição
-   */
+
   formatPetWeight(weightInKg?: number): string {
     if (weightInKg === undefined || weightInKg === null) {
       return 'Peso não informado';
@@ -404,5 +291,4 @@ export class PetFacade {
   }
 }
 
-// Exporta instância singleton do Facade
 export const petFacade = new PetFacade();

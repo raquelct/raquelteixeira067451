@@ -72,6 +72,8 @@ export interface CreatePetDto {
   idade: number;
 }
 
+export type PetFormData = CreatePetDto;
+
 export interface UpdatePetDto extends Partial<CreatePetDto> {
   id: number;
 }

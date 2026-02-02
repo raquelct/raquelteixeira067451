@@ -4,9 +4,6 @@ import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../type
 import type { Observable } from 'rxjs';
 import { toast } from 'react-hot-toast';
 
-/**
- * TutorFacade - Padrão Facade para Tutores
- */
 export class TutorFacade {
   get tutores$(): Observable<Tutor[]> {
     return tutorStore.tutores$;
@@ -67,50 +64,21 @@ export class TutorFacade {
   }
 
   async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
-    let createdTutor: Tutor | null = null;
-
     try {
       tutorStore.setLoading(true);
       tutorStore.setError(null);
-
-      const createData: CreateTutorDto = {
-        nome: data.nome,
-        email: data.email,
-        telefone: data.telefone,
-        endereco: data.endereco,
-        cpf: data.cpf,
-      };
-
-      this.validateTutorData(createData);
-      const normalizedData = this.normalizeTutorData(createData);
+      const normalizedData = this.prepareCreateData(data);
 
       console.log('[TutorFacade] Criando tutor...');
-      createdTutor = await tutorService.create(normalizedData);
+      const createdTutor = await tutorService.create(normalizedData);
       console.log('[TutorFacade] Tutor criado, ID:', createdTutor.id);
 
-      if (imageFile && createdTutor.id) {
-        console.log('[TutorFacade] Iniciando upload de foto...');
-        try {
-          await tutorService.uploadPhoto(createdTutor.id, imageFile);
-          console.log('[TutorFacade] Upload concluído');
-        } catch (uploadError) {
-          console.error('[TutorFacade] Erro no upload:', uploadError);
-          // Toast via Interceptor
-        }
+      if (imageFile) {
+        await this.uploadTutorPhoto(createdTutor.id, imageFile);
       }
 
-      // Vincular pets selecionados durante a criação
-      if (pendingPetIds && pendingPetIds.length > 0 && createdTutor?.id) {
-        console.log('[TutorFacade] Vinculando pets:', pendingPetIds);
-        try {
-          await Promise.all(
-            pendingPetIds.map((petId) => tutorService.linkPet(createdTutor!.id, petId))
-          );
-          console.log('[TutorFacade] Pets vinculados com sucesso');
-        } catch (linkError) {
-          console.error('[TutorFacade] Erro ao vincular pets:', linkError);
-          // Toast via Interceptor
-        }
+      if (pendingPetIds && pendingPetIds.length > 0) {
+        await this.linkPendingPets(createdTutor.id, pendingPetIds);
       }
 
       console.log('[TutorFacade] Atualizando lista...');
@@ -128,9 +96,7 @@ export class TutorFacade {
     }
   }
 
-  /**
-   * Atualiza tutor existente (sequencial: Delete Photo se necessário → Update → Upload Photo se necessário)
-   */
+
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     try {
       tutorStore.setLoading(true);
@@ -216,7 +182,6 @@ export class TutorFacade {
 
       await tutorService.linkPet(tutorId, petId);
 
-      // Recarrega dados do tutor para atualizar lista de pets
       await this.fetchTutorById(tutorId);
 
       console.log('[TutorFacade] Pet vinculado com sucesso');
@@ -231,9 +196,6 @@ export class TutorFacade {
     }
   }
 
-  /**
-   * Remove vínculo de um pet com um tutor
-   */
   async removePetFromTutor(tutorId: number, petId: number): Promise<void> {
     try {
       tutorStore.setLoading(true);
@@ -243,7 +205,6 @@ export class TutorFacade {
 
       await tutorService.unlinkPet(tutorId, petId);
 
-      // Recarrega dados do tutor para atualizar lista de pets
       await this.fetchTutorById(tutorId);
 
       console.log('[TutorFacade] Vínculo removido com sucesso');
@@ -304,6 +265,43 @@ export class TutorFacade {
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  private prepareCreateData(data: TutorFormData): CreateTutorDto {
+    const createData: CreateTutorDto = {
+      nome: data.nome,
+      email: data.email,
+      telefone: data.telefone,
+      endereco: data.endereco,
+      cpf: data.cpf,
+    };
+
+    this.validateTutorData(createData);
+    return this.normalizeTutorData(createData);
+  }
+
+  private async uploadTutorPhoto(tutorId: number, file: File): Promise<void> {
+    console.log('[TutorFacade] Iniciando upload de foto...');
+    try {
+      await tutorService.uploadPhoto(tutorId, file);
+      console.log('[TutorFacade] Upload concluído');
+    } catch (error) {
+      console.error('[TutorFacade] Erro no upload:', error);
+      toast.error('Tutor criado, mas houve erro ao fazer upload da foto');
+    }
+  }
+
+  private async linkPendingPets(tutorId: number, petIds: number[]): Promise<void> {
+    console.log('[TutorFacade] Vinculando pets:', petIds);
+    try {
+      await Promise.all(
+        petIds.map((petId) => tutorService.linkPet(tutorId, petId))
+      );
+      console.log('[TutorFacade] Pets vinculados com sucesso');
+    } catch (error) {
+      console.error('[TutorFacade] Erro ao vincular pets:', error);
+      toast.error('Tutor criado, mas houve erro ao vincular alguns pets');
+    }
   }
 
 
