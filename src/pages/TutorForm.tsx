@@ -60,7 +60,7 @@ export const TutorForm = () => {
     return tutorFacade.fetchTutorById(Number(id));
   }, [id]);
 
-  const { isLoading: isLoadingData, reload: reloadTutor } = useEntityLoader({
+  const { isLoading: isLoadingData } = useEntityLoader({
     fetcher: fetchTutor,
     shouldFetch: isEditMode && !!id,
     onSuccess: (tutor) => {
@@ -79,32 +79,39 @@ export const TutorForm = () => {
           setCurrentPhotoId(tutor.foto.id);
         }
       }
+
+      if (tutor.pets) {
+        setSelectedPets(tutor.pets);
+      }
     },
     errorMessage: 'Erro ao carregar dados do tutor',
   });
 
-
-
   const handleAddPet = (pet: Pet) => {
     setSelectedPets((prev) => [...prev, pet]);
+    toast.success('Pet adicionado à lista!');
   };
 
   const handleRemovePet = (petId: number) => {
     setSelectedPets((prev) => prev.filter((p) => p.id !== petId));
+    toast.success('Pet removido da lista!');
+  };
+
+  const handlePetUnlinked = (petId: number) => {
+    setSelectedPets((prev) => prev.filter((p) => p.id !== petId));
+    toast.success('Vínculo removido com sucesso!');
   };
 
   const handleSelectPet = async (pet: Pet) => {
     if (isEditMode && id) {
-
       try {
         await tutorFacade.linkPetToTutor(Number(id), pet.id);
-        handleRefreshTutor(); 
+        handleAddPet(pet);
       } catch (error) {
         console.error('Erro ao vincular pet:', error);
         toast.error('Erro ao vincular pet');
       }
     } else {
-
       handleAddPet(pet);
       toast.success('Pet adicionado à lista');
     }
@@ -139,11 +146,6 @@ export const TutorForm = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleRefreshTutor = async () => {
-    if (!id) return;
-    reloadTutor();
   };
 
   const handleCancel = () => {
@@ -201,7 +203,6 @@ export const TutorForm = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-            {/* Upload de Imagem Reutilizável */}
             <ImageUpload
               label="Foto do Tutor"
               previewUrl={imagePreview}
@@ -209,7 +210,6 @@ export const TutorForm = () => {
               onRemove={handleRemoveImage}
             />
 
-            {/* Form Inputs Reutilizáveis */}
             <FormInput
               label="Nome Completo *"
               placeholder="Ex: João Silva"
@@ -225,7 +225,6 @@ export const TutorForm = () => {
               {...register('email')}
             />
 
-            {/* Input com Máscara via onChange */}
             <FormInput
               label="Telefone *"
               placeholder="Ex: (65) 98765-4321"
@@ -238,7 +237,6 @@ export const TutorForm = () => {
               }}
             />
 
-            {/* Input com Máscara via onChange */}
             <FormInput
               label="CPF *"
               placeholder="000.000.000-00"
@@ -288,7 +286,9 @@ export const TutorForm = () => {
               <LinkedPetsSection
                 mode="edit"
                 tutor={currentTutor}
-                onRefresh={handleRefreshTutor}
+                selectedPets={selectedPets}
+                onAddPet={handleAddPet}
+                onRemovePet={handlePetUnlinked}
                 onAddClick={() => setIsModalOpen(true)}
               />
             ) : (

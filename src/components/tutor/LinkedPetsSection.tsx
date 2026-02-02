@@ -1,29 +1,14 @@
-/**
- * LinkedPetsSection - Seção de gerenciamento de pets vinculados ao tutor
- * 
- * Features:
- * - Lista de pets vinculados ao tutor
- * - Adicionar novo vínculo (via modal/dropdown)
- * - Remover vínculo (com confirmação)
- * - Loading states
- * - Empty state quando não há pets vinculados
- * - Modo de criação (estado local) e modo de edição (API calls)
- */
-
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { Pet } from '../../types/pet.types';
 import type { Tutor } from '../../types/tutor.types';
-import { petFacade } from '../../facades/pet.facade';
 import { tutorFacade } from '../../facades/tutor.facade';
 import { Button } from '../shared/Button';
+import { ConfirmationModal } from '../shared/ConfirmationModal';
 import toast from 'react-hot-toast';
 
 interface LinkedPetsSectionProps {
-  // Modo de edição: tutor existente
   tutor?: Tutor;
   onRefresh?: () => void;
-
-  // Modo de criação: estado local
   mode?: 'create' | 'edit';
   selectedPets?: Pet[];
   onAddPet?: (pet: Pet) => void;
@@ -33,131 +18,64 @@ interface LinkedPetsSectionProps {
 
 export const LinkedPetsSection = ({
   tutor,
-  onRefresh,
   mode = 'edit',
   selectedPets = [],
-  onAddPet,
   onRemovePet,
   onAddClick
 }: LinkedPetsSectionProps) => {
-  const [isAddingPet, setIsAddingPet] = useState(false);
-  const [availablePets, setAvailablePets] = useState<Pet[]>([]);
-  const [selectedPetId, setSelectedPetId] = useState<number>(0);
-  const [isLoadingPets, setIsLoadingPets] = useState(false);
-  const [isLinking, setIsLinking] = useState(false);
   const [unlinkingPetId, setUnlinkingPetId] = useState<number | null>(null);
+  
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    petId: number;
+    petName: string;
+  }>({
+    isOpen: false,
+    petId: 0,
+    petName: '',
+  });
 
-  // Em modo 'create', usar selectedPets; em modo 'edit', usar tutor.pets
-  const linkedPets = mode === 'create' ? selectedPets : (tutor?.pets || []);
+  const linkedPets = useMemo(() => {
+    return selectedPets !== undefined 
+      ? selectedPets 
+      : (tutor?.pets || []);
+  }, [selectedPets, tutor?.pets]);
 
-  /**
-   * Carrega lista de pets disponíveis quando abre o modal
-   */
-  useEffect(() => {
-    if (!isAddingPet) return;
-
-    const loadAvailablePets = async () => {
-      try {
-        setIsLoadingPets(true);
-
-        // Busca todos os pets (primeira página com tamanho grande)
-        const subscription = petFacade.pets$.subscribe((pets) => {
-          // Filtra pets que já estão vinculados
-          const linkedPetIds = linkedPets.map((p) => p.id);
-          const available = pets.filter((p) => !linkedPetIds.includes(p.id));
-          setAvailablePets(available);
-        });
-
-        await petFacade.fetchPets(undefined, 0, 100);
-
-        return () => subscription.unsubscribe();
-      } catch (error) {
-        console.error('[LinkedPetsSection] Erro ao carregar pets:', error);
-      } finally {
-        setIsLoadingPets(false);
-      }
-    };
-
-    loadAvailablePets();
-  }, [isAddingPet, linkedPets]);
-
-  /**
-   * Vincula pet selecionado ao tutor (modo edit) ou adiciona ao estado local (modo create)
-   */
-  const handleLinkPet = async () => {
-    if (!selectedPetId) {
-      alert('Selecione um pet para vincular');
-      return;
-    }
-
-    try {
-      setIsLinking(true);
-
-      if (mode === 'create') {
-        // Modo criação: adiciona ao estado local
-        const petToAdd = availablePets.find((p) => p.id === selectedPetId);
-        if (petToAdd && onAddPet) {
-          onAddPet(petToAdd);
-          setIsAddingPet(false);
-          setSelectedPetId(0);
-        }
-      } else {
-        // Modo edição: faz API call
-        if (!tutor) {
-          throw new Error('Tutor não fornecido em modo de edição');
-        }
-        await tutorFacade.linkPetToTutor(tutor.id, selectedPetId);
-
-        // Fecha modal e reseta seleção
-        setIsAddingPet(false);
-        setSelectedPetId(0);
-
-        // Callback para refresh no componente pai
-        onRefresh?.();
-
-        toast.success('Pet vinculado com sucesso!');
-      }
-    } catch (error) {
-      console.error('[LinkedPetsSection] Erro ao vincular pet:', error);
-      toast.error('Erro ao vincular pet. Tente novamente.');
-    } finally {
-      setIsLinking(false);
-    }
+  const handleUnlinkPetClick = (petId: number, petName: string) => {
+    setConfirmModal({
+      isOpen: true,
+      petId,
+      petName,
+    });
   };
 
-  /**
-   * Remove vínculo de pet com confirmação
-   */
-  const handleUnlinkPet = async (petId: number, petName: string) => {
-    const confirmed = window.confirm(
-      `Tem certeza que deseja desvincular o pet "${petName}" deste tutor?`
-    );
 
-    if (!confirmed) return;
+  const handleConfirmUnlink = async () => {
+    const { petId } = confirmModal;
 
     try {
       setUnlinkingPetId(petId);
+      setConfirmModal({ isOpen: false, petId: 0, petName: '' });
 
       if (mode === 'create') {
-        // Modo criação: remove do estado local
         if (onRemovePet) {
           onRemovePet(petId);
         }
       } else {
-        // Modo edição: faz API call
         if (!tutor) {
           throw new Error('Tutor não fornecido em modo de edição');
         }
+
         await tutorFacade.removePetFromTutor(tutor.id, petId);
 
-        // Callback para refresh no componente pai
-        onRefresh?.();
-
-        alert('Vínculo removido com sucesso!');
+        if (onRemovePet) {
+          onRemovePet(petId);
+        }
       }
     } catch (error) {
       console.error('[LinkedPetsSection] Erro ao remover vínculo:', error);
-      alert('Erro ao remover vínculo. Tente novamente.');
+      toast.error('Erro ao remover vínculo. Tente novamente.');
+      
     } finally {
       setUnlinkingPetId(null);
     }
@@ -176,7 +94,7 @@ export const LinkedPetsSection = ({
         <Button
           variant="primary"
           size="sm"
-          onClick={() => onAddClick ? onAddClick() : setIsAddingPet(true)}
+          onClick={onAddClick}
           leftIcon={
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -211,9 +129,9 @@ export const LinkedPetsSection = ({
             >
               {/* Imagem do Pet */}
               <div className="flex-shrink-0">
-                {pet.foto?.url ? (
+                {pet.photoUrl ? (
                   <img
-                    src={pet.foto.url}
+                    src={pet.photoUrl}
                     alt={pet.name}
                     className="w-12 h-12 rounded-lg object-cover"
                   />
@@ -235,7 +153,7 @@ export const LinkedPetsSection = ({
 
               {/* Botão Remover */}
               <button
-                onClick={() => handleUnlinkPet(pet.id, pet.name)}
+                onClick={() => handleUnlinkPetClick(pet.id, pet.name)}
                 disabled={unlinkingPetId === pet.id}
                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
                 title="Remover vínculo"
@@ -266,81 +184,23 @@ export const LinkedPetsSection = ({
         </div>
       )}
 
-      {/* Modal de Adicionar Pet */}
-      {isAddingPet && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Adicionar Pet</h3>
-              <button
-                onClick={() => {
-                  setIsAddingPet(false);
-                  setSelectedPetId(0);
-                }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Select de Pets */}
-            <div className="mb-4">
-              <label htmlFor="pet-select" className="block text-sm font-medium text-gray-700 mb-2">
-                Selecione um pet
-              </label>
-
-              {isLoadingPets ? (
-                <div className="animate-pulse">
-                  <div className="h-12 bg-gray-200 rounded-lg" />
-                </div>
-              ) : availablePets.length === 0 ? (
-                <div className="text-center py-4 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500 text-sm">Todos os pets já estão vinculados</p>
-                </div>
-              ) : (
-                <select
-                  id="pet-select"
-                  value={selectedPetId}
-                  onChange={(e) => setSelectedPetId(Number(e.target.value))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
-                >
-                  <option value="">-- Selecione um pet --</option>
-                  {availablePets.map((pet) => (
-                    <option key={pet.id} value={pet.id}>
-                      {pet.name} - {pet.breed} ({pet.age} {pet.age === 1 ? 'ano' : 'anos'})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            {/* Botões */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsAddingPet(false);
-                  setSelectedPetId(0);
-                }}
-                className="flex-1"
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleLinkPet}
-                disabled={!selectedPetId || isLinking}
-                loading={isLinking}
-                className="flex-1"
-              >
-                {isLinking ? 'Vinculando...' : 'Vincular Pet'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de Confirmação para Desvincular */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, petId: 0, petName: '' })}
+        onConfirm={handleConfirmUnlink}
+        title="Desvincular Pet"
+        message={
+          <>
+            Tem certeza que deseja desvincular o pet{' '}
+            <strong>"{confirmModal.petName}"</strong> deste tutor?
+          </>
+        }
+        confirmLabel="Desvincular"
+        cancelLabel="Cancelar"
+        variant="danger"
+        isLoading={unlinkingPetId === confirmModal.petId}
+      />
     </div>
   );
 };

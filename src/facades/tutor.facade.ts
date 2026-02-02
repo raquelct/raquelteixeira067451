@@ -11,7 +11,6 @@ interface TutorFacadeDependencies {
   toastService: typeof toast;
 }
 
-
 export class TutorFacade {
   private deps: TutorFacadeDependencies;
 
@@ -50,7 +49,6 @@ export class TutorFacade {
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutores');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] fetchTutores error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
@@ -70,7 +68,6 @@ export class TutorFacade {
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutor');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] fetchTutorById error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
@@ -83,9 +80,7 @@ export class TutorFacade {
       this.deps.tutorStore.setError(undefined);
       const normalizedData = this.prepareCreateData(data);
 
-      console.log('[TutorFacade] Criando tutor...');
       const createdTutor = await this.deps.tutorService.create(normalizedData);
-      console.log('[TutorFacade] Tutor criado, ID:', createdTutor.id);
 
       if (imageFile) {
         await this.uploadTutorPhoto(createdTutor.id, imageFile);
@@ -95,7 +90,6 @@ export class TutorFacade {
         await this.linkPendingPets(createdTutor.id, pendingPetIds);
       }
 
-      console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
       this.deps.toastService.success('Tutor criado com sucesso!');
@@ -103,50 +97,39 @@ export class TutorFacade {
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar tutor');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] createTutor error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
     }
   }
 
-
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     try {
       this.deps.tutorStore.setLoading(true);
       this.deps.tutorStore.setError(undefined);
 
-      console.log('[TutorFacade] Validando dados do tutor...');
       this.validateTutorData(data);
 
       if (isImageRemoved && currentPhotoId) {
         try {
-          console.log(`[TutorFacade] Removendo foto ${currentPhotoId} do tutor ${id}...`);
           await this.deps.tutorService.deletePhoto(id, currentPhotoId);
-          console.log('[TutorFacade] Foto removida com sucesso');
         } catch (deleteError) {
-          console.warn('[TutorFacade] Falha ao remover foto (pode já ter sido removida):', deleteError);
+          // Não bloqueia atualização, mas informa usuário
+          this.deps.toastService.error('Não foi possível remover a foto anterior');
         }
       }
 
-      console.log('[TutorFacade] Normalizando dados do tutor...');
       const normalizedData = this.normalizeTutorData(data);
-
-      console.log('[TutorFacade] Atualizando tutor via API...');
       const updatedTutor = await this.deps.tutorService.update(id, normalizedData);
-      console.log('[TutorFacade] Tutor atualizado:', updatedTutor);
 
       if (imageFile) {
         try {
-          console.log('[TutorFacade] Fazendo upload da foto...');
-          await this.deps.tutorService.uploadPhoto((updatedTutor.id), imageFile);
-          console.log('[TutorFacade] Foto enviada com sucesso');
+          await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile);
         } catch (uploadError) {
-          console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
+          // Não bloqueia atualização, mas informa usuário
+          this.deps.toastService.error('Não foi possível enviar a nova foto');
         }
       }
-
-      console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
       this.deps.toastService.success('Tutor atualizado com sucesso!');
@@ -154,7 +137,6 @@ export class TutorFacade {
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar tutor');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] updateTutor error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
@@ -173,7 +155,6 @@ export class TutorFacade {
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover tutor');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] deleteTutor error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
@@ -185,18 +166,10 @@ export class TutorFacade {
       this.deps.tutorStore.setLoading(true);
       this.deps.tutorStore.setError(undefined);
 
-      console.log('[TutorFacade] Vinculando pet', petId, 'ao tutor', tutorId);
-
       await this.deps.tutorService.linkPet(tutorId, petId);
-
-      await this.fetchTutorById(tutorId);
-
-      console.log('[TutorFacade] Pet vinculado com sucesso');
-      this.deps.toastService.success('Pet vinculado com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao vincular pet');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] linkPetToTutor error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
@@ -208,18 +181,10 @@ export class TutorFacade {
       this.deps.tutorStore.setLoading(true);
       this.deps.tutorStore.setError(undefined);
 
-      console.log('[TutorFacade] Removendo vínculo do pet', petId, 'do tutor', tutorId);
-
       await this.deps.tutorService.unlinkPet(tutorId, petId);
-
-      await this.fetchTutorById(tutorId);
-
-      console.log('[TutorFacade] Vínculo removido com sucesso');
-      this.deps.toastService.success('Vínculo removido com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover vínculo');
       this.deps.tutorStore.setError(errorMessage);
-      console.error('[TutorFacade] removePetFromTutor error:', error);
       throw error;
     } finally {
       this.deps.tutorStore.setLoading(false);
@@ -288,27 +253,13 @@ export class TutorFacade {
   }
 
   private async uploadTutorPhoto(tutorId: number, file: File): Promise<void> {
-    console.log('[TutorFacade] Iniciando upload de foto...');
-    try {
-      await this.deps.tutorService.uploadPhoto(tutorId, file);
-      console.log('[TutorFacade] Upload concluído');
-    } catch (error) {
-      console.error('[TutorFacade] Erro no upload:', error);
-      this.deps.toastService.error('Tutor criado, mas houve erro ao fazer upload da foto');
-    }
+    await this.deps.tutorService.uploadPhoto(tutorId, file);
   }
 
   private async linkPendingPets(tutorId: number, petIds: number[]): Promise<void> {
-    console.log('[TutorFacade] Vinculando pets:', petIds);
-    try {
-      await Promise.all(
-        petIds.map((petId) => this.deps.tutorService.linkPet(tutorId, petId))
-      );
-      console.log('[TutorFacade] Pets vinculados com sucesso');
-    } catch (error) {
-      console.error('[TutorFacade] Erro ao vincular pets:', error);
-      this.deps.toastService.error('Tutor criado, mas houve erro ao vincular alguns pets');
-    }
+    await Promise.all(
+      petIds.map((petId) => this.deps.tutorService.linkPet(tutorId, petId))
+    );
   }
 
 
