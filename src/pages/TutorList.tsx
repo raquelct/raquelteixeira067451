@@ -13,6 +13,7 @@ import { containerStyles } from '../styles/theme';
 import { tutorFacade } from '../facades/tutor.facade';
 import { maskCPF, maskPhone } from '../utils/masks';
 import { ConfirmationModal } from '../components/shared/ConfirmationModal';
+import { toast } from 'react-hot-toast';
 
 
 export const TutorList = () => {
@@ -199,11 +200,16 @@ export const TutorList = () => {
             setDeleteModalOpen(false);
             setTutorToDelete(null);
         }}
-        onConfirm={() => {
+        onConfirm={async () => {
             if (tutorToDelete) {
-                tutorFacade.deleteTutor(tutorToDelete.id);
-                setDeleteModalOpen(false);
-                setTutorToDelete(null);
+                try {
+                    await tutorFacade.deleteTutor(tutorToDelete.id);
+                    toast.success('Tutor removido com sucesso!');
+                    setDeleteModalOpen(false);
+                    setTutorToDelete(null);
+                } catch (error) {
+                    toast.error('Erro ao remover tutor. Tente novamente.');
+                }
             }
         }}
         title="Excluir Tutor"

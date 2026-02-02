@@ -9,6 +9,7 @@ import { useImageUpload } from '../hooks/useImageUpload';
 import { FormInput } from '../components/shared/FormInput';
 import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
+import { toast } from 'react-hot-toast';
 
 export const PetForm = () => {
   const navigate = useNavigate();
@@ -83,15 +84,16 @@ export const PetForm = () => {
           isImageRemoved, 
           currentPhotoId
         );
-        console.log('[PetForm] Pet atualizado com sucesso');
+        toast.success('Pet atualizado com sucesso!');
       } else {
         await petFacade.createPet(data, imageFile || undefined);
-        console.log('[PetForm] Pet criado com sucesso');
+        toast.success('Pet criado com sucesso!');
       }
 
       navigate('/');
     } catch (error) {
       console.error(`[PetForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet:`, error);
+      toast.error(`Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet. Verifique os dados.`);
     } finally {
       setIsSubmitting(false);
     }

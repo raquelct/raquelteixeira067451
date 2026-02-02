@@ -12,6 +12,7 @@ import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
 import { containerStyles } from '../styles/theme';
 import { petFacade } from '../facades/pet.facade';
 import { ConfirmationModal } from '../components/shared/ConfirmationModal';
+import { toast } from 'react-hot-toast';
 
 export const PetList = () => {
   const navigate = useNavigate();
@@ -183,11 +184,16 @@ export const PetList = () => {
             setDeleteModalOpen(false);
             setPetToDelete(null);
         }}
-        onConfirm={() => {
+        onConfirm={async () => {
             if (petToDelete) {
-                petFacade.deletePet(petToDelete.id);
-                setDeleteModalOpen(false);
-                setPetToDelete(null);
+                try {
+                    await petFacade.deletePet(petToDelete.id);
+                    toast.success('Pet removido com sucesso!');
+                    setDeleteModalOpen(false);
+                    setPetToDelete(null);
+                } catch (error) {
+                    toast.error('Erro ao remover pet. Tente novamente.');
+                }
             }
         }}
         title="Excluir Pet"
