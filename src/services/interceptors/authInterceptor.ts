@@ -50,7 +50,7 @@ const handleRequest = (config: InternalAxiosRequestConfig): InternalAxiosRequest
   return config;
 };
 
-const handleResponseError = async (error: AxiosError, axiosInstance: AxiosInstance): Promise<any> => {
+const handleResponseError = async (error: AxiosError, axiosInstance: AxiosInstance): Promise<AxiosResponse> => {
   const originalRequest = error.config as RetryableConfig;
 
   if (error.response?.status !== 401 || originalRequest._retry) {

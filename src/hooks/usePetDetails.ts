@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { petService } from '../services/pet.service';
 import type { Pet } from '../types/pet.types';
 import { getErrorMessage } from '../utils/errorUtils';
+import { AxiosError } from 'axios';
 
 export const usePetDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,10 +32,10 @@ export const usePetDetails = () => {
         if (mounted) {
           setPet(data);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (mounted) {
           console.error('[usePetDetails] Error:', err);
-          if (err.response?.status === 404) {
+          if (err instanceof AxiosError && err.response?.status === 404) {
             setNotFound(true);
           } else {
             setError(getErrorMessage(err, 'Não foi possível carregar os dados do pet.'));

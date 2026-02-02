@@ -20,12 +20,11 @@ export const tutorSchema = z.object({
     .string()
     .min(10, 'Telefone deve ter no mínimo 10 caracteres')
     .max(15, 'Telefone deve ter no máximo 15 caracteres')
-    .regex(/^[\d\s\(\)\-\+]+$/, 'Telefone deve conter apenas números e símbolos válidos'),
+    .regex(/^\(\d{2}\) \d{5}-\d{4}$/, 'Formato inválido: (99) 99999-9999'),
   
   endereco: z
     .string()
-    .min(5, 'Endereço deve ter no mínimo 5 caracteres')
-    .max(200, 'Endereço deve ter no máximo 200 caracteres'),
+    .min(5, 'Endereço muito curto'),
   
   cpf: z
     .string()
