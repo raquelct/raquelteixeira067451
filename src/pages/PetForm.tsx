@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import { petSchema, type PetFormSchema } from '../schemas/petSchema';
 import { petFacade } from '../facades/pet.facade';
+import { useEntityLoader } from '../hooks/useEntityLoader';
 import { FormInput } from '../components/shared/FormInput';
 import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
@@ -17,7 +18,6 @@ export const PetForm = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(isEditMode);
 
   const {
     register,
@@ -33,42 +33,30 @@ export const PetForm = () => {
     },
   });
 
-  useEffect(() => {
-    if (!isEditMode || !id) {
-      return;
-    }
+  const fetchPet = useCallback(async () => {
+    return petFacade.fetchPetById(Number(id));
+  }, [id]);
 
-    const loadPetData = async () => {
-      try {
-        setIsLoadingData(true);
-        console.log('[PetForm] Carregando pet:', id);
+  const { isLoading: isLoadingData } = useEntityLoader({
+    fetcher: fetchPet,
+    shouldFetch: isEditMode && !!id,
+    onSuccess: (pet) => {
+      console.log('[PetForm] Dados carregados:', pet);
+      reset({
+        nome: pet.name,
+        raca: pet.breed,
+        idade: pet.age,
+      });
 
-        const pet = await petFacade.fetchPetById(Number(id));
-
-        reset({
-          nome: pet.name,
-          raca: pet.breed,
-          idade: pet.age,
-        });
-
-        if (pet.photoUrl) {
-          setImagePreview(pet.photoUrl);
-          // Captura ID da foto se disponível
-          if (pet.photoId) {
-            setCurrentPhotoId(pet.photoId);
-          }
+      if (pet.photoUrl) {
+        setImagePreview(pet.photoUrl);
+        if (pet.photoId) {
+          setCurrentPhotoId(pet.photoId);
         }
-
-        console.log('[PetForm] Dados carregados:', pet);
-      } catch (error) {
-        console.error('[PetForm] Erro ao carregar pet:', error);
-      } finally {
-        setIsLoadingData(false);
       }
-    };
-
-    loadPetData();
-  }, [id, isEditMode, reset]);
+    },
+    errorMessage: 'Erro ao carregar dados do pet',
+  });
 
   const [isImageRemoved, setIsImageRemoved] = useState(false);
   const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);

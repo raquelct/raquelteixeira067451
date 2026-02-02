@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import { tutorSchema, type TutorFormSchema } from '../schemas/tutorSchema';
 import { tutorFacade } from '../facades/tutor.facade';
+import { useEntityLoader } from '../hooks/useEntityLoader';
 import { LinkedPetsSection } from '../components/tutor/LinkedPetsSection';
 import type { Tutor } from '../types/tutor.types';
 import type { Pet } from '../types/pet.types';
@@ -23,7 +24,6 @@ export const TutorForm = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(isEditMode);
   const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
 
   const [selectedPets, setSelectedPets] = useState<Pet[]>([]);
@@ -46,41 +46,32 @@ export const TutorForm = () => {
     },
   });
 
-  useEffect(() => {
-    if (!isEditMode || !id) {
-      return;
-    }
+  const fetchTutor = useCallback(async () => {
+    return tutorFacade.fetchTutorById(Number(id));
+  }, [id]);
 
-    const loadTutorData = async () => {
-      try {
-        setIsLoadingData(true);
+  const { isLoading: isLoadingData, reload: reloadTutor } = useEntityLoader({
+    fetcher: fetchTutor,
+    shouldFetch: isEditMode && !!id,
+    onSuccess: (tutor) => {
+      setCurrentTutor(tutor);
+      reset({
+        nome: tutor.name,
+        email: tutor.email,
+        telefone: maskPhone(tutor.phone),
+        endereco: tutor.address,
+        cpf: maskCPF(String(tutor.cpf)),
+      });
 
-        const tutor = await tutorFacade.fetchTutorById(Number(id));
-        setCurrentTutor(tutor);
-
-        reset({
-          nome: tutor.name,
-          email: tutor.email,
-          telefone: maskPhone(tutor.phone),
-          endereco: tutor.address,
-          cpf: maskCPF(String(tutor.cpf)),
-        });
-
-        if (tutor.foto?.url) {
-          setImagePreview(tutor.foto.url);
-          if (tutor.foto.id) {
-            setCurrentPhotoId(tutor.foto.id);
-          }
+      if (tutor.foto?.url) {
+        setImagePreview(tutor.foto.url);
+        if (tutor.foto.id) {
+          setCurrentPhotoId(tutor.foto.id);
         }
-      } catch (error) {
-        console.error('[TutorForm] Erro ao carregar tutor:', error);
-      } finally {
-        setIsLoadingData(false);
       }
-    };
-
-    loadTutorData();
-  }, [id, isEditMode, reset]);
+    },
+    errorMessage: 'Erro ao carregar dados do tutor',
+  });
 
   const [isImageRemoved, setIsImageRemoved] = useState(false);
   const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
@@ -176,13 +167,7 @@ export const TutorForm = () => {
 
   const handleRefreshTutor = async () => {
     if (!id) return;
-
-    try {
-      const tutor = await tutorFacade.fetchTutorById(Number(id));
-      setCurrentTutor(tutor);
-    } catch (error) {
-      console.error('[TutorForm] Erro ao recarregar tutor:', error);
-    }
+    reloadTutor();
   };
 
   const handleCancel = () => {
