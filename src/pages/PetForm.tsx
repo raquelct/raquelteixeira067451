@@ -5,19 +5,28 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { petSchema, type PetFormSchema } from '../schemas/petSchema';
 import { petFacade } from '../facades/pet.facade';
 import { useEntityLoader } from '../hooks/useEntityLoader';
+import { useImageUpload } from '../hooks/useImageUpload';
 import { FormInput } from '../components/shared/FormInput';
 import { ImageUpload } from '../components/shared/ImageUpload';
 import { Button } from '../components/shared/Button';
-import { toast } from 'react-hot-toast';
 
 export const PetForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    imageFile,
+    imagePreview,
+    isImageRemoved,
+    currentPhotoId,
+    handleImageChange,
+    handleRemoveImage,
+    setImagePreview,
+    setCurrentPhotoId,
+  } = useImageUpload({ maxSizeMB: 5 });
 
   const {
     register,
@@ -58,42 +67,7 @@ export const PetForm = () => {
     errorMessage: 'Erro ao carregar dados do pet',
   });
 
-  const [isImageRemoved, setIsImageRemoved] = useState(false);
-  const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Por favor, selecione apenas arquivos de imagem');
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('A imagem deve ter no máximo 5MB');
-        return;
-      }
-
-      setImageFile(file);
-      setIsImageRemoved(false);
-
-      const reader = new FileReader();
-
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (isEditMode) {
-      setIsImageRemoved(true);
-    }
-  };
 
   const onSubmit = async (data: PetFormSchema) => {
     try {

@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { tutorSchema, type TutorFormSchema } from '../schemas/tutorSchema';
 import { tutorFacade } from '../facades/tutor.facade';
 import { useEntityLoader } from '../hooks/useEntityLoader';
+import { useImageUpload } from '../hooks/useImageUpload';
 import { LinkedPetsSection } from '../components/tutor/LinkedPetsSection';
 import type { Tutor } from '../types/tutor.types';
 import type { Pet } from '../types/pet.types';
@@ -21,13 +22,22 @@ export const TutorForm = () => {
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTutor, setCurrentTutor] = useState<Tutor | null>(null);
 
   const [selectedPets, setSelectedPets] = useState<Pet[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const {
+    imageFile,
+    imagePreview,
+    isImageRemoved,
+    currentPhotoId,
+    handleImageChange,
+    handleRemoveImage,
+    setImagePreview,
+    setCurrentPhotoId,
+  } = useImageUpload({ maxSizeMB: 5 });
 
   const {
     register,
@@ -73,41 +83,7 @@ export const TutorForm = () => {
     errorMessage: 'Erro ao carregar dados do tutor',
   });
 
-  const [isImageRemoved, setIsImageRemoved] = useState(false);
-  const [currentPhotoId, setCurrentPhotoId] = useState<number | undefined>(undefined);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Por favor, selecione apenas arquivos de imagem');
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('A imagem deve ter no máximo 5MB');
-        return;
-      }
-
-      setImageFile(file);
-      setIsImageRemoved(false);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (isEditMode) {
-      setIsImageRemoved(true);
-    }
-  };
 
   const handleAddPet = (pet: Pet) => {
     setSelectedPets((prev) => [...prev, pet]);
