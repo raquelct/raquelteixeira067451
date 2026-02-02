@@ -21,7 +21,7 @@ const initialPetState: PetState = {
   currentPage: 1,
 };
 
-class PetStore {
+export class PetStore {
   private petState$: BehaviorSubject<PetState>;
 
   constructor() {

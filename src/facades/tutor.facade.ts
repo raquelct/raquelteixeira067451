@@ -1,77 +1,90 @@
-import { tutorService } from '../services/tutor.service';
-import { tutorStore } from '../state/TutorStore';
+import { tutorService, type TutorService } from '../services/tutor.service';
+import { tutorStore, type TutorStore } from '../state/TutorStore';
 import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../types/tutor.types';
 import type { Observable } from 'rxjs';
 import type { Optional } from '../types/optional';
 import { toast } from 'react-hot-toast';
 
+interface TutorFacadeDependencies {
+  tutorService: TutorService;
+  tutorStore: TutorStore;
+  toastService: typeof toast;
+}
+
+
 export class TutorFacade {
+  private deps: TutorFacadeDependencies;
+
+  constructor(deps: TutorFacadeDependencies) {
+    this.deps = deps;
+  }
+  
   get tutores$(): Observable<Tutor[]> {
-    return tutorStore.tutores$;
+    return this.deps.tutorStore.tutores$;
   }
 
   get currentTutor$(): Observable<Optional<Tutor>> {
-    return tutorStore.currentTutor$;
+    return this.deps.tutorStore.currentTutor$;
   }
 
   get isLoading$(): Observable<boolean> {
-    return tutorStore.isLoading$;
+    return this.deps.tutorStore.isLoading$;
   }
 
   get error$(): Observable<Optional<string>> {
-    return tutorStore.error$;
+    return this.deps.tutorStore.error$;
   }
 
   get totalCount$(): Observable<number> {
-    return tutorStore.totalCount$;
+    return this.deps.tutorStore.totalCount$;
   }
 
   async fetchTutores(filters?: TutorFilters, page = 0, size = 10): Promise<void> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
 
-      const response = await tutorService.getAll(filters, page, size);
+      const response = await this.deps.tutorService.getAll(filters, page, size);
 
-      tutorStore.setTutores(response.content, response.total, response.page);
+      this.deps.tutorStore.setTutores(response.content, response.total, response.page);
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutores');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] fetchTutores error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
   async fetchTutorById(id: number): Promise<Tutor> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
 
-      const tutor = await tutorService.getById(id);
+      const tutor = await this.deps.tutorService.getById(id);
 
-      tutorStore.setCurrentTutor(tutor);
+      this.deps.tutorStore.setCurrentTutor(tutor);
 
       return tutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutor');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] fetchTutorById error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
   async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
       const normalizedData = this.prepareCreateData(data);
 
       console.log('[TutorFacade] Criando tutor...');
-      const createdTutor = await tutorService.create(normalizedData);
+      const createdTutor = await this.deps.tutorService.create(normalizedData);
       console.log('[TutorFacade] Tutor criado, ID:', createdTutor.id);
 
       if (imageFile) {
@@ -85,23 +98,23 @@ export class TutorFacade {
       console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
-      toast.success('Tutor criado com sucesso!');
+      this.deps.toastService.success('Tutor criado com sucesso!');
       return createdTutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar tutor');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] createTutor error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
 
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
 
       console.log('[TutorFacade] Validando dados do tutor...');
       this.validateTutorData(data);
@@ -109,7 +122,7 @@ export class TutorFacade {
       if (isImageRemoved && currentPhotoId) {
         try {
           console.log(`[TutorFacade] Removendo foto ${currentPhotoId} do tutor ${id}...`);
-          await tutorService.deletePhoto(id, currentPhotoId);
+          await this.deps.tutorService.deletePhoto(id, currentPhotoId);
           console.log('[TutorFacade] Foto removida com sucesso');
         } catch (deleteError) {
           console.warn('[TutorFacade] Falha ao remover foto (pode já ter sido removida):', deleteError);
@@ -120,13 +133,13 @@ export class TutorFacade {
       const normalizedData = this.normalizeTutorData(data);
 
       console.log('[TutorFacade] Atualizando tutor via API...');
-      const updatedTutor = await tutorService.update(id, normalizedData);
+      const updatedTutor = await this.deps.tutorService.update(id, normalizedData);
       console.log('[TutorFacade] Tutor atualizado:', updatedTutor);
 
       if (imageFile) {
         try {
           console.log('[TutorFacade] Fazendo upload da foto...');
-          await tutorService.uploadPhoto((updatedTutor.id), imageFile);
+          await this.deps.tutorService.uploadPhoto((updatedTutor.id), imageFile);
           console.log('[TutorFacade] Foto enviada com sucesso');
         } catch (uploadError) {
           console.warn('[TutorFacade] Falha no upload da foto:', uploadError);
@@ -136,89 +149,89 @@ export class TutorFacade {
       console.log('[TutorFacade] Atualizando lista...');
       await this.fetchTutores(undefined, 0, 10);
 
-      toast.success('Tutor atualizado com sucesso!');
+      this.deps.toastService.success('Tutor atualizado com sucesso!');
       return updatedTutor;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar tutor');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] updateTutor error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
   async deleteTutor(id: number): Promise<void> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
 
-      await tutorService.delete(id);
+      await this.deps.tutorService.delete(id);
 
-      tutorStore.removeTutor(id);
-      toast.success('Tutor removido com sucesso!');
+      this.deps.tutorStore.removeTutor(id);
+      this.deps.toastService.success('Tutor removido com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover tutor');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] deleteTutor error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
   async linkPetToTutor(tutorId: number, petId: number): Promise<void> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
 
       console.log('[TutorFacade] Vinculando pet', petId, 'ao tutor', tutorId);
 
-      await tutorService.linkPet(tutorId, petId);
+      await this.deps.tutorService.linkPet(tutorId, petId);
 
       await this.fetchTutorById(tutorId);
 
       console.log('[TutorFacade] Pet vinculado com sucesso');
-      toast.success('Pet vinculado com sucesso!');
+      this.deps.toastService.success('Pet vinculado com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao vincular pet');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] linkPetToTutor error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
   async removePetFromTutor(tutorId: number, petId: number): Promise<void> {
     try {
-      tutorStore.setLoading(true);
-      tutorStore.setError(undefined);
+      this.deps.tutorStore.setLoading(true);
+      this.deps.tutorStore.setError(undefined);
 
       console.log('[TutorFacade] Removendo vínculo do pet', petId, 'do tutor', tutorId);
 
-      await tutorService.unlinkPet(tutorId, petId);
+      await this.deps.tutorService.unlinkPet(tutorId, petId);
 
       await this.fetchTutorById(tutorId);
 
       console.log('[TutorFacade] Vínculo removido com sucesso');
-      toast.success('Vínculo removido com sucesso!');
+      this.deps.toastService.success('Vínculo removido com sucesso!');
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao remover vínculo');
-      tutorStore.setError(errorMessage);
+      this.deps.tutorStore.setError(errorMessage);
       console.error('[TutorFacade] removePetFromTutor error:', error);
       throw error;
     } finally {
-      tutorStore.setLoading(false);
+      this.deps.tutorStore.setLoading(false);
     }
   }
 
   setCurrentTutor(tutor: Optional<Tutor>): void {
-    tutorStore.setCurrentTutor(tutor);
+    this.deps.tutorStore.setCurrentTutor(tutor);
   }
 
   clear(): void {
-    tutorStore.clear();
+    this.deps.tutorStore.clear();
   }
 
   private validateTutorData(data: Partial<CreateTutorDto>): void {
@@ -277,11 +290,11 @@ export class TutorFacade {
   private async uploadTutorPhoto(tutorId: number, file: File): Promise<void> {
     console.log('[TutorFacade] Iniciando upload de foto...');
     try {
-      await tutorService.uploadPhoto(tutorId, file);
+      await this.deps.tutorService.uploadPhoto(tutorId, file);
       console.log('[TutorFacade] Upload concluído');
     } catch (error) {
       console.error('[TutorFacade] Erro no upload:', error);
-      toast.error('Tutor criado, mas houve erro ao fazer upload da foto');
+      this.deps.toastService.error('Tutor criado, mas houve erro ao fazer upload da foto');
     }
   }
 
@@ -289,12 +302,12 @@ export class TutorFacade {
     console.log('[TutorFacade] Vinculando pets:', petIds);
     try {
       await Promise.all(
-        petIds.map((petId) => tutorService.linkPet(tutorId, petId))
+        petIds.map((petId) => this.deps.tutorService.linkPet(tutorId, petId))
       );
       console.log('[TutorFacade] Pets vinculados com sucesso');
     } catch (error) {
       console.error('[TutorFacade] Erro ao vincular pets:', error);
-      toast.error('Tutor criado, mas houve erro ao vincular alguns pets');
+      this.deps.toastService.error('Tutor criado, mas houve erro ao vincular alguns pets');
     }
   }
 
@@ -316,4 +329,16 @@ export class TutorFacade {
   }
 }
 
-export const tutorFacade = new TutorFacade();
+export const tutorFacade = new TutorFacade({
+  tutorService,
+  tutorStore,
+  toastService: toast,
+});
+
+export const createTutorFacade = (deps: Partial<TutorFacadeDependencies> = {}): TutorFacade => {
+  return new TutorFacade({
+    tutorService: deps.tutorService || tutorService,
+    tutorStore: deps.tutorStore || tutorStore,
+    toastService: deps.toastService || toast,
+  });
+};

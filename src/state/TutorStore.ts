@@ -21,7 +21,7 @@ const initialTutorState: TutorState = {
   currentPage: 0,
 };
 
-class TutorStore {
+export class TutorStore {
   private tutorState$ = new BehaviorSubject<TutorState>(initialTutorState);
 
   tutores$ = this.tutorState$.pipe(
