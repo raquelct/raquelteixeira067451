@@ -4,15 +4,18 @@ import apiClient from '../services/api';
 // --- Constants & Config ---
 export const HEALTH_CONFIG = {
   TIMEOUT_MS: 5000,
-  ENDPOINT: '/health',
+  ENDPOINTS: {
+    LIVE: '/q/health/live',
+    READY: '/q/health/ready',
+  },
   REFRESH_INTERVAL: 30000,
 } as const;
 
 export const PROBE_STATUS = {
-  PASS: 'pass',
-  FAIL: 'fail',
-  HEALTHY: 'healthy',
-  UNHEALTHY: 'unhealthy',
+  PASS: 'UP',
+  FAIL: 'DOWN',
+  HEALTHY: 'UP',
+  UNHEALTHY: 'DOWN',
 } as const;
 
 const MESSAGES = {
@@ -46,8 +49,12 @@ const createProbe = (
 
 // --- Core Logic ---
 
-export const checkLiveness = (): HealthProbe => {
+export const checkLiveness = async (): Promise<HealthProbe> => {
   try {
+    await apiClient.get(HEALTH_CONFIG.ENDPOINTS.LIVE, {
+      timeout: HEALTH_CONFIG.TIMEOUT_MS
+    });
+
     return createProbe(PROBE_STATUS.PASS, {
       uptime: getAppUptime(),
       message: MESSAGES.LIVENESS_OK,
@@ -61,9 +68,7 @@ export const checkLiveness = (): HealthProbe => {
 
 export const checkReadiness = async (): Promise<HealthProbe> => {
   try {
-    // Ideally this endpoint should be a dedicated health check endpoint on the API
-    // For now we check connectivity to the server.
-    await apiClient.get(HEALTH_CONFIG.ENDPOINT, { 
+    await apiClient.get(HEALTH_CONFIG.ENDPOINTS.READY, { 
       timeout: HEALTH_CONFIG.TIMEOUT_MS 
     });
 

@@ -15,14 +15,14 @@ export interface ProbeCardProps {
 }
 
 const STATUS_STYLES = {
-  pass: {
+  UP: {
     bg: 'bg-green-50',
     text: 'text-green-700',
     border: 'border-green-200',
     icon: <CheckCircle2 className="w-4 h-4" />,
     label: 'Operacional'
   },
-  fail: {
+  DOWN: {
     bg: 'bg-red-50',
     text: 'text-red-700',
     border: 'border-red-200',
@@ -57,7 +57,7 @@ export const ProbeCard: React.FC<ProbeCardProps> = ({
 }) => {
   const currentStyle = isLoading 
     ? STATUS_STYLES.loading 
-    : STATUS_STYLES[status as keyof typeof STATUS_STYLES] || STATUS_STYLES.fail;
+    : STATUS_STYLES[status as keyof typeof STATUS_STYLES] || STATUS_STYLES.DOWN;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">

@@ -1,5 +1,5 @@
 export interface HealthCheckResponse {
-  status: 'healthy' | 'unhealthy';
+  status: 'UP' | 'DOWN';
   timestamp: string;
   checks: {
     liveness: HealthProbe;
@@ -8,7 +8,7 @@ export interface HealthCheckResponse {
 }
 
 export interface HealthProbe {
-  status: 'pass' | 'fail';
+  status: 'UP' | 'DOWN';
   timestamp: string;
   details?: Record<string, unknown>;
 }
