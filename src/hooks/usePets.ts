@@ -1,34 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { petFacade } from '../facades/pet.facade';
+import { petStore } from '../state/PetStore';
 import type { Pet, PetFilters } from '../types/pet.types';
 
-/**
- * Hook customizado para gerenciar pets
- * 
- * IMPORTANTE: Este hook demonstra o uso CORRETO da arquitetura.
- * - NÃO importa axios
- * - NÃO importa PetService
- * - USA APENAS PetFacade
- * - Subscribe aos Observables do Facade
- * - Métodos memoizados com useCallback para evitar loops
- * 
- * UI Components devem seguir este padrão.
- */
 export const usePets = () => {
   const [pets, setPets] = useState<Pet[]>([]);
   const [currentPet, setCurrentPetState] = useState<Pet | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    // Subscribe aos observables do PetFacade
     const petsSubscription = petFacade.pets$.subscribe((data) => {
       setPets(data);
     });
 
     const currentPetSubscription = petFacade.currentPet$.subscribe((data) => {
-      setCurrentPetState(data);
+      setCurrentPetState(data ?? null);
     });
 
     const loadingSubscription = petFacade.isLoading$.subscribe((data) => {
@@ -36,25 +26,31 @@ export const usePets = () => {
     });
 
     const errorSubscription = petFacade.error$.subscribe((data) => {
-      setError(data);
+      setError(data ?? null);
     });
 
     const totalCountSubscription = petFacade.totalCount$.subscribe((data) => {
       setTotalCount(data);
     });
 
-    // Cleanup: Unsubscribe ao desmontar
+    const currentPageSubscription = petStore.currentPage$.subscribe((data) => {
+      setCurrentPage(data);
+    });
+
+    const pageSizeSubscription = petStore.pageSize$.subscribe((data) => {
+      setPageSize(data);
+    });
+
     return () => {
       petsSubscription.unsubscribe();
       currentPetSubscription.unsubscribe();
       loadingSubscription.unsubscribe();
       errorSubscription.unsubscribe();
       totalCountSubscription.unsubscribe();
+      currentPageSubscription.unsubscribe();
+      pageSizeSubscription.unsubscribe();
     };
   }, []);
-
-  // ========== Métodos Memoizados ==========
-  // CRÍTICO: useCallback previne loops infinitos em useEffect
 
   const fetchPets = useCallback(
     (filters?: PetFilters, page?: number, size?: number) => {
@@ -67,9 +63,6 @@ export const usePets = () => {
     return petFacade.fetchPetById(id);
   }, []);
 
-  const fetchPetsByTutor = useCallback((cpf: string) => {
-    return petFacade.fetchPetsByTutor(cpf);
-  }, []);
 
   const createPet = useCallback((data: Parameters<typeof petFacade.createPet>[0]) => {
     return petFacade.createPet(data);
@@ -87,7 +80,7 @@ export const usePets = () => {
   }, []);
 
   const setCurrentPet = useCallback((pet: Pet | null) => {
-    petFacade.setCurrentPet(pet);
+    petFacade.setCurrentPet(pet ?? undefined);
   }, []);
 
   const clear = useCallback(() => {
@@ -98,30 +91,22 @@ export const usePets = () => {
     return petFacade.formatPetAge(age);
   }, []);
 
-  const formatPetWeight = useCallback((weight?: number) => {
-    return petFacade.formatPetWeight(weight);
-  }, []);
 
   return {
-    // Estado reativo
     pets,
     currentPet,
     isLoading,
     error,
     totalCount,
-    
-    // Métodos memoizados (previnem loops)
+    currentPage,
+    pageSize,
     fetchPets,
     fetchPetById,
-    fetchPetsByTutor,
     createPet,
     updatePet,
     deletePet,
     setCurrentPet,
     clear,
-    
-    // Helpers de formatação
     formatPetAge,
-    formatPetWeight,
   };
 };

@@ -41,7 +41,6 @@ export class TutorService {
     const params = new URLSearchParams();
 
     if (filters?.nome) params.append('nome', filters.nome);
-    if (filters?.cpf) params.append('cpf', filters.cpf);
 
     params.append('page', String(page));
     params.append('size', String(size));
@@ -79,6 +78,7 @@ export class TutorService {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 120000,
     });
   }
 

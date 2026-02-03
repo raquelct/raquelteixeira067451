@@ -10,6 +10,7 @@ export interface PetState {
   error: Optional<string>;
   totalCount: number;
   currentPage: number;
+  pageSize: number;
 }
 
 const initialPetState: PetState = {
@@ -19,6 +20,7 @@ const initialPetState: PetState = {
   error: undefined,
   totalCount: 0,
   currentPage: 1,
+  pageSize: 10,
 };
 
 export class PetStore {
@@ -71,6 +73,20 @@ export class PetStore {
     );
   }
 
+  public get pageSize$(): Observable<number> {
+    return this.petState$.pipe(
+      map((state) => state.pageSize),
+      distinctUntilChanged()
+    );
+  }
+
+  public get currentPage$(): Observable<number> {
+    return this.petState$.pipe(
+      map((state) => state.currentPage),
+      distinctUntilChanged()
+    );
+  }
+
  
   public getCurrentState(): PetState {
     return this.petState$.getValue();
@@ -85,13 +101,14 @@ export class PetStore {
     return this.petState$.getValue().currentPet;
   }
 
-  public setPets(pets: Pet[], totalCount?: number, page?: number): void {
+  public setPets(pets: Pet[], totalCount?: number, page?: number, pageSize?: number): void {
     const currentState = this.petState$.getValue();
     this.petState$.next({
       ...currentState,
       pets,
       totalCount: totalCount ?? pets.length,
       currentPage: page ?? currentState.currentPage,
+      pageSize: pageSize ?? currentState.pageSize,
       isLoading: false,
       error: undefined,
     });

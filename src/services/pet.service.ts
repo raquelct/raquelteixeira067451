@@ -39,11 +39,11 @@ export class PetService {
     return pet;
   }
 
-  async getAll(filters?: PetFilters, page = 0, size = 20): Promise<PetListResponse> {
+  async getAll(filters?: PetFilters, page = 0, size = 10): Promise<PetListResponse> {
     const params = new URLSearchParams();
 
     if (filters?.name) params.append('nome', filters.name);
-    if (filters?.ownerCpf) params.append('ownerCpf', filters.ownerCpf);
+    if (filters?.raca) params.append('raca', filters.raca);
 
     params.append('page', String(page));
     params.append('size', String(size));
@@ -63,10 +63,6 @@ export class PetService {
     return this.toDomain(response.data);
   }
 
-  async getByTutorCpf(cpf: string): Promise<Pet[]> {
-    const response = await apiClient.get<PetApiDto[]>(`${this.baseUrl}/tutor/${cpf}`);
-    return response.data.map((dto) => this.toDomain(dto));
-  }
 
   async create(data: CreatePetDto): Promise<Pet> {
     const response = await apiClient.post<PetApiDto>(this.baseUrl, data);
@@ -84,6 +80,7 @@ export class PetService {
 
     await apiClient.post(`${this.baseUrl}/${petId}/fotos`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
     });
   }
 
@@ -93,16 +90,6 @@ export class PetService {
 
   async delete(id: number): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
-  }
-
-  async getStats(): Promise<{
-    total: number;
-    bySpecies: Record<string, number>;
-    vaccinated: number;
-    neutered: number;
-  }> {
-    const response = await apiClient.get(`${this.baseUrl}/stats`);
-    return response.data;
   }
 }
 

@@ -38,7 +38,6 @@ export class PetFacade {
     return this.deps.petStore.error$;
   }
 
-
   get totalCount$(): Observable<number> {
     return this.deps.petStore.totalCount$;
   }
@@ -47,14 +46,19 @@ export class PetFacade {
     return this.deps.petStore.getPets();
   }
 
-
   getCurrentPet(): Optional<Pet> {
     return this.deps.petStore.getCurrentPet();
   }
 
-
-  async fetchPets(filters?: PetFilters, page = 1, size = 10): Promise<void> {
-    const requestKey = `fetchPets-${JSON.stringify(filters)}-${page}-${size}`;
+  async fetchPets(filters?: PetFilters, page?: number, size?: number): Promise<void> {
+    const currentState = this.deps.petStore.getCurrentState();
+    const currentPage = page ?? currentState.currentPage;
+    const currentSize = size ?? currentState.pageSize;
+    const filterKey = filters 
+      ? Object.keys(filters).sort().map(k => `${k}:${filters[k as keyof PetFilters]}`).join('|') 
+      : 'all';
+    
+    const requestKey = `fetchPets-${filterKey}-${currentPage}-${currentSize}`;
 
     if (this.pendingRequests.has(requestKey)) {
       return this.pendingRequests.get(requestKey) as Promise<void>;
@@ -64,10 +68,8 @@ export class PetFacade {
       try {
         this.deps.petStore.setLoading(true);
         this.deps.petStore.setError(undefined);
-
-        const response = await this.deps.petService.getAll(filters, page, size);
-
-        this.deps.petStore.setPets(response.content, response.total, response.page);
+        const response = await this.deps.petService.getAll(filters, currentPage, currentSize);
+        this.deps.petStore.setPets(response.content, response.total, response.page, response.size);
       } catch (error) {
         const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets');
         this.deps.petStore.setError(errorMessage);
@@ -100,30 +102,12 @@ export class PetFacade {
     }
   }
 
-  async fetchPetsByTutor(cpf: string): Promise<void> {
-    try {
-      this.deps.petStore.setLoading(true);
-      this.deps.petStore.setError(undefined);
-
-      const pets = await this.deps.petService.getByTutorCpf(cpf);
-
-      this.deps.petStore.setPets(pets);
-    } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets do tutor');
-      this.deps.petStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.petStore.setLoading(false);
-    }
-  }
-
   async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
     try {
       this.deps.petStore.setLoading(true);
       this.deps.petStore.setError(undefined);
 
       const normalizedData = this.prepareCreateData(data);
-
       const createdPet = await this.deps.petService.create(normalizedData);
 
       if (imageFile) {
@@ -131,7 +115,6 @@ export class PetFacade {
       }
 
       await this.fetchPets(undefined, 0, 10);
-
       return createdPet;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao criar pet');
@@ -141,7 +124,6 @@ export class PetFacade {
       this.deps.petStore.setLoading(false);
     }
   }
-
 
   async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
     try {
@@ -154,24 +136,22 @@ export class PetFacade {
         try {
           await this.deps.petService.deletePhoto(id, currentPhotoId);
         } catch (deleteError) {
-          // Não bloqueia atualização, continua execução
+          console.error('Error deleting photo:', deleteError);
         }
       }
 
       const normalizedData = this.normalizePetData(data);
-
       const updatedPet = await this.deps.petService.update(id, normalizedData);
 
       if (imageFile) {
         try {
           await this.deps.petService.uploadPhoto(Number(updatedPet.id), imageFile);
         } catch (uploadError) {
-          // Não bloqueia atualização, continua execução
+          console.error('Error uploading photo:', uploadError);
         }
       }
 
       await this.fetchPets(undefined, 0, 10);
-
       return updatedPet;
     } catch (error) {
       const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar pet');
@@ -188,9 +168,6 @@ export class PetFacade {
       this.deps.petStore.setError(undefined);
 
       await this.deps.petService.delete(id);
-
-      this.deps.petStore.removePet(id);
-
       this.deps.petStore.removePet(id);
 
     } catch (error) {
@@ -209,7 +186,6 @@ export class PetFacade {
   clear(): void {
     this.deps.petStore.clear();
   }
-
 
   private validatePetData(data: Partial<CreatePetDto>): void {
     if (data.nome && data.nome.trim().length < 3) {
@@ -254,8 +230,14 @@ export class PetFacade {
     }
 
     if (typeof error === 'object' && error !== null && 'response' in error) {
-      const axiosError = error as { response?: { data?: { message?: string } } };
-      return axiosError.response?.data?.message || defaultMessage;
+      const axiosError = error as { response?: { status: number; data?: { message?: string } } };
+      const status = axiosError.response?.status;
+      const message = axiosError.response?.data?.message || defaultMessage;
+      
+      if (status === 404) return `${message} (Não encontrado)`;
+      if (status === 403) return `${message} (Acesso negado)`;
+      
+      return message;
     }
 
     return defaultMessage;
@@ -272,15 +254,6 @@ export class PetFacade {
     }
 
     return `${ageInYears} ${ageInYears === 1 ? 'ano' : 'anos'}`;
-  }
-
-
-  formatPetWeight(weightInKg?: number): string {
-    if (weightInKg === undefined || weightInKg === null) {
-      return 'Peso não informado';
-    }
-
-    return `${weightInKg.toFixed(1)} kg`;
   }
 }
 

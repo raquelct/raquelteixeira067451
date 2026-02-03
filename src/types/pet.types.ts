@@ -80,7 +80,7 @@ export interface UpdatePetDto extends Partial<CreatePetDto> {
 
 export interface PetFilters {
   name?: string;
-  ownerCpf?: string;
+  raca?: string;
 }
 
 export interface PetListResponse {
