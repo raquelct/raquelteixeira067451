@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-/**
- * Schema de validação para criação de tutor
- * Campos conforme API: nome, email, telefone, endereco, cpf
- */
 export const tutorSchema = z.object({
   nome: z
     .string()
@@ -30,10 +26,7 @@ export const tutorSchema = z.object({
     .string()
     .min(11, 'CPF deve ter no mínimo 11 caracteres')
     .max(14, 'CPF deve ter no máximo 14 caracteres')
-    .regex(/^[\d\.\-]+$/, 'CPF deve conter apenas números, pontos e traços'),
+    .regex(/^[\d.-]+$/, 'CPF deve conter apenas números, pontos e traços'),
 });
 
-/**
- * Type inferido do schema
- */
 export type TutorFormSchema = z.infer<typeof tutorSchema>;

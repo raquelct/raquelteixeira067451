@@ -3,12 +3,11 @@ import { tutorStore, type TutorStore } from '../state/TutorStore';
 import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../types/tutor.types';
 import type { Observable } from 'rxjs';
 import type { Optional } from '../types/optional';
-import { toast } from 'react-hot-toast';
+import { formatErrorMessage } from '../utils/error.utils';
 
 interface TutorFacadeDependencies {
   tutorService: TutorService;
   tutorStore: TutorStore;
-  toastService: typeof toast;
 }
 
 export class TutorFacade {
@@ -47,7 +46,7 @@ export class TutorFacade {
 
       this.deps.tutorStore.setTutores(response.content, response.total, response.page);
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutores');
+      const errorMessage = formatErrorMessage(error, 'Erro ao buscar tutores');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -66,7 +65,7 @@ export class TutorFacade {
 
       return tutor;
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar tutor');
+      const errorMessage = formatErrorMessage(error, 'Erro ao buscar tutor');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -91,11 +90,9 @@ export class TutorFacade {
       }
 
       await this.fetchTutores(undefined, 0, 10);
-
-      this.deps.toastService.success('Tutor criado com sucesso!');
       return createdTutor;
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao criar tutor');
+      const errorMessage = formatErrorMessage(error, 'Erro ao criar tutor');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -114,8 +111,7 @@ export class TutorFacade {
         try {
           await this.deps.tutorService.deletePhoto(id, currentPhotoId);
         } catch (deleteError) {
-          // Não bloqueia atualização, mas informa usuário
-          this.deps.toastService.error('Não foi possível remover a foto anterior');
+          console.error('Error removing old photo:', deleteError);
         }
       }
 
@@ -126,16 +122,13 @@ export class TutorFacade {
         try {
           await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile);
         } catch (uploadError) {
-          // Não bloqueia atualização, mas informa usuário
-          this.deps.toastService.error('Não foi possível enviar a nova foto');
+          console.error('Error uploading new photo:', uploadError);
         }
       }
       await this.fetchTutores(undefined, 0, 10);
-
-      this.deps.toastService.success('Tutor atualizado com sucesso!');
       return updatedTutor;
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar tutor');
+      const errorMessage = formatErrorMessage(error, 'Erro ao atualizar tutor');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -151,9 +144,8 @@ export class TutorFacade {
       await this.deps.tutorService.delete(id);
 
       this.deps.tutorStore.removeTutor(id);
-      this.deps.toastService.success('Tutor removido com sucesso!');
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao remover tutor');
+      const errorMessage = formatErrorMessage(error, 'Erro ao remover tutor');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -168,7 +160,7 @@ export class TutorFacade {
 
       await this.deps.tutorService.linkPet(tutorId, petId);
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao vincular pet');
+      const errorMessage = formatErrorMessage(error, 'Erro ao vincular pet');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -183,7 +175,7 @@ export class TutorFacade {
 
       await this.deps.tutorService.unlinkPet(tutorId, petId);
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao remover vínculo');
+      const errorMessage = formatErrorMessage(error, 'Erro ao remover vínculo');
       this.deps.tutorStore.setError(errorMessage);
       throw error;
     } finally {
@@ -261,35 +253,16 @@ export class TutorFacade {
       petIds.map((petId) => this.deps.tutorService.linkPet(tutorId, petId))
     );
   }
-
-
-
-  private formatErrorMessage(error: unknown, defaultMessage: string): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-
-    if (typeof error === 'object' && error !== null && 'response' in error) {
-      const axiosError = error as { response?: { data?: { message?: string } } };
-      if (axiosError.response?.data?.message) {
-        return axiosError.response.data.message;
-      }
-    }
-
-    return defaultMessage;
-  }
 }
 
 export const tutorFacade = new TutorFacade({
   tutorService,
   tutorStore,
-  toastService: toast,
 });
 
 export const createTutorFacade = (deps: Partial<TutorFacadeDependencies> = {}): TutorFacade => {
   return new TutorFacade({
     tutorService: deps.tutorService || tutorService,
     tutorStore: deps.tutorStore || tutorStore,
-    toastService: deps.toastService || toast,
   });
 };

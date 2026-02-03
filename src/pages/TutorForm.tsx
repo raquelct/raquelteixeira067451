@@ -113,7 +113,6 @@ export const TutorForm = () => {
       }
     } else {
       handleAddPet(pet);
-      toast.success('Pet adicionado à lista');
     }
   };
 

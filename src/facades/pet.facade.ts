@@ -4,6 +4,7 @@ import type { Pet, CreatePetDto, PetFormData, PetFilters } from '../types/pet.ty
 import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
 import type { Optional } from '../types/optional';
+import { formatErrorMessage } from '../utils/error.utils';
 
 interface PetFacadeDependencies {
   petService: PetService;
@@ -71,7 +72,7 @@ export class PetFacade {
         const response = await this.deps.petService.getAll(filters, currentPage, currentSize);
         this.deps.petStore.setPets(response.content, response.total, response.page, response.size);
       } catch (error) {
-        const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pets');
+        const errorMessage = formatErrorMessage(error, 'Erro ao buscar pets');
         this.deps.petStore.setError(errorMessage);
         throw error;
       } finally {
@@ -94,7 +95,7 @@ export class PetFacade {
       this.deps.petStore.setCurrentPet(pet);
       return pet;
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao buscar pet');
+      const errorMessage = formatErrorMessage(error, 'Erro ao buscar pet');
       this.deps.petStore.setError(errorMessage);
       throw error;
     } finally {
@@ -117,7 +118,7 @@ export class PetFacade {
       await this.fetchPets(undefined, 0, 10);
       return createdPet;
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao criar pet');
+      const errorMessage = formatErrorMessage(error, 'Erro ao criar pet');
       this.deps.petStore.setError(errorMessage);
       throw error;
     } finally {
@@ -154,7 +155,7 @@ export class PetFacade {
       await this.fetchPets(undefined, 0, 10);
       return updatedPet;
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao atualizar pet');
+      const errorMessage = formatErrorMessage(error, 'Erro ao atualizar pet');
       this.deps.petStore.setError(errorMessage);
       throw error;
     } finally {
@@ -171,7 +172,7 @@ export class PetFacade {
       this.deps.petStore.removePet(id);
 
     } catch (error) {
-      const errorMessage = this.formatErrorMessage(error, 'Erro ao remover pet');
+      const errorMessage = formatErrorMessage(error, 'Erro ao remover pet');
       this.deps.petStore.setError(errorMessage);
       throw error;
     } finally {
@@ -222,25 +223,6 @@ export class PetFacade {
 
   private async uploadPetPhoto(petId: number, file: File): Promise<void> {
     await this.deps.petService.uploadPhoto(petId, file);
-  }
-
-  private formatErrorMessage(error: unknown, defaultMessage: string): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-
-    if (typeof error === 'object' && error !== null && 'response' in error) {
-      const axiosError = error as { response?: { status: number; data?: { message?: string } } };
-      const status = axiosError.response?.status;
-      const message = axiosError.response?.data?.message || defaultMessage;
-      
-      if (status === 404) return `${message} (Não encontrado)`;
-      if (status === 403) return `${message} (Acesso negado)`;
-      
-      return message;
-    }
-
-    return defaultMessage;
   }
 
   formatPetAge(ageInYears?: number): string {

@@ -1,13 +1,12 @@
-import { BehaviorSubject, Observable } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
+import type { Observable } from 'rxjs';
 import type { Pet } from '../types/pet.types';
 import type { Optional } from '../types/optional';
+import { BaseStore, type BaseState } from './BaseStore';
 
-export interface PetState {
+export interface PetState extends BaseState {
   pets: Pet[];
   currentPet: Optional<Pet>;
-  isLoading: boolean;
-  error: Optional<string>;
   totalCount: number;
   currentPage: number;
   pageSize: number;
@@ -23,88 +22,61 @@ const initialPetState: PetState = {
   pageSize: 10,
 };
 
-export class PetStore {
-  private petState$: BehaviorSubject<PetState>;
-
+export class PetStore extends BaseStore<PetState> {
   constructor() {
-    this.petState$ = new BehaviorSubject<PetState>(initialPetState);
+    super(initialPetState);
   }
 
   public getPetState(): Observable<PetState> {
-    return this.petState$.asObservable();
+    return this.getState();
   }
 
   public get pets$(): Observable<Pet[]> {
-    return this.petState$.pipe(
+    return this.state$.pipe(
       map((state) => state.pets),
       distinctUntilChanged()
     );
   }
 
-
   public get currentPet$(): Observable<Optional<Pet>> {
-    return this.petState$.pipe(
+    return this.state$.pipe(
       map((state) => state.currentPet),
       distinctUntilChanged()
     );
   }
 
-
-  public get isLoading$(): Observable<boolean> {
-    return this.petState$.pipe(
-      map((state) => state.isLoading),
-      distinctUntilChanged()
-    );
-  }
-
-
-  public get error$(): Observable<Optional<string>> {
-    return this.petState$.pipe(
-      map((state) => state.error),
-      distinctUntilChanged()
-    );
-  }
-
-
   public get totalCount$(): Observable<number> {
-    return this.petState$.pipe(
+    return this.state$.pipe(
       map((state) => state.totalCount),
       distinctUntilChanged()
     );
   }
 
   public get pageSize$(): Observable<number> {
-    return this.petState$.pipe(
+    return this.state$.pipe(
       map((state) => state.pageSize),
       distinctUntilChanged()
     );
   }
 
   public get currentPage$(): Observable<number> {
-    return this.petState$.pipe(
+    return this.state$.pipe(
       map((state) => state.currentPage),
       distinctUntilChanged()
     );
   }
 
- 
-  public getCurrentState(): PetState {
-    return this.petState$.getValue();
-  }
-
-
   public getPets(): Pet[] {
-    return this.petState$.getValue().pets;
+    return this.getCurrentState().pets;
   }
 
   public getCurrentPet(): Optional<Pet> {
-    return this.petState$.getValue().currentPet;
+    return this.getCurrentState().currentPet;
   }
 
   public setPets(pets: Pet[], totalCount?: number, page?: number, pageSize?: number): void {
-    const currentState = this.petState$.getValue();
-    this.petState$.next({
-      ...currentState,
+    const currentState = this.getCurrentState();
+    this.setState({
       pets,
       totalCount: totalCount ?? pets.length,
       currentPage: page ?? currentState.currentPage,
@@ -115,21 +87,19 @@ export class PetStore {
   }
 
   public addPet(pet: Pet): void {
-    const currentState = this.petState$.getValue();
-    this.petState$.next({
-      ...currentState,
+    const currentState = this.getCurrentState();
+    this.setState({
       pets: [pet, ...currentState.pets],
       totalCount: currentState.totalCount + 1,
     });
   }
 
   public updatePet(updatedPet: Pet): void {
-    const currentState = this.petState$.getValue();
+    const currentState = this.getCurrentState();
     const pets = currentState.pets.map((pet) =>
       pet.id === updatedPet.id ? updatedPet : pet
     );
-    this.petState$.next({
-      ...currentState,
+    this.setState({
       pets,
       currentPet:
         currentState.currentPet?.id === updatedPet.id
@@ -139,10 +109,9 @@ export class PetStore {
   }
 
   public removePet(petId: number): void {
-    const currentState = this.petState$.getValue();
+    const currentState = this.getCurrentState();
     const pets = currentState.pets.filter((pet) => pet.id !== petId);
-    this.petState$.next({
-      ...currentState,
+    this.setState({
       pets,
       totalCount: Math.max(0, currentState.totalCount - 1),
       currentPet: currentState.currentPet?.id === petId ? undefined : currentState.currentPet,
@@ -150,38 +119,10 @@ export class PetStore {
   }
 
   public setCurrentPet(pet: Optional<Pet>): void {
-    const currentState = this.petState$.getValue();
-    this.petState$.next({
-      ...currentState,
+    this.setState({
       currentPet: pet,
     });
   }
-
-  public setLoading(isLoading: boolean): void {
-    const currentState = this.petState$.getValue();
-    this.petState$.next({
-      ...currentState,
-      isLoading,
-    });
-  }
-
-  public setError(error: Optional<string>): void {
-    const currentState = this.petState$.getValue();
-    this.petState$.next({
-      ...currentState,
-      error,
-      isLoading: false,
-    });
-  }
-
-  public clear(): void {
-    this.petState$.next(initialPetState);
-  }
-
-  public destroy(): void {
-    this.petState$.complete();
-  }
 }
-
 
 export const petStore = new PetStore();
