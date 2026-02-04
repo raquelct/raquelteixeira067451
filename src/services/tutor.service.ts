@@ -19,6 +19,7 @@ export class TutorService {
       breed: dto.raca,
       age: dto.idade,
       photoId: dto.foto?.id,
+      photoUrl: dto.foto?.url,
     };
   }
   private transformTutorDto(dto: TutorApiDto): Tutor {
