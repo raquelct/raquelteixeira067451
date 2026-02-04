@@ -12,7 +12,7 @@ import { ErrorState } from '../components/shared/ErrorState';
 import { ConfirmationModal } from '../components/shared/ConfirmationModal';
 import { Button } from '../components/shared/Button';
 import { tutorFacade } from '../facades/tutor.facade';
-import { maskCPF, maskPhone } from '../utils/masks';
+import { maskPhone } from '../utils/masks';
 import { getSubtitle } from '../utils/formatters';
 import { containerStyles } from '../styles/theme';
 
@@ -130,8 +130,7 @@ export const TutorList = () => {
                 key={tutor.id}
                 id={tutor.id}
                 title={tutor.name}
-                subtitle={tutor.email}
-                description={`${maskCPF(String(tutor.cpf))} • ${maskPhone(tutor.phone)}`}
+                description={maskPhone(tutor.phone)}
                 imageUrl={tutor.foto?.url}
                 icon="👤"
                 onViewDetails={() => handleViewTutor(tutor.id)}

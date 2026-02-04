@@ -1,5 +1,5 @@
 import { Users, Phone, Mail, UserX } from 'lucide-react';
-import { maskCPF, maskPhone } from '../../utils/masks';
+import { maskPhone } from '../../utils/masks';
 import type { Tutor } from '../../types/tutor.types';
 
 interface TutorListProps {
@@ -55,13 +55,6 @@ export const TutorList = ({ tutors }: TutorListProps) => {
                   </div>
                 )}
 
-                {/* CPF */}
-                {tutor.cpf && (
-                  <div className="flex items-center text-xs text-slate-400 font-mono mt-1 pt-1 border-t border-gray-50">
-                    <span className="font-sans font-bold mr-1 text-slate-300">CPF</span>
-                    {maskCPF(tutor.cpf)}
-                  </div>
-                )}
               </div>
             </div>
           ))}
