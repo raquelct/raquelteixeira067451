@@ -51,7 +51,6 @@ export function EntityList<T extends { id: number }>({
   isLoading,
   error,
   data,
-  totalCount,
   currentPage,
   totalPages,
   pageSize = PAGINATION.DEFAULT_PAGE_SIZE,
@@ -123,8 +122,6 @@ export function EntityList<T extends { id: number }>({
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={totalCount}
-            pageSize={pageSize}
             onPageChange={handlePageChangeWithScroll}
           />
         </>
