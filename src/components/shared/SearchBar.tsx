@@ -1,13 +1,3 @@
-/**
- * SearchBar - Componente de busca reutilizável
- * 
- * Features:
- * - Input com ícone de busca
- * - Botão de limpar (X)
- * - Estilos consistentes
- * - Alto contraste
- */
-
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;

@@ -127,12 +127,12 @@ export class TutorFacade extends BaseFacade<TutorStore> {
     });
   }
 
-  async deleteTutor(id: number): Promise<void> {
+  deleteTutor = async (id: number): Promise<void> => {
     return this.executeWithLoading(async () => {
       await this.deps.tutorService.delete(id);
       this.deps.tutorStore.removeTutor(id);
     });
-  }
+  };
 
   async linkPetToTutor(tutorId: number, petId: number): Promise<void> {
     return this.executeWithLoading(async () => {

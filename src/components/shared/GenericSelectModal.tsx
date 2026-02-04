@@ -79,6 +79,7 @@ export const GenericSelectModal = <T,>({
             placeholder={searchPlaceholder}
             onChange={(e) => onSearch(e.target.value)}
             className="mb-0"
+            aria-label={searchPlaceholder}
           />
         </div>
 

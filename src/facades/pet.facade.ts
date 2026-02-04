@@ -126,12 +126,12 @@ export class PetFacade extends BaseFacade<PetStore> {
     });
   }
 
-  async deletePet(id: number): Promise<void> {
+  deletePet = async (id: number): Promise<void> => {
     return this.executeWithLoading(async () => {
       await this.deps.petService.delete(id);
       this.deps.petStore.removePet(id);
     });
-  }
+  };
 
   setCurrentPet(pet: Optional<Pet>): void {
     this.deps.petStore.setCurrentPet(pet);
