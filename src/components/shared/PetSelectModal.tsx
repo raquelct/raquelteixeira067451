@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
 import { petFacade } from '../../facades/pet.facade';
 import type { Pet } from '../../types/pet.types';
 import { GenericSelectModal } from './GenericSelectModal';
@@ -64,23 +65,26 @@ export const PetSelectModal = ({
       searchPlaceholder="Buscar pet por nome..."
       emptyMessage={searchTerm ? 'Nenhum pet encontrado.' : 'Nenhum pet disponível.'}
       renderItem={(pet) => (
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden border border-indigo-50">
-            {pet.photoUrl ? (
-               <img 
-                 src={pet.photoUrl} 
-                 alt="" 
-                 aria-hidden="true" 
-                 className="h-full w-full object-cover" 
-               />
-            ) : (
-                <span className="text-lg" aria-hidden="true">🐾</span>
-            )}
+        <div className="flex items-center justify-between gap-3 overflow-hidden">
+          <div className="flex items-center gap-3 overflow-hidden flex-1">
+            <div className="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden border border-indigo-50">
+              {pet.photoUrl ? (
+                <img 
+                  src={pet.photoUrl} 
+                  alt="" 
+                  aria-hidden="true" 
+                  className="h-full w-full object-cover" 
+                />
+              ) : (
+                  <span className="text-lg" aria-hidden="true">🐾</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="font-medium text-gray-900 truncate">{pet.name}</p>
+              <p className="text-sm text-gray-500 truncate">{pet.breed || 'Raça não informada'}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="font-medium text-gray-900 truncate">{pet.name}</p>
-            <p className="text-sm text-gray-500 truncate">{pet.breed || 'Raça não informada'}</p>
-          </div>
+          <Plus className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={2} />
         </div>
       )}
     />

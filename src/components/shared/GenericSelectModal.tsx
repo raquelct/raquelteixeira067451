@@ -101,7 +101,7 @@ export const GenericSelectModal = <T,>({
                         onSelect(item);
                         onClose();
                         }}
-                        className="w-full flex items-center justify-between p-3 hover:bg-indigo-50 active:bg-indigo-100 rounded-lg border border-transparent hover:border-indigo-200 transition-all text-left focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full p-3 hover:bg-indigo-50 active:bg-indigo-100 rounded-lg border border-transparent hover:border-indigo-200 transition-all text-left focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                         {renderItem(item)}
                     </button>

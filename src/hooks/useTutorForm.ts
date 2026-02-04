@@ -69,9 +69,7 @@ export const useTutorForm = () => {
     currentPhotoId,
   });
 
-  const linkedPetIds = isEditMode && currentTutor
-    ? currentTutor.pets?.map(p => p.id) || []
-    : selectedPets.map(p => p.id);
+  const linkedPetIds = selectedPets.map(p => p.id);
 
   return {
     isEditMode,
