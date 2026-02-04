@@ -1,19 +1,12 @@
-import { useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { petSchema, type PetFormSchema } from '../schemas/petSchema';
-import { petFacade } from '../facades/pet.facade';
-import { useEntityLoader } from './useEntityLoader';
+import { useParams } from 'react-router-dom';
 import { useImageUpload } from './useImageUpload';
+import { usePetFormState } from './pet/usePetFormState';
+import { usePetSubmission } from './pet/usePetSubmission';
 
 export const usePetForm = () => {
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const petId = id ? Number(id) : undefined;
 
   const {
     imageFile,
@@ -29,31 +22,12 @@ export const usePetForm = () => {
   const {
     register,
     handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<PetFormSchema>({
-    resolver: zodResolver(petSchema),
-    defaultValues: {
-      nome: '',
-      raca: '',
-      idade: 0,
-    },
-  });
-
-  const fetchPet = useCallback(async () => {
-    return petFacade.fetchPetById(Number(id));
-  }, [id]);
-
-  const { isLoading: isLoadingData } = useEntityLoader({
-    fetcher: fetchPet,
-    shouldFetch: isEditMode && !!id,
-    onSuccess: (pet) => {
-      reset({
-        nome: pet.name,
-        raca: pet.breed,
-        idade: pet.age,
-      });
-
+    errors,
+    isLoadingData,
+  } = usePetFormState({
+    isEditMode,
+    petId,
+    onPetLoaded: (pet) => {
       if (pet.photoUrl) {
         setImagePreview(pet.photoUrl);
         if (pet.photoId) {
@@ -61,36 +35,15 @@ export const usePetForm = () => {
         }
       }
     },
-    errorMessage: 'Erro ao carregar dados do pet',
   });
 
-  const onSubmit = async (data: PetFormSchema) => {
-    setIsSubmitting(true);
-
-    try {
-      if (isEditMode && id) {
-        await petFacade.updatePet(
-          Number(id),
-          data,
-          imageFile || undefined,
-          isImageRemoved,
-          currentPhotoId
-        );
-        toast.success('Pet atualizado com sucesso!');
-      } else {
-        await petFacade.createPet(data, imageFile || undefined);
-        toast.success('Pet criado com sucesso!');
-      }
-
-      navigate('/');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    navigate('/');
-  };
+  const { isSubmitting, onSubmit, handleCancel } = usePetSubmission({
+    isEditMode,
+    petId,
+    imageFile,
+    isImageRemoved,
+    currentPhotoId,
+  });
 
   return {
     isEditMode,
