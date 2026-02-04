@@ -1,4 +1,5 @@
 import { PawPrint } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { LoginForm } from '../components/auth/LoginForm';
 
 export const Login = () => {
@@ -23,7 +24,11 @@ export const Login = () => {
         </div>
 
         <p className="text-center text-xs text-slate-400">
-          © 2026 Sistema de Registro de Pets - SEPLAG/MT
+          <Link to="/status" className="hover:text-indigo-500 transition-colors mr-2">
+            Status do Sistema
+          </Link>
+          |
+          <span className="ml-2">© 2026 Sistema de Registro de Pets - SEPLAG/MT</span>
         </p>
       </div>
     </div>

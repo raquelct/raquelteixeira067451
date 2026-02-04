@@ -2,7 +2,6 @@ import { Activity, RefreshCw, CheckCircle2, XCircle, Server } from 'lucide-react
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import { AppShell } from '../components/layout/AppShell';
 import { useHealthMonitor } from '../hooks/useHealthMonitor';
 import { ProbeCard } from '../components/health/ProbeCard';
 import { PROBE_STATUS, HEALTH_CONFIG } from '../utils/healthCheck';
@@ -28,7 +27,12 @@ const STATUS_CONFIG = {
   }
 };
 
+import { useNavigate } from 'react-router-dom';
+
+// ... imports remain the same
+
 export const StatusPage = () => {
+  const navigate = useNavigate();
   const { health, isLoading, lastUpdated, refresh } = useHealthMonitor();
 
   const getGlobalStatusConfig = () => {
@@ -39,90 +43,114 @@ export const StatusPage = () => {
   const statusConfig = getGlobalStatusConfig();
 
   return (
-    <AppShell>
-      <div className="flex items-center justify-center">
-        <div className="max-w-4xl w-full space-y-8">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center justify-center gap-3">
-              <Activity className="w-8 h-8 text-indigo-600" />
-              Status do Sistema
-            </h1>
-            <p className="text-slate-500">Monitoramento em tempo real da saúde da aplicação</p>
-          </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Simple Header */}
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+           <div className="flex items-center gap-2">
+              <Activity className="w-6 h-6 text-indigo-600" />
+              <span className="text-xl font-bold text-slate-900">Pet Manager Status</span>
+           </div>
+           <button 
+             onClick={() => navigate(-1)}
+             className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+           >
+             ← Voltar
+           </button>
+        </div>
+      </header>
 
-          {/* Global Status Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 transition-colors duration-300">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-full ${isLoading ? 'animate-pulse' : ''} ${statusConfig.bg}`}>
-                  {statusConfig.icon}
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Status Geral</h2>
-                  <p className={`text-sm font-medium transition-colors duration-300 ${statusConfig.color}`}>
-                    {statusConfig.label}
-                  </p>
-                </div>
-              </div>
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        <div className="flex flex-col items-center">
+          <div className="max-w-4xl w-full space-y-8">
+            {/* Header Content */}
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-bold text-slate-900 flex items-center justify-center gap-3">
+                Monitoramento em Tempo Real
+              </h1>
+              <p className="text-slate-500">Verifique a saúde operacional de todos os sistemas críticos.</p>
+            </div>
 
-              <div className="flex items-center gap-4">
-                <div className="text-right hidden md:block">
-                  <p className="text-xs text-slate-500">Última atualização</p>
-                  <p className="text-sm font-mono text-slate-700">
-                    {format(lastUpdated, "HH:mm:ss", { locale: ptBR })}
-                  </p>
+            {/* Global Status Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 transition-colors duration-300">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-full ${isLoading ? 'animate-pulse' : ''} ${statusConfig.bg}`}>
+                    {statusConfig.icon}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Status Geral</h2>
+                    <p className={`text-sm font-medium transition-colors duration-300 ${statusConfig.color}`}>
+                      {statusConfig.label}
+                    </p>
+                  </div>
                 </div>
-                <button 
-                  onClick={refresh}
-                  disabled={isLoading}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 group"
-                  title="Atualizar agora"
-                >
-                  <RefreshCw className={`w-5 h-5 text-slate-600 transition-transform ${isLoading ? 'animate-spin' : 'group-hover:rotate-180'}`} />
-                </button>
+
+                <div className="flex items-center gap-4">
+                  <div className="text-right hidden md:block">
+                    <p className="text-xs text-slate-500">Última atualização</p>
+                    <p className="text-sm font-mono text-slate-700">
+                      {lastUpdated ? format(lastUpdated, "HH:mm:ss", { locale: ptBR }) : '--:--:--'}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={refresh}
+                    disabled={isLoading}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 group"
+                    title="Atualizar agora"
+                  >
+                    <RefreshCw className={`w-5 h-5 text-slate-600 transition-transform ${isLoading ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Detailed Checks Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProbeCard
-              title="Liveness Probe"
-              description="Integridade da Aplicação"
-              icon={Activity}
-              iconColorClass="text-indigo-600"
-              iconBgClass="bg-indigo-50"
-              status={health?.checks.liveness.status}
-              isLoading={isLoading && !health}
-              details={health?.checks.liveness.details ? {
-                uptime: health.checks.liveness.details.uptime 
-                  ? `${Number(health.checks.liveness.details.uptime).toFixed(2)}s` 
-                  : '-',
-                message: health.checks.liveness.details.message as string
-              } : undefined}
-            />
+            {/* Detailed Checks Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ProbeCard
+                title="Liveness Probe"
+                description="Integridade da Aplicação"
+                icon={Activity}
+                iconColorClass="text-indigo-600"
+                iconBgClass="bg-indigo-50"
+                status={health?.checks.liveness.status}
+                isLoading={isLoading && !health}
+                details={health?.checks.liveness.details ? {
+                  uptime: health.checks.liveness.details.uptime 
+                    ? `${Number(health.checks.liveness.details.uptime).toFixed(2)}s` 
+                    : '-',
+                  message: health.checks.liveness.details.message as string
+                } : undefined}
+              />
 
-            <ProbeCard
-              title="Readiness Probe"
-              description="Conectividade API"
-              icon={Server}
-              iconColorClass="text-blue-600"
-              iconBgClass="bg-blue-50"
-              status={health?.checks.readiness.status}
-              isLoading={isLoading && !health}
-              details={{
-               latency: '-', // Placeholder for future implementation
-               error: (health?.checks.readiness.details?.error as string) || 'Nenhum'
-              }}
-            />
-          </div>
-          
-          <div className="text-center text-xs text-slate-400">
-            Status atualizado automaticamente a cada {HEALTH_CONFIG.REFRESH_INTERVAL / 1000} segundos.
+              <ProbeCard
+                title="Readiness Probe"
+                description="Conectividade API"
+                icon={Server}
+                iconColorClass="text-blue-600"
+                iconBgClass="bg-blue-50"
+                status={health?.checks.readiness.status}
+                isLoading={isLoading && !health}
+                details={{
+                 latency: '-', // Placeholder for future implementation
+                 error: (health?.checks.readiness.details?.error as string) || 'Nenhum'
+                }}
+              />
+            </div>
+            
+            <div className="text-center text-xs text-slate-400">
+              Status atualizado automaticamente a cada {HEALTH_CONFIG.REFRESH_INTERVAL / 1000} segundos.
+            </div>
           </div>
         </div>
-      </div>
-    </AppShell>
+      </main>
+      
+      {/* Footer Simple */}
+      <footer className="bg-white border-t border-slate-200 py-6">
+          <div className="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
+              &copy; {new Date().getFullYear()} Pet Registry System
+          </div>
+      </footer>
+    </div>
   );
 };

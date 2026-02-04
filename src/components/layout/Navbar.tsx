@@ -101,12 +101,7 @@ export const Navbar = () => {
                   >
                   Tutores
                   </Link>
-                  <Link
-                  to="/status"
-                  className={getNavLinkClass('/status')}
-                  >
-                  Status
-                  </Link>
+
               </div>
             )}
           </div>
@@ -226,15 +221,15 @@ export const Navbar = () => {
                 >
                   Tutores
                 </Link>
-                 <Link
-                  to="/status"
+                <Link
+                  to="/tutores"
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    isActivePath('/status')
+                    isActivePath('/tutores')
                       ? 'bg-indigo-800 text-white'
                       : 'text-indigo-100 hover:bg-indigo-600 hover:text-white'
                   }`}
                 >
-                  Status
+                  Tutores
                 </Link>
                 
                 <div className="border-t border-indigo-500/30 mt-4 pt-4 pb-2">
