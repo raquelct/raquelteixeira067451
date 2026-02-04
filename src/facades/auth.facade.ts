@@ -2,30 +2,30 @@ import { authService } from '../services/auth.service';
 import { authStore } from '../state/AuthStore';
 import type { AuthRequestDto, AuthState, User } from '../types/auth.types';
 import type { Observable } from 'rxjs';
+import { BaseFacade } from './base/BaseFacade';
+import { ROUTES } from '../constants/routes';
+import { USER_ROLES } from '../constants/roles';
 
-export class AuthFacade {
+export class AuthFacade extends BaseFacade<typeof authStore> {
+  protected store = authStore;
+
   async login(credentials: AuthRequestDto): Promise<void> {
-    try {
-      authStore.setLoading(true);
-
+    return this.executeWithLoading(async () => {
       const response = await authService.login(credentials);
 
       const user: User = {
-        id: parseInt(credentials.username),
+        id: parseInt(credentials.username, 10),
         name: credentials.username,
         email: `${credentials.username}@pet-registry.com`,
         cpf: '00000000000',
-        role: credentials.username === 'admin' ? 'admin' : 'user',
+        role: credentials.username === USER_ROLES.ADMIN ? USER_ROLES.ADMIN : USER_ROLES.USER,
       };
 
       authStore.setAuth(user, {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       });
-    } catch (error) {
-      authStore.setLoading(false);
-      throw error;
-    }
+    });
   }
 
   async logout(): Promise<void> {
@@ -33,7 +33,7 @@ export class AuthFacade {
     authStore.clearAuth();
 
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      window.location.href = ROUTES.LOGIN;
     }
   }
 
@@ -62,17 +62,11 @@ export class AuthFacade {
   }
 
   async fetchCurrentUser(): Promise<void> {
-    try {
-      const user = await authService.getCurrentUser();
-      const currentState = authStore.getCurrentAuthState();
+    const user = await authService.getCurrentUser();
+    const currentState = authStore.getCurrentAuthState();
 
-      if (currentState.tokens) {
-        authStore.setAuth(user, currentState.tokens);
-      }
-    } catch (error) {
-      console.error('[AuthFacade] Erro ao buscar usuário atual:', error);
-      authStore.clearAuth();
-      throw error;
+    if (currentState.tokens) {
+      authStore.setAuth(user, currentState.tokens);
     }
   }
 
@@ -84,8 +78,7 @@ export class AuthFacade {
     try {
       await this.fetchCurrentUser();
       return true;
-    } catch (error) {
-      console.debug('[AuthFacade] Session validation failed:', error);
+    } catch {
       return false;
     }
   }

@@ -4,19 +4,23 @@ import type { Pet, CreatePetDto, PetFormData, PetFilters } from '../types/pet.ty
 import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
 import type { Optional } from '../types/optional';
-import { formatErrorMessage } from '../utils/error.utils';
+import { BaseFacade } from './base/BaseFacade';
+import { PAGINATION } from '../constants/pagination';
 
 interface PetFacadeDependencies {
   petService: PetService;
   petStore: PetStore;
 }
 
-export class PetFacade {
+export class PetFacade extends BaseFacade<PetStore> {
+  protected store: PetStore;
   private pendingRequests: Map<string, Promise<unknown>> = new Map();
   private deps: PetFacadeDependencies;
 
   constructor(deps: PetFacadeDependencies) {
+    super();
     this.deps = deps;
+    this.store = deps.petStore;
   }
 
   getPetState(): Observable<PetState> {
@@ -65,49 +69,27 @@ export class PetFacade {
       return this.pendingRequests.get(requestKey) as Promise<void>;
     }
 
-    const requestPromise = (async () => {
-      try {
-        this.deps.petStore.setLoading(true);
-        this.deps.petStore.setError(undefined);
-        const response = await this.deps.petService.getAll(filters, currentPage, currentSize);
-        this.deps.petStore.setPets(response.content, response.total, response.page, response.size);
-      } catch (error) {
-        const errorMessage = formatErrorMessage(error, 'Erro ao buscar pets');
-        this.deps.petStore.setError(errorMessage);
-        throw error;
-      } finally {
-        this.deps.petStore.setLoading(false);
-        this.pendingRequests.delete(requestKey);
-      }
-    })();
+    const requestPromise = this.executeWithLoading(async () => {
+      const response = await this.deps.petService.getAll(filters, currentPage, currentSize);
+      this.deps.petStore.setPets(response.content, response.total, response.page, response.size);
+    }).finally(() => {
+      this.pendingRequests.delete(requestKey);
+    });
     this.pendingRequests.set(requestKey, requestPromise);
 
     return requestPromise;
   }
 
   async fetchPetById(id: number): Promise<Pet> {
-    try {
-      this.deps.petStore.setLoading(true);
-      this.deps.petStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       const pet = await this.deps.petService.getById(id);
-
       this.deps.petStore.setCurrentPet(pet);
       return pet;
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao buscar pet');
-      this.deps.petStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.petStore.setLoading(false);
-    }
+    });
   }
 
   async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
-    try {
-      this.deps.petStore.setLoading(true);
-      this.deps.petStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       const normalizedData = this.prepareCreateData(data);
       const createdPet = await this.deps.petService.create(normalizedData);
 
@@ -115,69 +97,40 @@ export class PetFacade {
         await this.uploadPetPhoto(createdPet.id, imageFile);
       }
 
-      await this.fetchPets(undefined, 0, 10);
+      await this.fetchPets(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
       return createdPet;
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao criar pet');
-      this.deps.petStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.petStore.setLoading(false);
-    }
+    });
   }
 
   async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
-    try {
-      this.deps.petStore.setLoading(true);
-      this.deps.petStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       this.validatePetData(data);
 
       if (isImageRemoved && currentPhotoId) {
-        try {
-          await this.deps.petService.deletePhoto(id, currentPhotoId);
-        } catch (deleteError) {
-          console.error('Error deleting photo:', deleteError);
-        }
+        await this.deps.petService.deletePhoto(id, currentPhotoId).catch(err => {
+          console.error('Error deleting photo:', err);
+        });
       }
 
       const normalizedData = this.normalizePetData(data);
       const updatedPet = await this.deps.petService.update(id, normalizedData);
 
       if (imageFile) {
-        try {
-          await this.deps.petService.uploadPhoto(Number(updatedPet.id), imageFile);
-        } catch (uploadError) {
-          console.error('Error uploading photo:', uploadError);
-        }
+        await this.deps.petService.uploadPhoto(updatedPet.id, imageFile).catch(err => {
+          console.error('Error uploading photo:', err);
+        });
       }
 
-      await this.fetchPets(undefined, 0, 10);
+      await this.fetchPets(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
       return updatedPet;
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao atualizar pet');
-      this.deps.petStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.petStore.setLoading(false);
-    }
+    });
   }
 
   async deletePet(id: number): Promise<void> {
-    try {
-      this.deps.petStore.setLoading(true);
-      this.deps.petStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       await this.deps.petService.delete(id);
       this.deps.petStore.removePet(id);
-
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao remover pet');
-      this.deps.petStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.petStore.setLoading(false);
-    }
+    });
   }
 
   setCurrentPet(pet: Optional<Pet>): void {

@@ -65,9 +65,9 @@ export const usePetForm = () => {
   });
 
   const onSubmit = async (data: PetFormSchema) => {
-    try {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
 
+    try {
       if (isEditMode && id) {
         await petFacade.updatePet(
           Number(id),
@@ -83,9 +83,6 @@ export const usePetForm = () => {
       }
 
       navigate('/');
-    } catch (error) {
-      console.error(`[PetForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet:`, error);
-      toast.error(`Erro ao ${isEditMode ? 'atualizar' : 'criar'} pet. Verifique os dados.`);
     } finally {
       setIsSubmitting(false);
     }

@@ -101,22 +101,17 @@ export const useTutorForm = () => {
 
   const handleSelectPet = async (pet: Pet) => {
     if (isEditMode && id) {
-      try {
-        await tutorFacade.linkPetToTutor(Number(id), pet.id);
-        handleAddPet(pet);
-      } catch (error) {
-        console.error('Erro ao vincular pet:', error);
-        toast.error('Erro ao vincular pet');
-      }
+      await tutorFacade.linkPetToTutor(Number(id), pet.id);
+      handleAddPet(pet);
     } else {
       handleAddPet(pet);
     }
   };
 
   const onSubmit = async (data: TutorFormSchema) => {
-    try {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
 
+    try {
       const payload = {
         ...data,
         cpf: unmask(data.cpf),
@@ -138,9 +133,6 @@ export const useTutorForm = () => {
 
       toast.success(isEditMode ? 'Tutor atualizado com sucesso!' : 'Tutor cadastrado com sucesso!');
       navigate('/tutores');
-    } catch (error) {
-      console.error(`[TutorForm] Erro ao ${isEditMode ? 'atualizar' : 'criar'} tutor:`, error);
-      toast.error('Erro ao salvar tutor.');
     } finally {
       setIsSubmitting(false);
     }

@@ -3,18 +3,24 @@ import { tutorStore, type TutorStore } from '../state/TutorStore';
 import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../types/tutor.types';
 import type { Observable } from 'rxjs';
 import type { Optional } from '../types/optional';
-import { formatErrorMessage } from '../utils/error.utils';
+import { BaseFacade } from './base/BaseFacade';
+import { RequestDeduplicator } from './base/RequestDeduplicator';
+import { PAGINATION } from '../constants/pagination';
 
 interface TutorFacadeDependencies {
   tutorService: TutorService;
   tutorStore: TutorStore;
 }
 
-export class TutorFacade {
+export class TutorFacade extends BaseFacade<TutorStore> {
+  protected store: TutorStore;
   private deps: TutorFacadeDependencies;
+  private deduplicator = new RequestDeduplicator();
 
   constructor(deps: TutorFacadeDependencies) {
+    super();
     this.deps = deps;
+    this.store = deps.tutorStore;
   }
   
   get tutores$(): Observable<Tutor[]> {
@@ -38,149 +44,86 @@ export class TutorFacade {
   }
 
   async fetchTutores(filters?: TutorFilters, page = 0, size = 10): Promise<void> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
-
-      const response = await this.deps.tutorService.getAll(filters, page, size);
-
-      this.deps.tutorStore.setTutores(response.content, response.total, response.page);
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao buscar tutores');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    const requestKey = this.createRequestKey('fetchTutores', filters, page, size);
+    
+    return this.deduplicator.deduplicate(requestKey, () =>
+      this.executeWithLoading(async () => {
+        const response = await this.deps.tutorService.getAll(filters, page, size);
+        this.deps.tutorStore.setTutores(response.content, response.total, response.page);
+      })
+    );
   }
 
   async fetchTutorById(id: number): Promise<Tutor> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       const tutor = await this.deps.tutorService.getById(id);
-
       this.deps.tutorStore.setCurrentTutor(tutor);
-
       return tutor;
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao buscar tutor');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    });
   }
 
   async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
+    return this.executeWithLoading(async () => {
       const normalizedData = this.prepareCreateData(data);
-
       const createdTutor = await this.deps.tutorService.create(normalizedData);
 
       if (imageFile) {
-        await this.uploadTutorPhoto(createdTutor.id, imageFile);
+        await this.uploadTutorPhoto(createdTutor.id, imageFile).catch(err => {
+          console.error('Photo upload failed:', err);
+        });
       }
 
       if (pendingPetIds && pendingPetIds.length > 0) {
-        await this.linkPendingPets(createdTutor.id, pendingPetIds);
+        await this.linkPendingPets(createdTutor.id, pendingPetIds).catch(err => {
+          console.error('Pet linking failed:', err);
+        });
       }
 
-      await this.fetchTutores(undefined, 0, 10);
+      await this.fetchTutores(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
       return createdTutor;
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao criar tutor');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    });
   }
 
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       this.validateTutorData(data);
 
       if (isImageRemoved && currentPhotoId) {
-        try {
-          await this.deps.tutorService.deletePhoto(id, currentPhotoId);
-        } catch (deleteError) {
-          console.error('Error removing old photo:', deleteError);
-        }
+        await this.deps.tutorService.deletePhoto(id, currentPhotoId).catch(err => {
+          console.error('Error removing old photo:', err);
+        });
       }
 
       const normalizedData = this.normalizeTutorData(data);
       const updatedTutor = await this.deps.tutorService.update(id, normalizedData);
 
       if (imageFile) {
-        try {
-          await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile);
-        } catch (uploadError) {
-          console.error('Error uploading new photo:', uploadError);
-        }
+        await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile).catch(err => {
+          console.error('Error uploading new photo:', err);
+        });
       }
-      await this.fetchTutores(undefined, 0, 10);
+      await this.fetchTutores(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
       return updatedTutor;
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao atualizar tutor');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    });
   }
 
   async deleteTutor(id: number): Promise<void> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       await this.deps.tutorService.delete(id);
-
       this.deps.tutorStore.removeTutor(id);
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao remover tutor');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    });
   }
 
   async linkPetToTutor(tutorId: number, petId: number): Promise<void> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       await this.deps.tutorService.linkPet(tutorId, petId);
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao vincular pet');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    });
   }
 
   async removePetFromTutor(tutorId: number, petId: number): Promise<void> {
-    try {
-      this.deps.tutorStore.setLoading(true);
-      this.deps.tutorStore.setError(undefined);
-
+    return this.executeWithLoading(async () => {
       await this.deps.tutorService.unlinkPet(tutorId, petId);
-    } catch (error) {
-      const errorMessage = formatErrorMessage(error, 'Erro ao remover vínculo');
-      this.deps.tutorStore.setError(errorMessage);
-      throw error;
-    } finally {
-      this.deps.tutorStore.setLoading(false);
-    }
+    });
   }
 
   setCurrentTutor(tutor: Optional<Tutor>): void {
