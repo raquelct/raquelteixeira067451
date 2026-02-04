@@ -1,11 +1,13 @@
 import { petService, type PetService } from '../services/pet.service';
 import { petStore, type PetStore } from '../state/PetStore';
-import type { Pet, CreatePetDto, PetFormData, PetFilters } from '../types/pet.types';
+import type { Pet, PetFormData, PetFilters } from '../types/pet.types';
 import type { Observable } from 'rxjs';
 import type { PetState } from '../state/PetStore';
 import type { Optional } from '../types/optional';
 import { BaseFacade } from './base/BaseFacade';
-import { PAGINATION } from '../constants/pagination';
+import { RequestDeduplicator } from './base/RequestDeduplicator';
+import { PetMapper } from '../domain/pet/PetMapper';
+import { PetValidator } from '../domain/pet/PetValidator';
 
 interface PetFacadeDependencies {
   petService: PetService;
@@ -14,7 +16,7 @@ interface PetFacadeDependencies {
 
 export class PetFacade extends BaseFacade<PetStore> {
   protected store: PetStore;
-  private pendingRequests: Map<string, Promise<unknown>> = new Map();
+  private deduplicator = new RequestDeduplicator();
   private deps: PetFacadeDependencies;
 
   constructor(deps: PetFacadeDependencies) {
@@ -59,25 +61,14 @@ export class PetFacade extends BaseFacade<PetStore> {
     const currentState = this.deps.petStore.getCurrentState();
     const currentPage = page ?? currentState.currentPage;
     const currentSize = size ?? currentState.pageSize;
-    const filterKey = filters 
-      ? Object.keys(filters).sort().map(k => `${k}:${filters[k as keyof PetFilters]}`).join('|') 
-      : 'all';
-    
-    const requestKey = `fetchPets-${filterKey}-${currentPage}-${currentSize}`;
+    const requestKey = this.createRequestKey('fetchPets', filters, currentPage, currentSize);
 
-    if (this.pendingRequests.has(requestKey)) {
-      return this.pendingRequests.get(requestKey) as Promise<void>;
-    }
-
-    const requestPromise = this.executeWithLoading(async () => {
-      const response = await this.deps.petService.getAll(filters, currentPage, currentSize);
-      this.deps.petStore.setPets(response.content, response.total, response.page, response.size);
-    }).finally(() => {
-      this.pendingRequests.delete(requestKey);
-    });
-    this.pendingRequests.set(requestKey, requestPromise);
-
-    return requestPromise;
+    return this.deduplicator.deduplicate(requestKey, () =>
+      this.executeWithLoading(async () => {
+        const response = await this.deps.petService.getAll(filters, currentPage, currentSize);
+        this.deps.petStore.setPets(response.content, response.total, response.page, response.size);
+      })
+    );
   }
 
   async fetchPetById(id: number): Promise<Pet> {
@@ -87,41 +78,40 @@ export class PetFacade extends BaseFacade<PetStore> {
       return pet;
     });
   }
-
   async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
     return this.executeWithLoading(async () => {
-      const normalizedData = this.prepareCreateData(data);
+      const normalizedData = PetMapper.toCreateDto(data);
       const createdPet = await this.deps.petService.create(normalizedData);
 
       if (imageFile) {
         await this.uploadPetPhoto(createdPet.id, imageFile);
       }
 
-      await this.fetchPets(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
+      await this.fetchPets();
       return createdPet;
     });
   }
 
   async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
     return this.executeWithLoading(async () => {
-      this.validatePetData(data);
+      PetValidator.validateOrThrow(data);
 
       if (isImageRemoved && currentPhotoId) {
-        await this.deps.petService.deletePhoto(id, currentPhotoId).catch(err => {
+        await this.deps.petService.deletePhoto(id, currentPhotoId).catch((err: Error) => {
           console.error('Error deleting photo:', err);
         });
       }
 
-      const normalizedData = this.normalizePetData(data);
+      const normalizedData = PetMapper.normalize(data);
       const updatedPet = await this.deps.petService.update(id, normalizedData);
 
       if (imageFile) {
-        await this.deps.petService.uploadPhoto(updatedPet.id, imageFile).catch(err => {
+        await this.deps.petService.uploadPhoto(updatedPet.id, imageFile).catch((err: Error) => {
           console.error('Error uploading photo:', err);
         });
       }
 
-      await this.fetchPets(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
+      await this.fetchPets();
       return updatedPet;
     });
   }
@@ -141,38 +131,7 @@ export class PetFacade extends BaseFacade<PetStore> {
     this.deps.petStore.clear();
   }
 
-  private validatePetData(data: Partial<CreatePetDto>): void {
-    if (data.nome && data.nome.trim().length < 3) {
-      throw new Error('Nome do pet deve ter no mínimo 3 caracteres');
-    }
 
-    if (data.raca && data.raca.trim().length < 2) {
-      throw new Error('Raça do pet deve ter no mínimo 2 caracteres');
-    }
-
-    if (data.idade !== undefined && (data.idade < 0 || data.idade > 100)) {
-      throw new Error('Idade do pet deve estar entre 0 e 100 anos');
-    }
-  }
-
-  private normalizePetData<T extends Partial<CreatePetDto>>(data: T): T {
-    return {
-      ...data,
-      nome: data.nome?.trim() as T['nome'],
-      raca: data.raca?.trim() as T['raca'],
-    } as T;
-  }
-
-  private prepareCreateData(data: PetFormData): CreatePetDto {
-    const createData: CreatePetDto = {
-      nome: data.nome,
-      raca: data.raca,
-      idade: data.idade,
-    };
-
-    this.validatePetData(createData);
-    return this.normalizePetData(createData);
-  }
 
   private async uploadPetPhoto(petId: number, file: File): Promise<void> {
     await this.deps.petService.uploadPhoto(petId, file);

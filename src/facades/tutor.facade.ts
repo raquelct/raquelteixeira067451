@@ -1,11 +1,12 @@
 import { tutorService, type TutorService } from '../services/tutor.service';
 import { tutorStore, type TutorStore } from '../state/TutorStore';
-import type { Tutor, CreateTutorDto, TutorFormData, TutorFilters } from '../types/tutor.types';
+import type { Tutor, TutorFormData, TutorFilters } from '../types/tutor.types';
 import type { Observable } from 'rxjs';
 import type { Optional } from '../types/optional';
 import { BaseFacade } from './base/BaseFacade';
 import { RequestDeduplicator } from './base/RequestDeduplicator';
-import { PAGINATION } from '../constants/pagination';
+import { TutorMapper } from '../domain/tutor/TutorMapper';
+import { TutorValidator } from '../domain/tutor/TutorValidator';
 
 interface TutorFacadeDependencies {
   tutorService: TutorService;
@@ -64,45 +65,45 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
   async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
     return this.executeWithLoading(async () => {
-      const normalizedData = this.prepareCreateData(data);
+      const normalizedData = TutorMapper.toCreateDto(data);
       const createdTutor = await this.deps.tutorService.create(normalizedData);
 
       if (imageFile) {
-        await this.uploadTutorPhoto(createdTutor.id, imageFile).catch(err => {
+        await this.uploadTutorPhoto(createdTutor.id, imageFile).catch((err: Error) => {
           console.error('Photo upload failed:', err);
         });
       }
 
       if (pendingPetIds && pendingPetIds.length > 0) {
-        await this.linkPendingPets(createdTutor.id, pendingPetIds).catch(err => {
+        await this.linkPendingPets(createdTutor.id, pendingPetIds).catch((err: Error) => {
           console.error('Pet linking failed:', err);
         });
       }
 
-      await this.fetchTutores(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
+      await this.fetchTutores();
       return createdTutor;
     });
   }
 
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     return this.executeWithLoading(async () => {
-      this.validateTutorData(data);
+      TutorValidator.validateOrThrow(data);
 
       if (isImageRemoved && currentPhotoId) {
-        await this.deps.tutorService.deletePhoto(id, currentPhotoId).catch(err => {
+        await this.deps.tutorService.deletePhoto(id, currentPhotoId).catch((err: Error) => {
           console.error('Error removing old photo:', err);
         });
       }
 
-      const normalizedData = this.normalizeTutorData(data);
+      const normalizedData = TutorMapper.normalize(data);
       const updatedTutor = await this.deps.tutorService.update(id, normalizedData);
 
       if (imageFile) {
-        await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile).catch(err => {
+        await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile).catch((err: Error) => {
           console.error('Error uploading new photo:', err);
         });
       }
-      await this.fetchTutores(undefined, PAGINATION.INITIAL_PAGE, PAGINATION.DEFAULT_PAGE_SIZE);
+      await this.fetchTutores();
       return updatedTutor;
     });
   }
@@ -132,59 +133,6 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
   clear(): void {
     this.deps.tutorStore.clear();
-  }
-
-  private validateTutorData(data: Partial<CreateTutorDto>): void {
-    if (data.nome && String(data.nome).trim().length < 3) {
-      throw new Error('Nome do tutor deve ter no mínimo 3 caracteres');
-    }
-
-    if (data.email && !this.isValidEmail(String(data.email))) {
-      throw new Error('Email inválido');
-    }
-
-    if (data.telefone && String(data.telefone).replace(/\D/g, '').length < 10) {
-      throw new Error('Telefone inválido');
-    }
-  }
-
-  private normalizeTutorData<T extends Partial<CreateTutorDto>>(data: T): T {
-    const normalizeString = (value: unknown) => {
-      if (!value) return undefined;
-      return String(value).trim();
-    };
-
-    const normalizeDigits = (value: unknown) => {
-      if (!value) return undefined;
-      return String(value).replace(/\D/g, '');
-    };
-
-    return {
-      ...data,
-      nome: normalizeString(data.nome) as T['nome'],
-      email: normalizeString(data.email)?.toLowerCase() as T['email'],
-      telefone: normalizeDigits(data.telefone) as T['telefone'],
-      endereco: normalizeString(data.endereco) as T['endereco'],
-      cpf: normalizeDigits(data.cpf) as T['cpf'],
-    } as T;
-  }
-
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  private prepareCreateData(data: TutorFormData): CreateTutorDto {
-    const createData: CreateTutorDto = {
-      nome: data.nome,
-      email: data.email,
-      telefone: data.telefone,
-      endereco: data.endereco,
-      cpf: data.cpf,
-    };
-
-    this.validateTutorData(createData);
-    return this.normalizeTutorData(createData);
   }
 
   private async uploadTutorPhoto(tutorId: number, file: File): Promise<void> {
