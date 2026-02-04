@@ -1,6 +1,6 @@
 import { Users, Phone, Mail, UserX } from 'lucide-react';
 import { maskCPF, maskPhone } from '../../utils/masks';
-import type { Tutor } from '../../types/pet.types';
+import type { Tutor } from '../../types/tutor.types';
 
 interface TutorListProps {
   tutors?: Tutor[];
@@ -22,9 +22,9 @@ export const TutorList = ({ tutors }: TutorListProps) => {
             <div key={tutor.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4 group">
               {/* Avatar */}
               <div className="shrink-0">
-                {tutor.photoUrl ? (
+                {tutor.photo ? (
                   <img 
-                    src={tutor.photoUrl} 
+                    src={tutor.photo} 
                     alt={tutor.name} 
                     className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm group-hover:border-indigo-100 transition-colors"
                   />

@@ -1,3 +1,5 @@
+import type { Tutor } from './tutor.types';
+
 export interface PetPhotoDto {
   id?: number;
   url: string;
@@ -40,15 +42,6 @@ export interface PetPhoto {
   url: string;
 }
 
-export interface Tutor {
-  id: number;
-  name: string;
-  cpf: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  photoUrl?: string;
-}
 
 export interface Pet {
   id: number;

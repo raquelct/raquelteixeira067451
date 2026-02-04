@@ -1,12 +1,12 @@
 import apiClient from './api';
+import type { Tutor } from '../types/tutor.types';
 import type {
   Pet,
   PetApiDto,
   CreatePetDto,
   PetFilters,
   PetListResponse,
-  PetListApiResponse,
-  Tutor
+  PetListApiResponse
 } from '../types/pet.types';
 
 export class PetService {
@@ -28,11 +28,11 @@ export class PetService {
       pet.tutors = dto.tutores.map((t): Tutor => ({
         id: t.id,
         name: t.nome,
-        cpf: t.cpf,
-        email: t.email,
-        phone: t.telefone,
-        address: t.endereco,
-        photoUrl: t.foto?.url
+        cpf: t.cpf || '',
+        email: t.email || '',
+        phone: t.telefone || '',
+        address: t.endereco || '',
+        photo: t.foto?.url
       }));
     }
 

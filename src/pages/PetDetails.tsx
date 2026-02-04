@@ -7,7 +7,7 @@ import { ConfirmationModal } from '../components/shared/ConfirmationModal';
 import { petFacade } from '../facades/pet.facade';
 import { ProfileHero } from '../components/ui/ProfileHero';
 import { GridList } from '../components/ui/GridList';
-import type { Tutor } from '../types/pet.types';
+import type { Tutor } from '../types/tutor.types';
 
 export const PetDetails = () => {
   const navigate = useNavigate();
@@ -92,8 +92,8 @@ export const PetDetails = () => {
                 className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 border border-gray-200">
-                  {tutor.photoUrl ? (
-                    <img src={tutor.photoUrl} alt={tutor.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  {tutor.photo ? (
+                    <img src={tutor.photo} alt={tutor.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     <span className="font-bold text-gray-400 text-lg">{tutor.name.charAt(0).toUpperCase()}</span>
                   )}
