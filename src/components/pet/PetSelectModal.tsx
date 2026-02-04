@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { petFacade } from '../../facades/pet.facade';
 import type { Pet } from '../../types/pet.types';
-import { GenericSelectModal } from './GenericSelectModal';
+import { GenericSelectModal } from '../shared/GenericSelectModal';
 
 interface PetSelectModalProps {
   isOpen: boolean;
@@ -21,7 +21,6 @@ export const PetSelectModal = ({
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch pets on open
   useEffect(() => {
     if (isOpen) {
       const loadPets = async () => {

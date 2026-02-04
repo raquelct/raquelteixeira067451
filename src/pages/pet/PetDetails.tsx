@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, Users, Phone } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { usePetDetails } from '../hooks/usePetDetails';
-import { ConfirmationModal } from '../components/shared/ConfirmationModal';
-import { petFacade } from '../facades/pet.facade';
-import { ProfileHero } from '../components/ui/ProfileHero';
-import { GridList } from '../components/ui/GridList';
-import { formatAge } from '../utils/formatters';
-import type { Tutor } from '../types/tutor.types';
+import { usePetDetails } from '../../hooks/pet/usePetDetails';
+import { ConfirmationModal } from '../../components/shared/ConfirmationModal';
+import { petFacade } from '../../facades/pet.facade';
+import { ProfileHero } from '../../components/ui/ProfileHero';
+import { GridList } from '../../components/ui/GridList';
+import { formatAge } from '../../utils/formatters';
+import type { Tutor } from '../../types/tutor.types';
 
 export const PetDetails = () => {
   const navigate = useNavigate();

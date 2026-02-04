@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { petFacade } from '../facades/pet.facade';
-import { petStore } from '../state/PetStore';
-import type { Pet, PetFilters } from '../types/pet.types';
+import { petFacade } from '../../facades/pet.facade';
+import { petStore } from '../../state/PetStore';
+import type { Pet, PetFilters } from '../../types/pet.types';
 
 export const usePets = () => {
   const [pets, setPets] = useState<Pet[]>([]);

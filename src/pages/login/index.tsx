@@ -1,6 +1,6 @@
 import { PawPrint } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { LoginForm } from '../components/auth/LoginForm';
+import { LoginForm } from '../../components/auth/LoginForm';
 
 export const Login = () => {
   return (

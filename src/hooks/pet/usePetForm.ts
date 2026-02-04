@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
-import { useImageUpload } from './useImageUpload';
-import { usePetFormState } from './pet/usePetFormState';
-import { usePetSubmission } from './pet/usePetSubmission';
+import { useImageUpload } from '../useImageUpload';
+import { usePetFormState } from './usePetFormState';
+import { usePetSubmission } from './usePetSubmission';
 
 export const usePetForm = () => {
   const { id } = useParams<{ id: string }>();

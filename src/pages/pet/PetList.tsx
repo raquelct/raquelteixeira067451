@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
-import { usePets } from '../hooks/usePets';
-import { useDeleteConfirmation } from '../hooks/useDeleteConfirmation';
-import { GenericCard } from '../components/shared/GenericCard';
-import { EntityList } from '../components/shared/EntityList';
-import { petFacade } from '../facades/pet.facade';
-import { getSubtitle, formatAge } from '../utils/formatters';
-import { PAGINATION } from '../constants/pagination';
-import { ENTITY_FILTERS } from '../constants/filters';
+import { usePets } from '../../hooks/pet/usePets';
+import { useDeleteConfirmation } from '../../hooks/useDeleteConfirmation';
+import { GenericCard } from '../../components/shared/GenericCard';
+import { EntityList } from '../../components/shared/EntityList';
+import { petFacade } from '../../facades/pet.facade';
+import { getSubtitle, formatAge } from '../../utils/formatters';
+import { PAGINATION } from '../../constants/pagination';
+import { ENTITY_FILTERS } from '../../constants/filters';
 
 const PET_FILTER_OPTIONS = ENTITY_FILTERS.PET;
 const PAGE_SIZE = PAGINATION.DEFAULT_PAGE_SIZE;

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useImageUpload } from './useImageUpload';
-import { useTutorFormState } from './tutor/useTutorFormState';
-import { useTutorPetSelection } from './tutor/useTutorPetSelection';
-import { useTutorSubmission } from './tutor/useTutorSubmission';
-import type { Tutor } from '../types/tutor.types';
+import { useImageUpload } from '../useImageUpload';
+import { useTutorFormState } from './useTutorFormState';
+import { useTutorPetSelection } from './useTutorPetSelection';
+import { useTutorSubmission } from './useTutorSubmission';
+import type { Tutor } from '../../types/tutor.types';
 
 export const useTutorForm = () => {
   const { id } = useParams<{ id: string }>();

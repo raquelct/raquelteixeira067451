@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Mail, Phone, MapPin, UserSquare } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { useTutorDetails } from '../hooks/useTutorDetails';
-import { ConfirmationModal } from '../components/shared/ConfirmationModal';
-import { tutorFacade } from '../facades/tutor.facade';
-import { ProfileHero } from '../components/ui/ProfileHero';
-import { GridList } from '../components/ui/GridList';
-import type { Pet } from '../types/pet.types';
+import { useTutorDetails } from '../../hooks/tutor/useTutorDetails';
+import { ConfirmationModal } from '../../components/shared/ConfirmationModal';
+import { tutorFacade } from '../../facades/tutor.facade';
+import { ProfileHero } from '../../components/ui/ProfileHero';
+import { GridList } from '../../components/ui/GridList';
+import type { Pet } from '../../types/pet.types';
 
 export const TutorDetails = () => {
   const navigate = useNavigate();

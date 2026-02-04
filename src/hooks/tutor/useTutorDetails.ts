@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { tutorService } from '../services/tutor.service';
-import type { Tutor } from '../types/tutor.types';
-import { getErrorMessage } from '../utils/errorUtils';
+import { tutorService } from '../../services/tutor.service';
+import type { Tutor } from '../../types/tutor.types';
+import { getErrorMessage } from '../../utils/errorUtils';
 import { AxiosError } from 'axios';
 
 export const useTutorDetails = () => {

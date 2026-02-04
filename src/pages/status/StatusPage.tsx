@@ -1,10 +1,10 @@
 import { Activity, RefreshCw, CheckCircle2, XCircle, Server } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-import { useHealthMonitor } from '../hooks/useHealthMonitor';
-import { ProbeCard } from '../components/health/ProbeCard';
-import { PROBE_STATUS, HEALTH_CONFIG } from '../utils/healthCheck';
+import { useNavigate } from 'react-router-dom';
+import { useHealthMonitor } from '../../hooks/useHealthMonitor';
+import { ProbeCard } from '../../components/health/ProbeCard';
+import { PROBE_STATUS, HEALTH_CONFIG } from '../../utils/healthCheck';
 
 const STATUS_CONFIG = {
   active: {
@@ -27,10 +27,6 @@ const STATUS_CONFIG = {
   }
 };
 
-import { useNavigate } from 'react-router-dom';
-
-// ... imports remain the same
-
 export const StatusPage = () => {
   const navigate = useNavigate();
   const { health, isLoading, lastUpdated, refresh } = useHealthMonitor();
@@ -44,7 +40,6 @@ export const StatusPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Simple Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
            <div className="flex items-center gap-2">
@@ -63,7 +58,6 @@ export const StatusPage = () => {
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         <div className="flex flex-col items-center">
           <div className="max-w-4xl w-full space-y-8">
-            {/* Header Content */}
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-bold text-slate-900 flex items-center justify-center gap-3">
                 Monitoramento em Tempo Real
@@ -71,7 +65,6 @@ export const StatusPage = () => {
               <p className="text-slate-500">Verifique a saúde operacional de todos os sistemas críticos.</p>
             </div>
 
-            {/* Global Status Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 transition-colors duration-300">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
@@ -105,7 +98,6 @@ export const StatusPage = () => {
               </div>
             </div>
 
-            {/* Detailed Checks Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ProbeCard
                 title="Liveness Probe"
@@ -132,7 +124,7 @@ export const StatusPage = () => {
                 status={health?.checks.readiness.status}
                 isLoading={isLoading && !health}
                 details={{
-                 latency: '-', // Placeholder for future implementation
+                 latency: '-',
                  error: (health?.checks.readiness.details?.error as string) || 'Nenhum'
                 }}
               />
@@ -144,8 +136,6 @@ export const StatusPage = () => {
           </div>
         </div>
       </main>
-      
-      {/* Footer Simple */}
       <footer className="bg-white border-t border-slate-200 py-6">
           <div className="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
               &copy; {new Date().getFullYear()} Pet Registry System

@@ -1,8 +1,8 @@
-import { FormHeader } from '../components/shared/FormHeader';
-import { FormActions } from '../components/shared/FormActions';
-import { PetFormFields } from '../components/pet/PetFormFields';
-import { usePetForm } from '../hooks/usePetForm';
-import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
+import { FormHeader } from '../../components/shared/FormHeader';
+import { FormActions } from '../../components/shared/FormActions';
+import { PetFormFields } from '../../components/pet/PetFormFields';
+import { usePetForm } from '../../hooks/pet/usePetForm';
+import { LoadingSkeleton } from '../../components/shared/LoadingSkeleton';
 
 export const PetForm = () => {
   const {

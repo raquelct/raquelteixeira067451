@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { tutorFacade } from '../facades/tutor.facade';
-import type { Tutor, TutorFilters, TutorFormData } from '../types/tutor.types';
+import { tutorFacade } from '../../facades/tutor.facade';
+import type { Tutor, TutorFilters, TutorFormData } from '../../types/tutor.types';
 
 export const useTutores = () => {
   const [tutores, setTutores] = useState<Tutor[]>([]);

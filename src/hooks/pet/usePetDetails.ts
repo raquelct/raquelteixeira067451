@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { petService } from '../services/pet.service';
-import type { Pet } from '../types/pet.types';
-import { getErrorMessage } from '../utils/errorUtils';
+import { petService } from '../../services/pet.service';
+import type { Pet } from '../../types/pet.types';
+import { getErrorMessage } from '../../utils/errorUtils';
 import { AxiosError } from 'axios';
 
 export const usePetDetails = () => {

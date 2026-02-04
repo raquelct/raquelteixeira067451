@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone } from 'lucide-react';
-import { useTutores } from '../hooks/useTutores';
-import { useDeleteConfirmation } from '../hooks/useDeleteConfirmation';
-import { GenericCard } from '../components/shared/GenericCard';
-import { EntityList } from '../components/shared/EntityList';
-import { tutorFacade } from '../facades/tutor.facade';
-import { maskPhone } from '../utils/masks';
-import { getSubtitle } from '../utils/formatters';
-import { PAGINATION } from '../constants/pagination';
-import { ENTITY_FILTERS } from '../constants/filters';
+import { useTutores } from '../../hooks/tutor/useTutores';
+import { useDeleteConfirmation } from '../../hooks/useDeleteConfirmation';
+import { GenericCard } from '../../components/shared/GenericCard';
+import { EntityList } from '../../components/shared/EntityList';
+import { tutorFacade } from '../../facades/tutor.facade';
+import { maskPhone } from '../../utils/masks';
+import { getSubtitle } from '../../utils/formatters';
+import { PAGINATION } from '../../constants/pagination';
+import { ENTITY_FILTERS } from '../../constants/filters';
 
 const TUTOR_FILTER_OPTIONS = ENTITY_FILTERS.TUTOR;
 const PAGE_SIZE = PAGINATION.DEFAULT_PAGE_SIZE;

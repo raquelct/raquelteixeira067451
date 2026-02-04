@@ -1,10 +1,10 @@
-import { LinkedPetsSection } from '../components/tutor/LinkedPetsSection';
-import { PetSelectModal } from '../components/shared/PetSelectModal';
-import { FormHeader } from '../components/shared/FormHeader';
-import { TutorFormFields } from '../components/tutor/TutorFormFields';
-import { FormActions } from '../components/shared/FormActions';
-import { useTutorForm } from '../hooks/useTutorForm';
-import { LoadingSkeleton } from '../components/shared/LoadingSkeleton';
+import { LinkedPetsSection } from '../../components/tutor/LinkedPetsSection';
+import { PetSelectModal } from '../../components/pet/PetSelectModal';
+import { FormHeader } from '../../components/shared/FormHeader';
+import { TutorFormFields } from '../../components/tutor/TutorFormFields';
+import { FormActions } from '../../components/shared/FormActions';
+import { useTutorForm } from '../../hooks/tutor/useTutorForm';
+import { LoadingSkeleton } from '../../components/shared/LoadingSkeleton';
 
 export const TutorForm = () => {
   const {
