@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Calendar } from 'lucide-react';
 import { usePets } from '../hooks/usePets';
 import { useDeleteConfirmation } from '../hooks/useDeleteConfirmation';
 import { GenericCard } from '../components/shared/GenericCard';
@@ -83,8 +84,8 @@ export const PetList = () => {
           key={pet.id}
           id={pet.id}
           title={pet.name}
-          subtitle={pet.breed || 'Sem raça definida'}
           description={formatAge(pet.age)}
+          descriptionIcon={<Calendar className="w-3.5 h-3.5" />}
           imageUrl={pet.photoUrl}
           icon="🐾"
           onViewDetails={() => handleViewPet(pet.id)}

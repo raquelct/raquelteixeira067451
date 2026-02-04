@@ -5,6 +5,7 @@ interface GenericCardProps {
   description?: string;
   imageUrl?: string | null;
   icon?: React.ReactNode;
+  descriptionIcon?: React.ReactNode;
   onViewDetails?: (id: number) => void;
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
@@ -18,6 +19,7 @@ export const GenericCard = ({
   description,
   imageUrl,
   icon,
+  descriptionIcon,
   onViewDetails,
   onEdit,
   onDelete,
@@ -54,7 +56,7 @@ export const GenericCard = ({
       className="bg-white rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group flex flex-col h-full cursor-pointer relative"
       onClick={handleCardClick}
     >
-      <div className="relative aspect-[4/3] flex-shrink-0 bg-gray-100 overflow-hidden">
+      <div className="relative aspect-[4/3] flex-shrink-0 bg-gray-50 overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -109,25 +111,24 @@ export const GenericCard = ({
           {title}
         </h3>
 
-        {/* Badges Container */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-3 w-full">
-          {/* Subtitle Badge (Raça/Email) */}
-          {subtitle && (
-            <span
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 capitalize max-w-full truncate"
-              title={subtitle}
-            >
-              {subtitle}
-            </span>
-          )}
+        {/* Subtitle (Raça/Email) */}
+        {subtitle && (
+          <p className="text-sm text-gray-600 mb-2 w-full truncate capitalize" title={subtitle}>
+            {subtitle}
+          </p>
+        )}
 
-          {/* Description Badge (Idade/Telefone) */}
-          {description && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 max-w-full truncate">
-              {description}
-            </span>
-          )}
-        </div>
+        {/* Description with Icon (Idade/Telefone) */}
+        {description && (
+          <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500 mb-2 w-full">
+            {descriptionIcon && (
+              <span className="flex-shrink-0" aria-hidden="true">
+                {descriptionIcon}
+              </span>
+            )}
+            <span className="truncate">{description}</span>
+          </div>
+        )}
 
         {/* Additional Info */}
         {additionalInfo && (

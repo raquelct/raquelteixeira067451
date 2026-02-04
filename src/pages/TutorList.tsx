@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Phone } from 'lucide-react';
 import { useTutores } from '../hooks/useTutores';
 import { useDeleteConfirmation } from '../hooks/useDeleteConfirmation';
 import { GenericCard } from '../components/shared/GenericCard';
@@ -85,6 +86,7 @@ export const TutorList = () => {
           id={tutor.id}
           title={tutor.name}
           description={maskPhone(tutor.phone)}
+          descriptionIcon={<Phone className="w-3.5 h-3.5" />}
           imageUrl={tutor.foto?.url}
           icon="👤"
           onViewDetails={() => handleViewTutor(tutor.id)}
