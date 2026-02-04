@@ -31,6 +31,7 @@ export const PetFormFields = memo(({
       <FormInput
         label="Nome do Pet *"
         placeholder="Ex: Bob"
+        autoComplete="off"
         error={errors.nome?.message}
         {...register('nome')}
       />
@@ -38,6 +39,7 @@ export const PetFormFields = memo(({
       <FormInput
         label="Raça"
         placeholder="Ex: Labrador"
+        autoComplete="off"
         error={errors.raca?.message}
         {...register('raca')}
       />
@@ -47,6 +49,7 @@ export const PetFormFields = memo(({
         placeholder="Ex: 3"
         type="number"
         min="0"
+        autoComplete="off"
         error={errors.idade?.message}
         {...register('idade', { valueAsNumber: true })}
       />

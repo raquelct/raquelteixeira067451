@@ -34,6 +34,7 @@ export const TutorFormFields = ({
       <FormInput
         label="Nome Completo *"
         placeholder="Ex: João Silva"
+        autoComplete="name"
         error={errors.nome?.message}
         {...register('nome')}
       />
@@ -42,6 +43,7 @@ export const TutorFormFields = ({
         label="Email *"
         placeholder="Ex: joao@email.com"
         type="email"
+        autoComplete="email"
         error={errors.email?.message}
         {...register('email')}
       />
@@ -49,6 +51,7 @@ export const TutorFormFields = ({
       <FormInput
         label="Telefone *"
         placeholder="Ex: (65) 98765-4321"
+        autoComplete="tel"
         error={errors.telefone?.message}
         {...register('telefone')}
         maxLength={15}
@@ -61,6 +64,7 @@ export const TutorFormFields = ({
       <FormInput
         label="CPF *"
         placeholder="000.000.000-00"
+        autoComplete="off"
         error={errors.cpf?.message}
         {...register('cpf')}
         maxLength={14}

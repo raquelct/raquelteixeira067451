@@ -27,6 +27,7 @@ export const LoginForm = () => {
         label="Usuário"
         id="username"
         placeholder="Digite seu usuário"
+        autoComplete="username"
         error={errors.username?.message}
         {...register('username')}
         disabled={isSubmitting}
@@ -37,6 +38,7 @@ export const LoginForm = () => {
         id="password"
         type="password"
         placeholder="••••••••"
+        autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}
         disabled={isSubmitting}
