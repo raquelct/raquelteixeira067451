@@ -7,6 +7,7 @@ import { ConfirmationModal } from '../components/shared/ConfirmationModal';
 import { petFacade } from '../facades/pet.facade';
 import { ProfileHero } from '../components/ui/ProfileHero';
 import { GridList } from '../components/ui/GridList';
+import { formatAge } from '../utils/formatters';
 import type { Tutor } from '../types/tutor.types';
 
 export const PetDetails = () => {
@@ -68,7 +69,7 @@ export const PetDetails = () => {
             badges={
               <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full font-semibold">
                 <span className="text-xl">🎂</span>
-                <span>{pet.age !== undefined ? `${pet.age} ${pet.age === 1 ? 'ano' : 'anos'}` : 'Idade não informada'}</span>
+                <span>{formatAge(pet.age)}</span>
               </div>
             }
             actions={

@@ -14,13 +14,11 @@ import { Button } from '../components/shared/Button';
 import { petFacade } from '../facades/pet.facade';
 import { getSubtitle } from '../utils/formatters';
 import { containerStyles } from '../styles/theme';
+import { PAGINATION } from '../constants/pagination';
+import { ENTITY_FILTERS } from '../constants/filters';
 
-const PET_FILTER_OPTIONS = [
-  { label: 'Nome', value: 'name' },
-  { label: 'Raça', value: 'raca' }
-] as const;
-
-const PAGE_SIZE = 10;
+const PET_FILTER_OPTIONS = ENTITY_FILTERS.PET;
+const PAGE_SIZE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 export const PetList = () => {
   const navigate = useNavigate();

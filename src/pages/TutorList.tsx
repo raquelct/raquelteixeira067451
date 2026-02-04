@@ -15,12 +15,11 @@ import { tutorFacade } from '../facades/tutor.facade';
 import { maskPhone } from '../utils/masks';
 import { getSubtitle } from '../utils/formatters';
 import { containerStyles } from '../styles/theme';
+import { PAGINATION } from '../constants/pagination';
+import { ENTITY_FILTERS } from '../constants/filters';
 
-const TUTOR_FILTER_OPTIONS = [
-  { label: 'Nome', value: 'nome' }
-] as const;
-
-const PAGE_SIZE = 10;
+const TUTOR_FILTER_OPTIONS = ENTITY_FILTERS.TUTOR;
+const PAGE_SIZE = PAGINATION.DEFAULT_PAGE_SIZE;
 
 export const TutorList = () => {
   const navigate = useNavigate();
