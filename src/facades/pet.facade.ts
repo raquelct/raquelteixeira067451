@@ -8,6 +8,7 @@ import { BaseFacade } from './base/BaseFacade';
 import { RequestDeduplicator } from './base/RequestDeduplicator';
 import { PetMapper } from '../domain/pet/PetMapper';
 import { PetValidator } from '../domain/pet/PetValidator';
+import { logger } from '../utils/logger';
 
 interface PetFacadeDependencies {
   petService: PetService;
@@ -98,7 +99,12 @@ export class PetFacade extends BaseFacade<PetStore> {
 
       if (isImageRemoved && currentPhotoId) {
         await this.deps.petService.deletePhoto(id, currentPhotoId).catch((err: Error) => {
-          console.error('Error deleting photo:', err);
+          logger.error('Error deleting photo', {
+            context: 'PetFacade.updatePet',
+            petId: id,
+            photoId: currentPhotoId,
+            error: err.message,
+          });
         });
       }
 
@@ -107,7 +113,11 @@ export class PetFacade extends BaseFacade<PetStore> {
 
       if (imageFile) {
         await this.deps.petService.uploadPhoto(updatedPet.id, imageFile).catch((err: Error) => {
-          console.error('Error uploading photo:', err);
+          logger.error('Error uploading photo', {
+            context: 'PetFacade.updatePet',
+            petId: updatedPet.id,
+            error: err.message,
+          });
         });
       }
 

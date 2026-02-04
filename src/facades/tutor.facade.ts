@@ -7,6 +7,7 @@ import { BaseFacade } from './base/BaseFacade';
 import { RequestDeduplicator } from './base/RequestDeduplicator';
 import { TutorMapper } from '../domain/tutor/TutorMapper';
 import { TutorValidator } from '../domain/tutor/TutorValidator';
+import { logger } from '../utils/logger';
 
 interface TutorFacadeDependencies {
   tutorService: TutorService;
@@ -70,13 +71,22 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
       if (imageFile) {
         await this.uploadTutorPhoto(createdTutor.id, imageFile).catch((err: Error) => {
-          console.error('Photo upload failed:', err);
+          logger.error('Photo upload failed', {
+            context: 'TutorFacade.createTutor',
+            tutorId: createdTutor.id,
+            error: err.message,
+          });
         });
       }
 
       if (pendingPetIds && pendingPetIds.length > 0) {
         await this.linkPendingPets(createdTutor.id, pendingPetIds).catch((err: Error) => {
-          console.error('Pet linking failed:', err);
+          logger.error('Pet linking failed', {
+            context: 'TutorFacade.createTutor',
+            tutorId: createdTutor.id,
+            petIds: pendingPetIds,
+            error: err.message,
+          });
         });
       }
 
@@ -91,7 +101,12 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
       if (isImageRemoved && currentPhotoId) {
         await this.deps.tutorService.deletePhoto(id, currentPhotoId).catch((err: Error) => {
-          console.error('Error removing old photo:', err);
+          logger.error('Error removing old photo', {
+            context: 'TutorFacade.updateTutor',
+            tutorId: id,
+            photoId: currentPhotoId,
+            error: err.message,
+          });
         });
       }
 
@@ -100,7 +115,11 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
       if (imageFile) {
         await this.deps.tutorService.uploadPhoto(updatedTutor.id, imageFile).catch((err: Error) => {
-          console.error('Error uploading new photo:', err);
+          logger.error('Error uploading new photo', {
+            context: 'TutorFacade.updateTutor',
+            tutorId: updatedTutor.id,
+            error: err.message,
+          });
         });
       }
       await this.fetchTutores();
