@@ -31,11 +31,8 @@ export const AppShell = ({ children }: AppShellProps) => {
       <Navbar />
 
       {/* Main Content Area */}
-      <main className="flex-grow">
-        {/* Container com max-width e padding responsivo */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </div>
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {children}
       </main>
 
       {/* Footer - Sempre no bottom */}

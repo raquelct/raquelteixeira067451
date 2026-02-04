@@ -76,7 +76,7 @@ export const TutorList = () => {
   }, [fetchTutores, currentPage]);
 
   return (
-    <div className="w-full">
+    <>
       <PageHeader
         title="Tutores Cadastrados"
         subtitle={getSubtitle(totalCount, 'tutor', 'tutores')}
@@ -89,7 +89,7 @@ export const TutorList = () => {
         <SearchFilter
           options={TUTOR_FILTER_OPTIONS}
           onSearch={handleSearch}
-          placeholder="Buscar tutores..."
+          placeholder="Buscar tutores"
         />
       </div>
 
@@ -167,6 +167,6 @@ export const TutorList = () => {
         confirmLabel="Excluir"
         variant="danger"
       />
-    </div>
+    </>
   );
 };

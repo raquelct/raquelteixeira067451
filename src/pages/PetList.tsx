@@ -76,7 +76,7 @@ export const PetList = () => {
   }, [fetchPets, currentPage]);
 
   return (
-    <div className="w-full">
+    <>
       <PageHeader
         title="Pets Cadastrados"
         subtitle={getSubtitle(totalCount, 'pet', 'pets')}
@@ -89,7 +89,7 @@ export const PetList = () => {
         <SearchFilter
           options={PET_FILTER_OPTIONS}
           onSearch={handleSearch}
-          placeholder="Buscar pets..."
+          placeholder="Buscar pets"
         />
       </div>
 
@@ -168,6 +168,6 @@ export const PetList = () => {
         confirmLabel="Excluir"
         variant="danger"
       />
-    </div>
+    </>
   );
 };

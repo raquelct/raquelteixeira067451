@@ -157,7 +157,7 @@ export const TutorForm = () => {
 
   if (isLoadingData) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -179,7 +179,7 @@ export const TutorForm = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
       {/* Header */}
       <div className="mb-8">
         <button
@@ -309,6 +309,6 @@ export const TutorForm = () => {
         onSelect={handleSelectPet}
         alreadyLinkedPetIds={linkedPetIds}
       />
-    </div>
+    </>
   );
 };

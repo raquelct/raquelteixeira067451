@@ -32,7 +32,7 @@ export const PetDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse">
+      <div className="animate-pulse">
         <div className="h-10 w-32 bg-gray-200 rounded-lg mb-6"></div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 h-[500px] bg-gray-200 rounded-xl"></div>
@@ -44,7 +44,7 @@ export const PetDetails = () => {
 
   if (notFound || !pet || error) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-4 py-16 text-center">
+      <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">{error || 'Pet não encontrado'}</h2>
         <button onClick={handleGoBack} className="bg-indigo-600 text-white px-6 py-2 rounded-lg">Voltar</button>
       </div>
@@ -52,7 +52,7 @@ export const PetDetails = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
       <button onClick={handleGoBack} className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 mb-6 font-medium transition-colors group">
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         <span>Voltar</span>

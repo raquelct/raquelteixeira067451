@@ -2,35 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========== Global Layout ========== */
+body,
+#root {
+  min-height: 100vh;
+  min-width: 320px;
+}
+
+/* ========== Typography & Theme ========== */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  /* ✅ Force light mode only */
+  /* Force light mode only */
   color-scheme: light;
   color: #111827; /* gray-900 */
   background-color: #ffffff;
 
+  /* Font rendering */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ========== Body Styles ========== */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
   background-color: #f9fafb; /* gray-50 */
 }
 
+/* ========== Root Container ========== */
 #root {
   width: 100%;
   margin: 0 auto;
-  text-align: center;
 }
 
 /* ========== Fix Browser Autofill White Text Issue ========== */
@@ -71,7 +77,7 @@ textarea:focus {
   background-color: #ffffff !important;
 }
 
-/* Selection text */
+/* ========== Selection Styles ========== */
 ::selection {
   background-color: #3b82f6; /* blue-500 */
   color: #ffffff;
