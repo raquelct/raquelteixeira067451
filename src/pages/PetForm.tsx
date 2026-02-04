@@ -8,8 +8,9 @@ import { useEntityLoader } from '../hooks/useEntityLoader';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { FormInput } from '../components/shared/FormInput';
 import { ImageUpload } from '../components/shared/ImageUpload';
-import { Button } from '../components/shared/Button';
 import { toast } from 'react-hot-toast';
+import { FormHeader } from '../components/shared/FormHeader';
+import { FormActions } from '../components/shared/FormActions';
 
 export const PetForm = () => {
   const navigate = useNavigate();
@@ -124,23 +125,11 @@ export const PetForm = () => {
   return (
     <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="mb-8">
-        <button
-          onClick={handleCancel}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Voltar
-        </button>
-        <h1 className="text-3xl font-bold text-gray-900">
-          {isEditMode ? 'Editar Pet' : 'Cadastrar Novo Pet'}
-        </h1>
-        <p className="text-gray-600 mt-2">
-          {isEditMode ? 'Atualize os dados do pet abaixo' : 'Preencha os dados do pet abaixo'}
-        </p>
-      </div>
+      <FormHeader
+        title={isEditMode ? 'Editar Pet' : 'Cadastrar Novo Pet'}
+        subtitle={isEditMode ? 'Atualize os dados do pet abaixo' : 'Preencha os dados do pet abaixo'}
+        onBack={handleCancel}
+      />
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-lg p-6 space-y-6">
@@ -174,26 +163,11 @@ export const PetForm = () => {
           {...register('idade', { valueAsNumber: true })}
         />
 
-        <div className="flex space-x-4 pt-4">
-          <Button
-            type="submit"
-            variant="primary"
-            className="flex-1"
-            loading={isSubmitting}
-            disabled={isSubmitting}
-          >
-            {isEditMode ? 'Atualizar Pet' : 'Cadastrar Pet'}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-        </div>
+        <FormActions
+          submitLabel={isEditMode ? 'Atualizar Pet' : 'Cadastrar Pet'}
+          isSubmitting={isSubmitting}
+          onCancel={handleCancel}
+        />
       </form>
     </div>
   );

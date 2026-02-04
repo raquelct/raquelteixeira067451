@@ -1,26 +1,13 @@
-/**
- * LoadingSkeleton - Componente genérico para estados de loading
- * 
- * Features:
- * - Tipos diferentes (card, list, table)
- * - Quantidade customizável
- * - Animação pulse
- * - Grid responsivo
- */
-
 import { containerStyles } from '../../styles/theme';
 import { CardSkeleton } from './CardSkeleton';
 
-type SkeletonType = 'card' | 'list' | 'table';
+type SkeletonType = 'card' | 'list' | 'table' | 'form';
 
 interface LoadingSkeletonProps {
   type?: SkeletonType;
   count?: number;
 }
 
-/**
- * Skeleton de Lista (para listagens simples)
- */
 const ListSkeleton = () => (
   <div className="bg-white rounded-lg shadow-md p-4 animate-pulse">
     <div className="flex items-center space-x-4">
@@ -33,15 +20,26 @@ const ListSkeleton = () => (
   </div>
 );
 
-/**
- * Skeleton de Tabela (para tabelas de dados)
- */
 const TableSkeleton = () => (
   <div className="bg-white rounded-lg shadow-md p-4 animate-pulse">
     <div className="space-y-3">
       <div className="h-4 bg-gray-300 rounded w-full" />
       <div className="h-4 bg-gray-200 rounded w-5/6" />
       <div className="h-4 bg-gray-200 rounded w-4/6" />
+    </div>
+  </div>
+);
+
+const FormSkeleton = () => (
+  <div className="space-y-6">
+    <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+       <div className="h-8 bg-gray-300 rounded w-1/3 mb-6" />
+       <div className="space-y-4">
+         <div className="h-12 bg-gray-200 rounded" />
+         <div className="h-12 bg-gray-200 rounded" />
+         <div className="h-12 bg-gray-200 rounded" />
+         <div className="h-32 bg-gray-200 rounded" />
+       </div>
     </div>
   </div>
 );
@@ -54,6 +52,7 @@ export const LoadingSkeleton = ({
     card: CardSkeleton,
     list: ListSkeleton,
     table: TableSkeleton,
+    form: FormSkeleton,
   }[type];
 
   return (
