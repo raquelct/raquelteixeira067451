@@ -1,17 +1,17 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { Login } from './pages/login';
+import { Login } from './pages/login/LoginPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
 import { LoadingSpinner } from './components/shared/LoadingSpinner';
 import { useAuth } from './hooks/useAuth';
 
-const PetList = lazy(() => import('./pages/pet/PetList').then(m => ({ default: m.PetList })));
-const PetForm = lazy(() => import('./pages/pet/PetForm').then(m => ({ default: m.PetForm })));
-const PetDetails = lazy(() => import('./pages/pet/PetDetails').then(m => ({ default: m.PetDetails })));
-const TutorList = lazy(() => import('./pages/tutor/TutorList').then(m => ({ default: m.TutorList })));
-const TutorForm = lazy(() => import('./pages/tutor/TutorForm').then(m => ({ default: m.TutorForm })));
-const TutorDetails = lazy(() => import('./pages/tutor/TutorDetails').then(m => ({ default: m.TutorDetails })));
+const PetList = lazy(() => import('./pages/pet/PetListPage').then(m => ({ default: m.PetList })));
+const PetForm = lazy(() => import('./pages/pet/PetFormPage').then(m => ({ default: m.PetForm })));
+const PetDetails = lazy(() => import('./pages/pet/PetDetailsPage').then(m => ({ default: m.PetDetails })));
+const TutorList = lazy(() => import('./pages/tutor/TutorListPage').then(m => ({ default: m.TutorList })));
+const TutorForm = lazy(() => import('./pages/tutor/TutorFormPage').then(m => ({ default: m.TutorForm })));
+const TutorDetails = lazy(() => import('./pages/tutor/TutorDetailsPage').then(m => ({ default: m.TutorDetails })));
 const StatusPage = lazy(() => import('./pages/status/StatusPage').then(m => ({ default: m.StatusPage })));
 
 const PublicRoute = () => {
