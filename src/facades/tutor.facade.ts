@@ -95,7 +95,7 @@ export const useTutorFacade = () => {
   const deleteTutorMutation = useMutation({
     mutationFn: (id: number) => tutorService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ['tutors', 'list'] });
     },
   });
 

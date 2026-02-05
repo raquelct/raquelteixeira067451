@@ -82,7 +82,7 @@ export const usePetFacade = () => {
   const deletePetMutation = useMutation({
     mutationFn: (id: number) => petService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ['pets', 'list'] });
     },
   });
 
