@@ -1,5 +1,4 @@
 import type { CreateTutorDto, TutorFormData } from '../../types/tutor.types';
-import { TutorValidator } from './TutorValidator';
 
 export class TutorMapper {
   static toCreateDto(formData: TutorFormData): CreateTutorDto {
@@ -11,7 +10,6 @@ export class TutorMapper {
       cpf: formData.cpf,
     };
 
-    TutorValidator.validateOrThrow(dto);
     return this.normalize(dto);
   }
 

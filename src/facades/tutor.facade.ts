@@ -6,7 +6,7 @@ import type { Optional } from '../types/optional';
 import { BaseFacade } from './base/BaseFacade';
 import { RequestDeduplicator } from './base/RequestDeduplicator';
 import { TutorMapper } from '../domain/tutor/TutorMapper';
-import { TutorValidator } from '../domain/tutor/TutorValidator';
+import { tutorSchema } from '../schemas/tutorSchema';
 import { logger } from '../utils/logger';
 
 interface TutorFacadeDependencies {
@@ -66,6 +66,7 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
   async createTutor(data: TutorFormData, imageFile?: File, pendingPetIds?: number[]): Promise<Tutor> {
     return this.executeWithLoading(async () => {
+      tutorSchema.parse(data);
       const normalizedData = TutorMapper.toCreateDto(data);
       const createdTutor = await this.deps.tutorService.create(normalizedData);
 
@@ -97,7 +98,7 @@ export class TutorFacade extends BaseFacade<TutorStore> {
 
   async updateTutor(id: number, data: TutorFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Tutor> {
     return this.executeWithLoading(async () => {
-      TutorValidator.validateOrThrow(data);
+      tutorSchema.parse(data);
 
       if (isImageRemoved && currentPhotoId) {
         await this.deps.tutorService.deletePhoto(id, currentPhotoId).catch((err: Error) => {

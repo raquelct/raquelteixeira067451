@@ -7,7 +7,7 @@ import type { Optional } from '../types/optional';
 import { BaseFacade } from './base/BaseFacade';
 import { RequestDeduplicator } from './base/RequestDeduplicator';
 import { PetMapper } from '../domain/pet/PetMapper';
-import { PetValidator } from '../domain/pet/PetValidator';
+import { petSchema } from '../schemas/petSchema';
 import { logger } from '../utils/logger';
 
 interface PetFacadeDependencies {
@@ -81,6 +81,7 @@ export class PetFacade extends BaseFacade<PetStore> {
   }
   async createPet(data: PetFormData, imageFile?: File): Promise<Pet> {
     return this.executeWithLoading(async () => {
+      petSchema.parse(data);
       const normalizedData = PetMapper.toCreateDto(data);
       const createdPet = await this.deps.petService.create(normalizedData);
 
@@ -95,7 +96,7 @@ export class PetFacade extends BaseFacade<PetStore> {
 
   async updatePet(id: number, data: PetFormData, imageFile?: File, isImageRemoved?: boolean, currentPhotoId?: number): Promise<Pet> {
     return this.executeWithLoading(async () => {
-      PetValidator.validateOrThrow(data);
+      petSchema.parse(data);
 
       if (isImageRemoved && currentPhotoId) {
         await this.deps.petService.deletePhoto(id, currentPhotoId).catch((err: Error) => {

@@ -1,5 +1,4 @@
 import type { CreatePetDto, PetFormData } from '../../types/pet.types';
-import { PetValidator } from './PetValidator';
 
 export class PetMapper {
   static toCreateDto(formData: PetFormData): CreatePetDto {
@@ -9,7 +8,6 @@ export class PetMapper {
       idade: formData.idade,
     };
 
-    PetValidator.validateOrThrow(dto);
     return this.normalize(dto);
   }
 
