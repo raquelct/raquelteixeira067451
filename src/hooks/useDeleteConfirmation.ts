@@ -33,15 +33,10 @@ export const useDeleteConfirmation = ({
   const confirmDelete = useCallback(async () => {
     if (!itemToDelete) return;
     
-    try {
-      await deleteFn(itemToDelete.id);
-      toast.success(`${entityName} removido com sucesso!`);
-      closeModal();
-      onSuccess();
-    } catch (error) {
-      console.error(`Error deleting ${entityName}:`, error);
-      toast.error(`Erro ao remover ${entityName}. Tente novamente.`);
-    }
+    await deleteFn(itemToDelete.id);
+    toast.success(`${entityName} removido com sucesso!`);
+    closeModal();
+    onSuccess();
   }, [itemToDelete, deleteFn, entityName, onSuccess, closeModal]);
 
   return {

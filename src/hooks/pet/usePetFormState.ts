@@ -1,8 +1,7 @@
-import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { petSchema, type PetFormSchema } from '../../schemas/petSchema';
-import { useEntityLoader } from '../useEntityLoader';
+import { useQuery } from '@tanstack/react-query';
 import { petFacade } from '../../facades/pet.facade';
 import type { Pet } from '../../types/pet.types';
 
@@ -27,15 +26,12 @@ export const usePetFormState = ({ isEditMode, petId, onPetLoaded }: UsePetFormSt
     },
   });
 
-  const fetchPet = useCallback(async () => {
-    if (!petId) throw new Error('Pet ID is required');
-    return petFacade.fetchPetById(petId);
-  }, [petId]);
-
-  const { isLoading: isLoadingData } = useEntityLoader({
-    fetcher: fetchPet,
-    shouldFetch: isEditMode && !!petId,
-    onSuccess: (pet) => {
+  const { isLoading: isLoadingData } = useQuery({
+    queryKey: ['pet', petId],
+    queryFn: async () => {
+      if (!petId) throw new Error('Pet ID is required');
+      const pet = await petFacade.fetchPetById(petId);
+      
       reset({
         nome: pet.name,
         raca: pet.breed,
@@ -43,8 +39,10 @@ export const usePetFormState = ({ isEditMode, petId, onPetLoaded }: UsePetFormSt
       });
 
       onPetLoaded?.(pet);
+      return pet;
     },
-    errorMessage: 'Erro ao carregar dados do pet',
+    enabled: isEditMode && !!petId,
+    retry: false,
   });
 
   return {

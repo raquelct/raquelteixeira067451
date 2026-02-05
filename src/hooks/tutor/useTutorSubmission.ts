@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { tutorFacade } from '../../facades/tutor.facade';
-import { unmask } from '../../utils/masks';
 import type { TutorFormSchema } from '../../schemas/tutorSchema';
 import type { Pet } from '../../types/pet.types';
 
@@ -34,11 +33,7 @@ export const useTutorSubmission = ({
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        ...data,
-        cpf: unmask(data.cpf),
-        telefone: unmask(data.telefone),
-      };
+      const payload = data;
 
       if (isEditMode && tutorId) {
         await tutorFacade.updateTutor(

@@ -1,61 +1,45 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { tutorService } from '../../services/tutor.service';
-import type { Tutor } from '../../types/tutor.types';
-import { getErrorMessage } from '../../utils/errorUtils';
+import { tutorFacade } from '../../facades/tutor.facade';
+import { useObservable } from '../useObservable';
 import { AxiosError } from 'axios';
 
 export const useTutorDetails = () => {
   const { id } = useParams<{ id: string }>();
   
-  const [tutor, setTutor] = useState<Tutor | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const tutor = useObservable(tutorFacade.currentTutor$, undefined);
+  const isLoading = useObservable(tutorFacade.isLoading$, true);
+  const error = useObservable(tutorFacade.error$, undefined);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-
     if (!id) {
       setNotFound(true);
-      setIsLoading(false);
       return;
     }
 
-    const loadTutor = async () => {
+    tutorFacade.setCurrentTutor(undefined);
+
+    const load = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        
-        const data = await tutorService.getById(Number(id));
-        
-        if (mounted) {
-          setTutor(data);
-        }
+        await tutorFacade.fetchTutorById(Number(id));
       } catch (err: unknown) {
-        if (mounted) {
-          console.error('[useTutorDetails] Error:', err);
-          if (err instanceof AxiosError && err.response?.status === 404) {
-            setNotFound(true);
-          } else {
-            setError(getErrorMessage(err, 'Não foi possível carregar os dados do tutor.'));
-          }
+        if (err instanceof AxiosError && err.response?.status === 404) {
+          setNotFound(true);
         }
-      } finally {
-        if (mounted) setIsLoading(false);
       }
     };
 
-    loadTutor();
+    load();
 
     return () => {
-      mounted = false;
+      tutorFacade.clear();
     };
   }, [id]);
 
   const reload = () => {
     if (id) {
-       window.location.reload(); 
+       tutorFacade.fetchTutorById(Number(id));
     }
   };
 

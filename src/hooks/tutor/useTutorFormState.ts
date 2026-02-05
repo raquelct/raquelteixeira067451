@@ -1,8 +1,7 @@
-import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { tutorSchema, type TutorFormSchema } from '../../schemas/tutorSchema';
-import { useEntityLoader } from '../useEntityLoader';
+import { useQuery } from '@tanstack/react-query';
 import { tutorFacade } from '../../facades/tutor.facade';
 import { maskPhone, maskCPF } from '../../utils/masks';
 import type { Tutor } from '../../types/tutor.types';
@@ -31,15 +30,12 @@ export const useTutorFormState = ({ isEditMode, tutorId, onTutorLoaded }: UseTut
     },
   });
 
-  const fetchTutor = useCallback(async () => {
-    if (!tutorId) throw new Error('Tutor ID is required');
-    return tutorFacade.fetchTutorById(tutorId);
-  }, [tutorId]);
-
-  const { isLoading: isLoadingData } = useEntityLoader({
-    fetcher: fetchTutor,
-    shouldFetch: isEditMode && !!tutorId,
-    onSuccess: (tutor) => {
+  const { isLoading: isLoadingData } = useQuery({
+    queryKey: ['tutor', tutorId],
+    queryFn: async () => {
+      if (!tutorId) throw new Error('Tutor ID is required');
+      const tutor = await tutorFacade.fetchTutorById(tutorId);
+      
       reset({
         nome: tutor.name,
         email: tutor.email,
@@ -49,8 +45,10 @@ export const useTutorFormState = ({ isEditMode, tutorId, onTutorLoaded }: UseTut
       });
 
       onTutorLoaded?.(tutor);
+      return tutor;
     },
-    errorMessage: 'Erro ao carregar dados do tutor',
+    enabled: isEditMode && !!tutorId,
+    retry: false,
   });
 
   return {
