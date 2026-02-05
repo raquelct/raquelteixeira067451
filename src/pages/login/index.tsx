@@ -28,7 +28,7 @@ export const Login = () => {
             Status do Sistema
           </Link>
           |
-          <span className="ml-2">© 2026 Sistema de Registro de Pets - SEPLAG/MT</span>
+          <span className="ml-2">© 2026 Sistema de Registro de Pets</span>
         </p>
       </div>
     </div>

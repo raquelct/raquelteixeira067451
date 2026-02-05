@@ -18,7 +18,7 @@ export const Footer = () => {
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-500 hidden sm:inline">
-              Desenvolvido para SEPLAG/MT
+              Desenvolvido para processo seletivo conjunto nº 001/2026
             </span>
             
             <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
