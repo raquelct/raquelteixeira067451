@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { performHealthCheck, HEALTH_CONFIG } from '../utils/healthCheck';
+import { healthService, HEALTH_CONFIG } from '../services/health.service';
 import type { HealthCheckResponse } from '../types/health.types';
 
 const REFRESH_INTERVAL = HEALTH_CONFIG.REFRESH_INTERVAL;
@@ -12,7 +12,7 @@ export const useHealthMonitor = () => {
   const checkHealth = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await performHealthCheck();
+      const result = await healthService.performHealthCheck();
       setData(result);
       setLastUpdated(new Date());
     } finally {

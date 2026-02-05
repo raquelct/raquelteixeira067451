@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useHealthMonitor } from '../../hooks/useHealthMonitor';
 import { ProbeCard } from '../../components/health/ProbeCard';
-import { PROBE_STATUS, HEALTH_CONFIG } from '../../utils/healthCheck';
+import { PROBE_STATUS, HEALTH_CONFIG } from '../../services/health.service';
 
 const STATUS_CONFIG = {
   active: {
