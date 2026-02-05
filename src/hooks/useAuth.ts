@@ -1,48 +1,29 @@
 import { useState, useEffect } from 'react';
 import { authFacade } from '../facades/auth.facade';
-import { authStore } from '../state/AuthStore';
-import type { AuthState, AuthRequestDto } from '../types/auth.types';
+import type { User } from '../types/auth.types';
 
 export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>(() =>
-    authStore.getCurrentAuthState()
-  );
+  const [user, setUser] = useState<User | null>(authFacade.getCurrentUser());
+  const [isAuthenticated, setIsAuthenticated] = useState(authFacade.isAuthenticated());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const subscription = authFacade.getAuthState().subscribe((state) => {
-      setAuthState(state);
-    });
-
+    const userSub = authFacade.user$.subscribe(setUser);
+    const authSub = authFacade.isAuthenticated$.subscribe(setIsAuthenticated);
+    const loadingSub = authFacade.isLoading$.subscribe(setIsLoading);
 
     return () => {
-      subscription.unsubscribe();
+      userSub.unsubscribe();
+      authSub.unsubscribe();
+      loadingSub.unsubscribe();
     };
   }, []);
 
-
-  const login = async (credentials: AuthRequestDto) => {
-    try {
-      await authFacade.login(credentials);
-    } catch (error) {
-      console.error('[useAuth] Erro ao fazer login:', error);
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await authFacade.logout();
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      throw error;
-    }
-  };
-
   return {
-    user: authState.user,
-    isAuthenticated: authState.isAuthenticated,
-    isLoading: authState.isLoading,
-    login,
-    logout,
+    user,
+    isAuthenticated,
+    isLoading,
+    login: authFacade.login.bind(authFacade),
+    logout: authFacade.logout.bind(authFacade),
   };
 };

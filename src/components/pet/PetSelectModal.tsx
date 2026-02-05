@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { petFacade } from '../../facades/pet.facade';
+import { usePetFacade } from '../../facades/pet.facade';
 import type { Pet } from '../../types/pet.types';
 import { GenericSelectModal } from '../shared/GenericSelectModal';
 
@@ -18,32 +18,11 @@ export const PetSelectModal = ({
   alreadyLinkedPetIds = [],
 }: PetSelectModalProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      const loadPets = async () => {
-        try {
-          setIsLoading(true);
-          await petFacade.fetchPets(undefined, 0, 100);
-        } catch (error) {
-            console.error('Erro ao carregar pets', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadPets();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const sub = petFacade.pets$.subscribe((allPets) => {
-      setPets(allPets);
-    });
-    return () => sub.unsubscribe();
-  }, [isOpen]);
+  const { usePets } = usePetFacade();
+  const { data, isLoading } = usePets(undefined, 0, 100);
+  const pets = data?.content || [];
+  
+  // No need for manual fetch or subscription effects as usePets handles it
 
   const filteredPets = pets.filter((pet) => {
     const term = searchTerm.toLowerCase();

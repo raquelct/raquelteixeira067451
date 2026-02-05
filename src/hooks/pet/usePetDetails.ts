@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { petFacade } from '../../facades/pet.facade';
-import { useObservable } from '../../hooks/useObservable';
+import { usePetFacade } from '../../facades/pet.facade';
 import { AxiosError } from 'axios';
 
 export const usePetDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const numericId = id ? Number(id) : undefined;
   
-  const pet = useObservable(petFacade.currentPet$, undefined);
-  const isLoading = useObservable(petFacade.isLoading$, true);
-  const error = useObservable(petFacade.error$, undefined);
+  const { usePet } = usePetFacade();
+  const { data: pet, isLoading, error: queryError, refetch } = usePet(numericId);
+  
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -18,38 +18,18 @@ export const usePetDetails = () => {
       return;
     }
 
-    // Reset current pet when mounting/id changes
-    petFacade.setCurrentPet(undefined);
-
-    const load = async () => {
-      try {
-        await petFacade.fetchPetById(Number(id));
-      } catch (err: unknown) {
-        if (err instanceof AxiosError && err.response?.status === 404) {
-          setNotFound(true);
-        }
-        // Other errors handled by interceptor/facade
+    if (queryError) {
+      if (queryError instanceof AxiosError && queryError.response?.status === 404) {
+        setNotFound(true);
       }
-    };
-
-    load();
-
-    return () => {
-      petFacade.clear();
-    };
-  }, [id]);
-
-  const reload = () => {
-    if (id) {
-       petFacade.fetchPetById(Number(id));
     }
-  };
+  }, [id, queryError]);
 
   return {
     pet,
     isLoading,
-    error,
+    error: queryError instanceof Error ? queryError.message : undefined,
     notFound,
-    reload
+    reload: refetch
   };
 };

@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { petFacade } from '../../facades/pet.facade';
+import { usePetFacade } from '../../facades/pet.facade';
 import type { PetFormSchema } from '../../schemas/petSchema';
 
 interface UsePetSubmissionProps {
@@ -20,35 +20,36 @@ export const usePetSubmission = ({
   currentPhotoId,
 }: UsePetSubmissionProps) => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createPet, updatePet, isCreating, isUpdating } = usePetFacade();
+  
+  const isSubmitting = isCreating || isUpdating;
 
   const handleCancel = useCallback(() => {
     navigate('/');
   }, [navigate]);
 
   const onSubmit = useCallback(async (data: PetFormSchema) => {
-    setIsSubmitting(true);
-
     try {
       if (isEditMode && petId) {
-        await petFacade.updatePet(
-          petId,
-          data,
-          imageFile || undefined,
+        await updatePet({
+          id: petId,
+          formData: data,
+          imageFile: imageFile || undefined,
           isImageRemoved,
           currentPhotoId
-        );
+        });
         toast.success('Pet atualizado com sucesso!');
       } else {
-        await petFacade.createPet(data, imageFile || undefined);
+        await createPet({ formData: data, imageFile: imageFile || undefined });
         toast.success('Pet criado com sucesso!');
       }
 
       navigate('/');
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+       // Error handled globally or by Facade
+       console.error(error);
     }
-  }, [isEditMode, petId, imageFile, isImageRemoved, currentPhotoId, navigate]);
+  }, [isEditMode, petId, imageFile, isImageRemoved, currentPhotoId, navigate, createPet, updatePet]);
 
   return {
     isSubmitting,

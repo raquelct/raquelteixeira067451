@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { tutorFacade } from '../../facades/tutor.facade';
+import { useTutorFacade } from '../../facades/tutor.facade';
 import type { Pet } from '../../types/pet.types';
 
 interface UseTutorPetSelectionProps {
@@ -11,6 +11,7 @@ interface UseTutorPetSelectionProps {
 export const useTutorPetSelection = ({ isEditMode, tutorId }: UseTutorPetSelectionProps) => {
   const [selectedPets, setSelectedPets] = useState<Pet[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { linkPet } = useTutorFacade();
 
   const handleAddPet = useCallback((pet: Pet) => {
     setSelectedPets((prev) => [...prev, pet]);
@@ -29,12 +30,12 @@ export const useTutorPetSelection = ({ isEditMode, tutorId }: UseTutorPetSelecti
 
   const handleSelectPet = useCallback(async (pet: Pet) => {
     if (isEditMode && tutorId) {
-      await tutorFacade.linkPetToTutor(tutorId, pet.id);
+      await linkPet({ tutorId, petId: pet.id });
       handleAddPet(pet);
     } else {
       handleAddPet(pet);
     }
-  }, [isEditMode, tutorId, handleAddPet]);
+  }, [isEditMode, tutorId, handleAddPet, linkPet]);
 
   return {
     selectedPets,

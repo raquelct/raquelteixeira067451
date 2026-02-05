@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Pet } from '../../types/pet.types';
 import type { Tutor } from '../../types/tutor.types';
-import { tutorFacade } from '../../facades/tutor.facade';
+import { useTutorFacade } from '../../facades/tutor.facade';
 import { Button } from '../shared/Button';
 import { ConfirmationModal } from '../shared/ConfirmationModal';
 import toast from 'react-hot-toast';
@@ -24,6 +24,7 @@ export const LinkedPetsSection = ({
   onAddClick
 }: LinkedPetsSectionProps) => {
   const [unlinkingPetId, setUnlinkingPetId] = useState<number | null>(null);
+  const { unlinkPet } = useTutorFacade();
   
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -66,7 +67,7 @@ export const LinkedPetsSection = ({
           throw new Error('Tutor não fornecido em modo de edição');
         }
 
-        await tutorFacade.removePetFromTutor(tutor.id, petId);
+        await unlinkPet({ tutorId: tutor.id, petId });
 
         if (onRemovePet) {
           onRemovePet(petId);

@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { tutorFacade } from '../../facades/tutor.facade';
-import { useObservable } from '../useObservable';
+import { useTutorFacade } from '../../facades/tutor.facade';
 import { AxiosError } from 'axios';
 
 export const useTutorDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const numericId = id ? Number(id) : undefined;
   
-  const tutor = useObservable(tutorFacade.currentTutor$, undefined);
-  const isLoading = useObservable(tutorFacade.isLoading$, true);
-  const error = useObservable(tutorFacade.error$, undefined);
+  const { useTutor } = useTutorFacade();
+  const { data: tutor, isLoading, error: queryError, refetch } = useTutor(numericId);
+  
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -18,36 +18,18 @@ export const useTutorDetails = () => {
       return;
     }
 
-    tutorFacade.setCurrentTutor(undefined);
-
-    const load = async () => {
-      try {
-        await tutorFacade.fetchTutorById(Number(id));
-      } catch (err: unknown) {
-        if (err instanceof AxiosError && err.response?.status === 404) {
-          setNotFound(true);
-        }
+    if (queryError) {
+      if (queryError instanceof AxiosError && queryError.response?.status === 404) {
+        setNotFound(true);
       }
-    };
-
-    load();
-
-    return () => {
-      tutorFacade.clear();
-    };
-  }, [id]);
-
-  const reload = () => {
-    if (id) {
-       tutorFacade.fetchTutorById(Number(id));
     }
-  };
+  }, [id, queryError]);
 
   return {
     tutor,
     isLoading,
-    error,
+    error: queryError instanceof Error ? queryError.message : undefined,
     notFound,
-    reload
+    reload: refetch
   };
 };

@@ -1,8 +1,8 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { tutorSchema, type TutorFormSchema } from '../../schemas/tutorSchema';
-import { useQuery } from '@tanstack/react-query';
-import { tutorFacade } from '../../facades/tutor.facade';
+import { useTutorFacade } from '../../facades/tutor.facade';
 import { maskPhone, maskCPF } from '../../utils/masks';
 import type { Tutor } from '../../types/tutor.types';
 
@@ -30,12 +30,11 @@ export const useTutorFormState = ({ isEditMode, tutorId, onTutorLoaded }: UseTut
     },
   });
 
-  const { isLoading: isLoadingData } = useQuery({
-    queryKey: ['tutor', tutorId],
-    queryFn: async () => {
-      if (!tutorId) throw new Error('Tutor ID is required');
-      const tutor = await tutorFacade.fetchTutorById(tutorId);
-      
+  const { useTutor } = useTutorFacade();
+  const { data: tutor, isLoading: isLoadingData } = useTutor(tutorId);
+
+  useEffect(() => {
+    if (tutor && isEditMode) {
       reset({
         nome: tutor.name,
         email: tutor.email,
@@ -43,13 +42,9 @@ export const useTutorFormState = ({ isEditMode, tutorId, onTutorLoaded }: UseTut
         endereco: tutor.address,
         cpf: maskCPF(String(tutor.cpf)),
       });
-
       onTutorLoaded?.(tutor);
-      return tutor;
-    },
-    enabled: isEditMode && !!tutorId,
-    retry: false,
-  });
+    }
+  }, [tutor, isEditMode, reset]);
 
   return {
     register,

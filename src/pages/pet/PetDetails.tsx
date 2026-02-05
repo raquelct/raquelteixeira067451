@@ -4,7 +4,7 @@ import { ArrowLeft, AlertTriangle, Users, Phone } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { usePetDetails } from '../../hooks/pet/usePetDetails';
 import { ConfirmationModal } from '../../components/shared/ConfirmationModal';
-import { petFacade } from '../../facades/pet.facade';
+import { usePetFacade } from '../../facades/pet.facade';
 import { ProfileHero } from '../../components/ui/ProfileHero';
 import { GridList } from '../../components/ui/GridList';
 import { formatAge } from '../../utils/formatters';
@@ -12,6 +12,7 @@ import type { Tutor } from '../../types/tutor.types';
 
 export const PetDetails = () => {
   const navigate = useNavigate();
+  const { deletePet } = usePetFacade();
   const { pet, isLoading, error, notFound } = usePetDetails();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -22,7 +23,7 @@ export const PetDetails = () => {
   const handleDelete = async () => {
     if (!pet) return;
     try {
-      await petFacade.deletePet(pet.id);
+      await deletePet(pet.id);
       toast.success('Pet removido com sucesso!');
       navigate('/');
     } catch (error) {

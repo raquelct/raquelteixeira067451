@@ -5,7 +5,7 @@ import { useTutores } from '../../hooks/tutor/useTutores';
 import { useDeleteConfirmation } from '../../hooks/useDeleteConfirmation';
 import { GenericCard } from '../../components/shared/GenericCard';
 import { EntityList } from '../../components/shared/EntityList';
-import { tutorFacade } from '../../facades/tutor.facade';
+
 import { maskPhone } from '../../utils/masks';
 import { getSubtitle } from '../../utils/formatters';
 import { PAGINATION } from '../../constants/pagination';
@@ -22,6 +22,7 @@ export const TutorList = () => {
     error,
     totalCount,
     fetchTutores,
+    deleteTutor,
   } = useTutores();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -30,7 +31,7 @@ export const TutorList = () => {
 
   const deleteConfirmation = useDeleteConfirmation({
     entityName: 'Tutor',
-    deleteFn: tutorFacade.deleteTutor,
+    deleteFn: deleteTutor,
     onSuccess: () => fetchTutores(undefined, currentPage, PAGE_SIZE),
   });
 
@@ -70,7 +71,7 @@ export const TutorList = () => {
       buttonLabel="Novo Tutor"
       onNewClick={() => navigate('/tutores/new')}
       isLoading={isLoading}
-      error={error}
+      error={error ?? null}
       data={tutores}
       totalCount={totalCount}
       currentPage={currentPage}

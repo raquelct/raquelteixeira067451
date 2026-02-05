@@ -4,13 +4,14 @@ import { ArrowLeft, PawPrint, Mail, Phone, MapPin, UserSquare } from 'lucide-rea
 import { toast } from 'react-hot-toast';
 import { useTutorDetails } from '../../hooks/tutor/useTutorDetails';
 import { ConfirmationModal } from '../../components/shared/ConfirmationModal';
-import { tutorFacade } from '../../facades/tutor.facade';
+import { useTutorFacade } from '../../facades/tutor.facade';
 import { ProfileHero } from '../../components/ui/ProfileHero';
 import { GridList } from '../../components/ui/GridList';
 import type { Pet } from '../../types/pet.types';
 
 export const TutorDetails = () => {
   const navigate = useNavigate();
+  const { deleteTutor } = useTutorFacade();
   const { tutor, isLoading, error, notFound } = useTutorDetails();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -21,7 +22,7 @@ export const TutorDetails = () => {
   const handleDelete = async () => {
     if (!tutor) return;
     try {
-      await tutorFacade.deleteTutor(tutor.id);
+      await deleteTutor(tutor.id);
       toast.success('Tutor removido com sucesso!');
       navigate('/tutores');
     } catch (error) {

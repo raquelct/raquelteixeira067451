@@ -5,7 +5,7 @@ import { usePets } from '../../hooks/pet/usePets';
 import { useDeleteConfirmation } from '../../hooks/useDeleteConfirmation';
 import { GenericCard } from '../../components/shared/GenericCard';
 import { EntityList } from '../../components/shared/EntityList';
-import { petFacade } from '../../facades/pet.facade';
+
 import { getSubtitle, formatAge } from '../../utils/formatters';
 import { PAGINATION } from '../../constants/pagination';
 import { ENTITY_FILTERS } from '../../constants/filters';
@@ -21,6 +21,7 @@ export const PetList = () => {
     error,
     totalCount,
     fetchPets,
+    deletePet,
   } = usePets();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -29,7 +30,7 @@ export const PetList = () => {
 
   const deleteConfirmation = useDeleteConfirmation({
     entityName: 'Pet',
-    deleteFn: petFacade.deletePet,
+    deleteFn: deletePet,
     onSuccess: () => fetchPets(undefined, currentPage, PAGE_SIZE),
   });
 
@@ -69,7 +70,7 @@ export const PetList = () => {
       buttonLabel="Novo Pet"
       onNewClick={() => navigate('/pets/new')}
       isLoading={isLoading}
-      error={error}
+      error={error ?? null}
       data={pets}
       totalCount={totalCount}
       currentPage={currentPage}

@@ -1,112 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
-import { petFacade } from '../../facades/pet.facade';
-import { petStore } from '../../state/PetStore';
-import type { Pet, PetFilters } from '../../types/pet.types';
+import { useState, useCallback } from 'react';
+import { usePetFacade } from '../../facades/pet.facade';
+import type { PetFilters } from '../../types/pet.types';
 
 export const usePets = () => {
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [currentPet, setCurrentPetState] = useState<Pet | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { usePets: usePetsQuery, createPet, updatePet, deletePet } = usePetFacade();
+  
+  const [filters, setFilters] = useState<PetFilters | undefined>(undefined);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
 
-  useEffect(() => {
-    const petsSubscription = petFacade.pets$.subscribe((data) => {
-      setPets(data);
-    });
+  const { data, isLoading, error } = usePetsQuery(filters, page, size);
 
-    const currentPetSubscription = petFacade.currentPet$.subscribe((data) => {
-      setCurrentPetState(data ?? null);
-    });
-
-    const loadingSubscription = petFacade.isLoading$.subscribe((data) => {
-      setIsLoading(data);
-    });
-
-    const errorSubscription = petFacade.error$.subscribe((data) => {
-      setError(data ?? null);
-    });
-
-    const totalCountSubscription = petFacade.totalCount$.subscribe((data) => {
-      setTotalCount(data);
-    });
-
-    const currentPageSubscription = petStore.currentPage$.subscribe((data) => {
-      setCurrentPage(data);
-    });
-
-    const pageSizeSubscription = petStore.pageSize$.subscribe((data) => {
-      setPageSize(data);
-    });
-
-    return () => {
-      petsSubscription.unsubscribe();
-      currentPetSubscription.unsubscribe();
-      loadingSubscription.unsubscribe();
-      errorSubscription.unsubscribe();
-      totalCountSubscription.unsubscribe();
-      currentPageSubscription.unsubscribe();
-      pageSizeSubscription.unsubscribe();
-    };
+  const fetchPets = useCallback((newFilters?: PetFilters, newPage?: number, newSize?: number) => {
+    if (newFilters !== undefined) setFilters(newFilters);
+    if (newPage !== undefined) setPage(newPage);
+    if (newSize !== undefined) setSize(newSize);
   }, []);
-
-  const fetchPets = useCallback(
-    (filters?: PetFilters, page?: number, size?: number) => {
-      return petFacade.fetchPets(filters, page, size);
-    },
-    []
-  );
-
-  const fetchPetById = useCallback((id: number) => {
-    return petFacade.fetchPetById(id);
-  }, []);
-
-
-  const createPet = useCallback((data: Parameters<typeof petFacade.createPet>[0]) => {
-    return petFacade.createPet(data);
-  }, []);
-
-  const updatePet = useCallback(
-    (id: number, data: Parameters<typeof petFacade.updatePet>[1]) => {
-      return petFacade.updatePet(id, data);
-    },
-    []
-  );
-
-  const deletePet = useCallback((id: number) => {
-    return petFacade.deletePet(id);
-  }, []);
-
-  const setCurrentPet = useCallback((pet: Pet | null) => {
-    petFacade.setCurrentPet(pet ?? undefined);
-  }, []);
-
-  const clear = useCallback(() => {
-    petFacade.clear();
-  }, []);
-
-  const formatPetAge = useCallback((age?: number) => {
-    return petFacade.formatPetAge(age);
-  }, []);
-
 
   return {
-    pets,
-    currentPet,
+    pets: data?.content || [],
     isLoading,
-    error,
-    totalCount,
-    currentPage,
-    pageSize,
+    error: error instanceof Error ? error.message : undefined,
+    totalCount: data?.total || 0,
+    currentPage: page,
+    pageSize: size,
     fetchPets,
-    fetchPetById,
     createPet,
     updatePet,
     deletePet,
-    setCurrentPet,
-    clear,
-    formatPetAge,
   };
 };

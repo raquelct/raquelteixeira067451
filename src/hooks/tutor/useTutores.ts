@@ -1,82 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
-import { tutorFacade } from '../../facades/tutor.facade';
-import type { Tutor, TutorFilters, TutorFormData } from '../../types/tutor.types';
+import { useState, useCallback } from 'react';
+import { useTutorFacade } from '../../facades/tutor.facade';
+import type { TutorFilters } from '../../types/tutor.types';
 
 export const useTutores = () => {
-  const [tutores, setTutores] = useState<Tutor[]>([]);
-  const [currentTutorState, setCurrentTutorState] = useState<Tutor | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(0);
+  const { useTutors: useTutorsQuery, createTutor, updateTutor, deleteTutor } = useTutorFacade();
+  
+  const [filters, setFilters] = useState<TutorFilters | undefined>(undefined);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
 
-  useEffect(() => {
-    const tutoresSubscription = tutorFacade.tutores$.subscribe((data) => {
-      setTutores(data);
-    });
+  const { data, isLoading, error } = useTutorsQuery(filters, page, size);
 
-    const currentTutorSubscription = tutorFacade.currentTutor$.subscribe((data) => {
-      setCurrentTutorState(data || null);
-    });
-
-    const loadingSubscription = tutorFacade.isLoading$.subscribe((data) => {
-      setIsLoading(data);
-    });
-
-    const errorSubscription = tutorFacade.error$.subscribe((data) => {
-      setError(data || null);
-    });
-
-    const totalCountSubscription = tutorFacade.totalCount$.subscribe((data) => {
-      setTotalCount(data);
-    });
-
-    return () => {
-      tutoresSubscription.unsubscribe();
-      currentTutorSubscription.unsubscribe();
-      loadingSubscription.unsubscribe();
-      errorSubscription.unsubscribe();
-      totalCountSubscription.unsubscribe();
-    };
-  }, []);
-
-  const fetchTutores = useCallback(
-    (filters?: TutorFilters, page?: number, size?: number) => {
-      return tutorFacade.fetchTutores(filters, page, size);
-    },
-    []
-  );
-
-  const fetchTutorById = useCallback((id: number) => {
-    return tutorFacade.fetchTutorById(id);
-  }, []);
-
-  const createTutor = useCallback((data: TutorFormData, imageFile?: File) => {
-    return tutorFacade.createTutor(data, imageFile);
-  }, []);
-
-  const deleteTutor = useCallback((id: number) => {
-    return tutorFacade.deleteTutor(id);
-  }, []);
-
-  const setCurrentTutor = useCallback((tutor: Tutor | null) => {
-    tutorFacade.setCurrentTutor(tutor || undefined);
-  }, []);
-
-  const clear = useCallback(() => {
-    tutorFacade.clear();
+  const fetchTutores = useCallback((newFilters?: TutorFilters, newPage?: number, newSize?: number) => {
+    if (newFilters !== undefined) setFilters(newFilters);
+    if (newPage !== undefined) setPage(newPage);
+    if (newSize !== undefined) setSize(newSize);
   }, []);
 
   return {
-    tutores,
-    currentTutor: currentTutorState,
+    tutores: data?.content || [],
     isLoading,
-    error,
-    totalCount,
+    error: error instanceof Error ? error.message : undefined,
+    totalCount: data?.total || 0,
+    currentPage: page,
+    pageSize: size,
     fetchTutores,
-    fetchTutorById,
     createTutor,
+    updateTutor,
     deleteTutor,
-    setCurrentTutor,
-    clear,
   };
 };

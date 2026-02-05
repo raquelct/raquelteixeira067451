@@ -2,26 +2,14 @@ import { useState, useEffect, Fragment } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, MenuItem, MenuItems, Transition } from '@headlessui/react';
 import { LogOut, User as UserIcon, ChevronDown, Menu as MenuIcon, PawPrint } from 'lucide-react';
-import { authFacade } from '../../facades/auth.facade';
-import type { User } from '../../types/auth.types';
+import { useAuth } from '../../hooks/useAuth';
 
 export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isAuthenticated, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  useEffect(() => {
-    const authSubscription = authFacade.isAuthenticated$.subscribe(setIsAuthenticated);
-    const userSubscription = authFacade.user$.subscribe(setUser);
-
-    return () => {
-      authSubscription.unsubscribe();
-      userSubscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -30,7 +18,7 @@ export const Navbar = () => {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      await authFacade.logout();
+      await logout();
       navigate('/login');
     } catch (error) {
       console.error('[Navbar] Logout error:', error);

@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { tutorFacade } from '../../facades/tutor.facade';
+import { useTutorFacade } from '../../facades/tutor.facade';
 import type { TutorFormSchema } from '../../schemas/tutorSchema';
 import type { Pet } from '../../types/pet.types';
 
@@ -23,37 +23,39 @@ export const useTutorSubmission = ({
   currentPhotoId,
 }: UseTutorSubmissionProps) => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createTutor, updateTutor, isCreating, isUpdating } = useTutorFacade();
+  
+  const isSubmitting = isCreating || isUpdating;
 
   const handleCancel = useCallback(() => {
     navigate('/tutores');
   }, [navigate]);
 
   const onSubmit = useCallback(async (data: TutorFormSchema) => {
-    setIsSubmitting(true);
-
     try {
-      const payload = data;
-
       if (isEditMode && tutorId) {
-        await tutorFacade.updateTutor(
-          tutorId,
-          payload,
-          imageFile || undefined,
+        await updateTutor({
+          id: tutorId,
+          formData: data,
+          imageFile: imageFile || undefined,
           isImageRemoved,
           currentPhotoId
-        );
+        });
       } else {
         const petIds = selectedPets.map((pet) => pet.id);
-        await tutorFacade.createTutor(payload, imageFile || undefined, petIds);
+        await createTutor({
+          formData: data, 
+          imageFile: imageFile || undefined, 
+          pendingPetIds: petIds
+        });
       }
 
       toast.success(isEditMode ? 'Tutor atualizado com sucesso!' : 'Tutor cadastrado com sucesso!');
       navigate('/tutores');
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error(error);
     }
-  }, [isEditMode, tutorId, selectedPets, imageFile, isImageRemoved, currentPhotoId, navigate]);
+  }, [isEditMode, tutorId, selectedPets, imageFile, isImageRemoved, currentPhotoId, navigate, createTutor, updateTutor]);
 
   return {
     isSubmitting,

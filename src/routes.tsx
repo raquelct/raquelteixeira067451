@@ -4,7 +4,7 @@ import { Login } from './pages/login';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
 import { LoadingSpinner } from './components/shared/LoadingSpinner';
-import { authFacade } from './facades/auth.facade';
+import { useAuth } from './hooks/useAuth';
 
 const PetList = lazy(() => import('./pages/pet/PetList').then(m => ({ default: m.PetList })));
 const PetForm = lazy(() => import('./pages/pet/PetForm').then(m => ({ default: m.PetForm })));
@@ -15,7 +15,8 @@ const TutorDetails = lazy(() => import('./pages/tutor/TutorDetails').then(m => (
 const StatusPage = lazy(() => import('./pages/status/StatusPage').then(m => ({ default: m.StatusPage })));
 
 const PublicRoute = () => {
-  if (authFacade.isAuthenticated()) {
+  const { isAuthenticated } = useAuth();
+  if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;
