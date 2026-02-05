@@ -46,7 +46,7 @@ export const TutorDetails = () => {
   if (notFound || !tutor || error) {
     return (
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">{error || 'Tutor não encontrado'}</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">{error}</h2>
         <button onClick={handleGoBack} className="bg-indigo-600 text-white px-6 py-2 rounded-lg">Voltar</button>
       </div>
     );
@@ -62,7 +62,7 @@ export const TutorDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-1 lg:sticky lg:top-6">
           <ProfileHero
-            imageUrl={tutor.photo || (tutor.foto ? tutor.foto.url : undefined)} // Handler legacy vs new API structure
+            imageUrl={tutor.photo || (tutor.foto ? tutor.foto.url : undefined)}
             title={tutor.name}
             subtitle="Tutor Responsável"
             variant="tutor"

@@ -37,7 +37,6 @@ export const setupErrorInterceptor = (axiosInstance: AxiosInstance): void => {
                     toast.error('Acesso negado: Você não tem permissão para realizar esta ação.', { id: 'forbidden-error' });
                     break;
                 case 404:
-                    toast.error('Recurso não encontrado.', { id: 'not-found-error' });
                     break;
                 case 500:
                 case 502:
