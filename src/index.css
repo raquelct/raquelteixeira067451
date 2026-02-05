@@ -2,69 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ========== Global Layout ========== */
 body,
 #root {
   min-height: 100vh;
   min-width: 320px;
 }
 
-/* ========== Typography & Theme ========== */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  /* Force light mode only */
   color-scheme: light;
-  color: #111827; /* gray-900 */
+  color: #111827;
   background-color: #ffffff;
-
-  /* Font rendering */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ========== Body Styles ========== */
 body {
   margin: 0;
-  background-color: #f9fafb; /* gray-50 */
+  background-color: #f9fafb;
 }
 
-/* ========== Root Container ========== */
 #root {
   width: 100%;
   margin: 0 auto;
 }
 
-/* ========== Fix Browser Autofill White Text Issue ========== */
-/* Chrome, Safari, Edge autofill styling */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-text-fill-color: #111827 !important; /* gray-900 */
+  -webkit-text-fill-color: #111827 !important;
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
   box-shadow: 0 0 0px 1000px #ffffff inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Firefox autofill styling */
 input:-moz-autofill,
 input:-moz-autofill-preview {
-  color: #111827 !important; /* gray-900 */
+  color: #111827 !important;
   background-color: #ffffff !important;
 }
 
-/* ========== Ensure Text Visibility in All Input States ========== */
 input[type="text"],
 input[type="password"],
 input[type="email"],
 input[type="search"],
 textarea {
-  color: #111827 !important; /* gray-900 */
+  color: #111827 !important;
   background-color: #ffffff !important;
 }
 
@@ -73,17 +61,22 @@ input[type="password"]:focus,
 input[type="email"]:focus,
 input[type="search"]:focus,
 textarea:focus {
-  color: #111827 !important; /* gray-900 */
+  color: #111827 !important;
   background-color: #ffffff !important;
 }
 
-/* ========== Selection Styles ========== */
 ::selection {
-  background-color: #3b82f6; /* blue-500 */
+  background-color: #3b82f6;
   color: #ffffff;
 }
 
 ::-moz-selection {
-  background-color: #3b82f6; /* blue-500 */
+  background-color: #3b82f6;
   color: #ffffff;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
 }
