@@ -41,7 +41,7 @@ export const useTutorFormState = ({ isEditMode, tutorId, onTutorLoaded }: UseTut
         telefone: maskPhone(tutor.phone),
         endereco: tutor.address,
         cpf: maskCPF(String(tutor.cpf)),
-      });
+      }, { keepDirtyValues: true });
       onTutorLoaded?.(tutor);
     }
   }, [tutor, isEditMode, reset]);
