@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, MenuItem, MenuItems, Transition } from '@headlessui/react';
+import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
 import { LogOut, User as UserIcon, ChevronDown, Menu as MenuIcon, PawPrint } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -100,7 +100,7 @@ export const Navbar = () => {
                 <div className="hidden md:block">
                     <Menu as="div" className="relative">
                     <div>
-                        <Menu.Button className="flex items-center gap-2 max-w-xs rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 p-1 hover:bg-white/5 transition-colors">
+                        <MenuButton className="flex items-center gap-2 max-w-xs rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 p-1 hover:bg-white/5 transition-colors">
                         <span className="sr-only">Open user menu</span>
                         <div className="h-8 w-8 rounded-full bg-indigo-800 flex items-center justify-center text-indigo-100 font-bold border border-indigo-400">
                             {getUserInitials(user?.name)}
@@ -109,7 +109,7 @@ export const Navbar = () => {
                             {user?.name?.split(' ')[0]}
                         </span>
                         <ChevronDown className="h-4 w-4 text-indigo-200" aria-hidden="true" />
-                        </Menu.Button>
+                        </MenuButton>
                     </div>
                     <Transition
                         as={Fragment}
@@ -208,18 +208,7 @@ export const Navbar = () => {
                   }`}
                 >
                   Tutores
-                </Link>
-                <Link
-                  to="/tutores"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    isActivePath('/tutores')
-                      ? 'bg-indigo-800 text-white'
-                      : 'text-indigo-100 hover:bg-indigo-600 hover:text-white'
-                  }`}
-                >
-                  Tutores
-                </Link>
-                
+                </Link>                
                 <div className="border-t border-indigo-500/30 mt-4 pt-4 pb-2">
                     <button
                     onClick={handleLogout}
