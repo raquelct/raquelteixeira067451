@@ -1,4 +1,3 @@
-import axios from 'axios';
 import apiClient from './api';
 import type { 
   AuthRequestDto, 
@@ -6,6 +5,7 @@ import type {
   User, 
   AuthTokens, 
   LoginResponse} from '../types/auth.types';
+
 
 const AUTH_BASE_URL = 'https://pet-manager-api.geia.vip';
 export class AuthService {
@@ -29,7 +29,7 @@ export class AuthService {
 
   
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-    const { data } = await axios.put<AuthResponseDto>(
+    const { data } = await apiClient.put<AuthResponseDto>(
       `${AUTH_BASE_URL}/autenticacao/refresh`,
       {},
       {
