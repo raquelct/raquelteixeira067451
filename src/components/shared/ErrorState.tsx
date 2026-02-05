@@ -1,13 +1,3 @@
-/**
- * ErrorState - Componente genérico para estados de erro
- * 
- * Features:
- * - Mensagem de erro customizável
- * - Botão de retry opcional
- * - Layout consistente
- * - Alto contraste
- */
-
 import type { ReactNode } from 'react';
 import { Button } from './Button';
 import { stateStyles } from '../../styles/theme';

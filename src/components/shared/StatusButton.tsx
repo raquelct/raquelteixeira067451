@@ -5,7 +5,6 @@ export const StatusButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Não mostrar o botão se já estiver na página de status
   if (location.pathname === '/status') return null;
 
   return (

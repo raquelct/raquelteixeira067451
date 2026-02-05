@@ -6,36 +6,22 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-/**
- * Componente de Proteção de Rota - Nível Sênior
- * 
- * Features:
- * - Subscribe ao Observable isAuthenticated$ (reativo)
- * - Redireciona para /login se não autenticado
- * - Loading state para evitar flash de redirecionamento
- * - Usa AuthFacade (Facade Pattern)
- * 
- * Arquitetura:
- * Component → AuthFacade → AuthStore → BehaviorSubject
- */
+
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Subscribe ao Observable isAuthenticated$
     const subscription = authFacade.isAuthenticated$.subscribe(
       (authenticated) => {
         setIsAuthenticated(authenticated);
       }
     );
 
-    // Cleanup
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  // Loading state - evita flash de redirecionamento
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -47,11 +33,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // Não autenticado - redireciona
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Autenticado - renderiza filhos
   return <>{children}</>;
 };

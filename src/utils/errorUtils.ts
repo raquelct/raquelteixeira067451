@@ -1,10 +1,5 @@
 import { AxiosError } from 'axios';
 
-/**
- * @param error O objeto de erro capturado no catch.
- * @param defaultMsg Mensagem padrão caso não seja possível extrair uma específica.
- * @returns A mensagem de erro processada.
- */
 export const getErrorMessage = (error: unknown, defaultMsg: string = 'Ocorreu um erro inesperado.'): string => {
   if (error instanceof AxiosError) {
     if (error.code === 'ERR_NETWORK' || !error.response) {

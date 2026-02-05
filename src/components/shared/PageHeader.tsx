@@ -1,13 +1,3 @@
-/**
- * PageHeader - Componente de cabeçalho genérico para páginas de listagem
- * 
- * Features:
- * - Título e subtítulo
- * - Botão de ação principal (ex: "Novo Pet", "Novo Tutor")
- * - Navegação ou callback customizado
- * - Layout responsivo
- */
-
 import { useNavigate } from 'react-router-dom';
 import { Button } from './Button';
 import { textStyles } from '../../styles/theme';
@@ -22,9 +12,6 @@ interface PageHeaderProps {
   showButton?: boolean;
 }
 
-/**
- * Ícone de "Plus" SVG
- */
 const PlusIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path

@@ -6,10 +6,6 @@ interface FormTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> 
     className?: string;
 }
 
-/**
- * FormTextarea - Componente de textarea reutilizável
- * Compatível com react-hook-form via forwardRef
- */
 export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
     ({ label, error, className = '', ...props }, ref) => {
         return (

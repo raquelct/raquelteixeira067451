@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-/**
- * Schema de validação para criação de pet
- * Apenas campos suportados pela API
- */
 export const petSchema = z.object({
   nome: z
     .string()
@@ -21,7 +17,5 @@ export const petSchema = z.object({
     .max(100, 'Idade deve ser menor ou igual a 100'),
 });
 
-/**
- * Type inferido do schema
- */
+
 export type PetFormSchema = z.infer<typeof petSchema>;

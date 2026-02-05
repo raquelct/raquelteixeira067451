@@ -97,14 +97,9 @@ class AuthStore {
   }
 
   public clearTokens(): void {
-    try {
-      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-    } catch (error) {
-      console.error('[AuthStore] Erro ao limpar tokens:', error);
-    }
-
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER_DATA);
     this.authState$.next(initialAuthState);
   }
 
@@ -128,11 +123,7 @@ class AuthStore {
           let user: User | null = null;
 
           if (userDataStr) {
-            try {
-              user = JSON.parse(userDataStr) as User;
-            } catch {
-              // Ignore invalid user data
-            }
+            user = JSON.parse(userDataStr) as User;
           }
 
           this.authState$.next({

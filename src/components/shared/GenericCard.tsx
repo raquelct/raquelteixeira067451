@@ -100,10 +100,7 @@ export const GenericCard = ({
           )}
         </div>
       </div>
-
-      {/* Content */}
       <div className="p-4 flex flex-col items-center text-center flex-1">
-        {/* Title (Nome) */}
         <h3
           className="text-lg font-bold text-gray-900 mb-2 w-full truncate capitalize"
           title={title}
@@ -111,14 +108,12 @@ export const GenericCard = ({
           {title}
         </h3>
 
-        {/* Subtitle (Raça/Email) */}
         {subtitle && (
           <p className="text-sm text-gray-600 mb-2 w-full truncate capitalize" title={subtitle}>
             {subtitle}
           </p>
         )}
 
-        {/* Description with Icon (Idade/Telefone) */}
         {description && (
           <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500 mb-2 w-full">
             {descriptionIcon && (
@@ -129,15 +124,11 @@ export const GenericCard = ({
             <span className="truncate">{description}</span>
           </div>
         )}
-
-        {/* Additional Info */}
         {additionalInfo && (
           <div className="w-full mb-2 overflow-hidden text-xs text-gray-400">
             {additionalInfo}
           </div>
         )}
-        
-        {/* Spacer */}
         <div className="flex-1" />
       </div>
     </div>
