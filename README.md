@@ -53,7 +53,7 @@ O ambiente Docker provisiona automaticamente todas as dependências do frontend 
 1. **Clone o repositório:**
 
    ```bash
-   git clone <url-do-repositorio>
+   git clone https://github.com/raquelct/raquelteixeira067451
    cd pet-registry
    ```
 
