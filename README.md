@@ -1,244 +1,131 @@
-# 🐾 Cadastro Público de Pets
+# Pet Manager - Sistema de Registro de Animais de Estimação
 
-## Informações do Desenvolvedor
+## 1. Identificação e Vaga
 
-**Nome:** [Seu Nome Completo]  
-**CPF:** [123.456.789-00]  
-**Identificação:** NomeCompleto_123456
-
----
-
-## 📋 Sobre o Projeto
-
-Sistema de Cadastro Público de Pets desenvolvido como parte do processo seletivo para **SEPLAG/MT - Perfil Sênior**.
-
-Este projeto é uma SPA (Single Page Application) construída com as tecnologias e padrões arquiteturais especificados no edital oficial.
+- **Nome Completo**: Raquel Teixeira
+- **Vaga**: Analista de Tecnologia da Informação - Perfil Engenheiro da Computação (Sênior)
+- **CPF**: [067.451]
+- **Projeto**: Pet Manager - Frontend
+- **Número de inscrição**: 16308
 
 ---
 
-## 🚀 Stack Tecnológico
+## 2. Arquitetura e Decisões Técnicas
 
-### Core
-- **React 18** - Framework Frontend
-- **TypeScript** - Tipagem estática
-- **Vite** - Build tool e dev server
+Este projeto foi projetado seguindo rigorosamente os padrões exigidos no Edital 001/2026/SEPLAG/MT, com foco em escalabilidade, manutenibilidade e separação de responsabilidades.
 
-### Estilização
-- **Tailwind CSS** - Framework CSS utilitário para design responsivo
+### 🏛️ Padrão Facade
 
-### Gerenciamento de Estado
-- **RxJS BehaviorSubject** - Gerenciamento de estado reativo (requisito obrigatório do edital)
+Implementamos uma camada de **Facade** (`src/facades/`) para atuar como uma interface simplificada entre os componentes da UI e a complexidade das camadas inferiores (Services, Store, API).
 
-### Comunicação HTTP
-- **Axios** - Cliente HTTP com interceptors para JWT e Refresh Token
-- **API Base URL:** `https://pet-manager-api.geia.vip`
+- **Isolamento**: A UI não conhece a implementação direta do RxJS ou das chamadas API; ela interage apenas com métodos agnósticos da Facade (ex: `authFacade.login()`).
+- **Benefício**: Facilita a substituição de bibliotecas de estado ou mudanças na API sem impactar os componentes visuais.
 
-### Arquitetura
-- **Facade Pattern** - Padrão arquitetural implementado na estrutura de pastas
+### 🔄 State Management (RxJS & Hooks)
 
----
+Adotamos uma abordagem híbrida e otimizada para gerenciamento de estado:
 
-## 📁 Estrutura do Projeto
+- **Estado Global (Auth)**: Utilizamos `BehaviorSubject` do RxJS (`AuthStore.ts`) para gerenciar o estado de autenticação. Isso permite que múltiplos componentes reajam a mudanças de login/logout em tempo real (Programação Reativa), atendendo ao requisito de controle de sessão global persistente.
+- **Estado Local/Ephemeral**: Para formulários e estados de UI passageiros, utilizamos hooks nativos do React (`useState`, `useReducer`) e `React Hook Form`. Isso evita complexidade desnecessária no estado global e melhora a performance de renderização.
 
-```
-src/
-├── api/              # Configuração do Axios e clientes HTTP
-├── facades/          # Camada Facade para simplificar interfaces complexas
-├── services/         # Lógica de negócio e serviços
-├── components/       # Componentes React reutilizáveis
-├── hooks/            # Custom React Hooks
-├── pages/            # Páginas/Views da aplicação
-├── types/            # Definições de tipos TypeScript
-├── state/            # Gerenciamento de estado (BehaviorSubject stores)
-└── utils/            # Utilitários e helpers
-```
+### 🛡️ Validação com Zod
+
+A integridade dos dados é garantida através do **Zod** na camada de serviço e formulários.
+
+- **Runtime Validation**: Validamos dados recebidos da API e inputs do usuário em tempo de execução, prevenindo que dados inconsistentes corrompam o estado da aplicação.
+- **Type Inference**: Utilizamos a inferência de tipos do Zod para gerar interfaces TypeScript automaticamente, garantindo que os tipos estáticos estejam sempre sincronizados com as regras de validação.
+
+### 🧩 Modularização e Lazy Loading
+
+A aplicação foi estruturada em módulos lógicos (`Pets`, `Tutores`, `Shared`):
+
+- **Code Splitting**: Implementado via `React.lazy` e `Suspense` nas rotas principais. O bundle JS é quebrado em pedaços menores (chunks), garantindo que o usuário baixe apenas o código necessário para a tela que está acessando (Time-to-Interactive reduzido).
+- **Shared Module**: Componentes reutilizáveis (Botões, Modais, Inputs) residem em `src/components/ui`, promovendo DRY (Don't Repeat Yourself).
 
 ---
 
-## 🏗️ Recursos Implementados
+## 3. Instruções de Execução
 
-### ✅ Requisitos Técnicos do Edital
+### 🐳 Via Docker (Recomendado)
 
-1. **Facade Pattern**
-   - Estrutura de pastas organizada para suportar o padrão
-   - Separação clara entre camadas (api, facades, services, components)
+O ambiente Docker provisiona automaticamente todas as dependências do frontend (Nginx/Node).
 
-2. **BehaviorSubject (RxJS)**
-   - `AuthStore.ts` - Store de autenticação usando BehaviorSubject
-   - Gerenciamento reativo de estado com Observables
-   - Persistência de tokens no localStorage
+1. **Clone o repositório:**
 
-3. **Health Checks**
-   - **Liveness Probe** - Verifica se a aplicação está viva
-   - **Readiness Probe** - Verifica se a aplicação está pronta (conectividade com API)
-   - Endpoint/utilitário dedicado para health checks
+   ```bash
+   git clone <url-do-repositorio>
+   cd pet-registry
+   ```
 
-4. **API Client (Axios)**
-   - Instância configurada com `baseURL: https://pet-manager-api.geia.vip`
-   - **Request Interceptor** - Adiciona JWT Bearer Token automaticamente
-   - **Response Interceptor** - Implementa lógica de Refresh Token
-   - Tratamento de erros 401 com renovação automática de tokens
+2. **Suba os containers:**
 
-5. **TypeScript**
-   - Totalmente tipado com interfaces
-   - Tipos definidos para Auth, Health Checks, etc.
+   ```bash
+   docker-compose up -d --build
+   ```
 
-6. **Tailwind CSS**
-   - Configurado para design responsivo
-   - Tema customizado com cores primárias
-   - Componentes estilizados com classes utilitárias
+3. **Acesse a aplicação:**
+   Abra seu navegador em: [http://localhost:8080](http://localhost:8080)
 
----
+### 💻 Execução Local
 
-## 🛠️ Instalação e Execução
+Pré-requisitos: Node.js 18+ e npm/yarn.
 
-### Pré-requisitos
-- Node.js 18+ 
-- npm ou yarn
+1. **Instale as dependências:**
 
-### Instalação
+   ```bash
+   npm install
+   ```
 
-```bash
-# Clone o repositório
-git clone <repository-url>
+2. **Execute o servidor de desenvolvimento:**
 
-# Entre no diretório
-cd pet-registry
+   ```bash
+   npm run dev
+   ```
 
-# Instale as dependências
-npm install
-```
-
-### Executar em Desenvolvimento
-
-```bash
-npm run dev
-```
-
-Acesse: `http://localhost:5173`
-
-### Build para Produção
-
-```bash
-npm run build
-```
-
-### Preview da Build
-
-```bash
-npm run preview
-```
+3. **Acesse a aplicação:**
+   Abra seu navegador em: [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## 🔐 Autenticação
+## 4. Testes e Qualidade
 
-### Fluxo de Autenticação
+A qualidade do código é assegurada por testes automatizados e verificações de saúde.
 
-1. **Login**: Usuário envia credenciais → Recebe `accessToken` e `refreshToken`
-2. **Armazenamento**: Tokens são armazenados no localStorage e no `AuthStore`
-3. **Requisições**: Todas as requisições incluem `Authorization: Bearer <accessToken>`
-4. **Renovação**: Quando o `accessToken` expira (401), o interceptor automaticamente:
-   - Pausa requisições pendentes
-   - Usa o `refreshToken` para obter novos tokens
-   - Atualiza o `AuthStore`
-   - Retenta todas as requisições pendentes
+### 🧪 Testes Unitários
 
-### AuthStore (BehaviorSubject)
+Utilizamos **Vitest** + **React Testing Library** para testar componentes e regras de negócio.
 
-```typescript
-// Assinar mudanças no estado de autenticação
-authStore.getAuthState().subscribe((state) => {
-  console.log('Auth state changed:', state);
-});
+- **Executar todos os testes:**
+  ```bash
+  npm test
+  ```
+- **Modo Watch (Desenvolvimento):**
+  ```bash
+  npm test -- --watch
+  ```
 
-// Obter snapshot do estado atual
-const currentState = authStore.getCurrentAuthState();
+### 💓 Health Checks
 
-// Fazer login
-authStore.setAuth(user, tokens);
+Implementamos endpoints/utilitários para monitoramento em ambientes orquestrados (K8s/Docker):
 
-// Fazer logout
-authStore.clearAuth();
-```
+- **Liveness Probe**: Verifica se a aplicação React carregou corretamente no DOM.
+- **Readiness Probe**: Verifica a conectividade com a API Backend (`https://pet-manager-api.geia.vip`).
+- **Verificação**: Utilitário disponível em `src/utils/healthCheck.ts`.
 
 ---
 
-## 🏥 Health Checks
+## 5. Justificativas e Priorização
 
-A aplicação implementa dois tipos de health checks conforme requisitos do edital:
+Para garantir a entrega de valor alinhada ao nível Senior exigido:
 
-### Liveness Probe
-Verifica se a aplicação está viva e respondendo.
+1.  **Prioridade: Robustez e Tipagem (TypeScript Strict)**
+    - Em sistemas governamentais/corporativos, a manutenibilidade a longo prazo é crítica. Adotamos **Strict Mode** e eliminamos o uso de `any` para prevenir erros silenciosos e facilitar o onboarding de novos desenvolvedores.
 
-### Readiness Probe
-Verifica se a aplicação está pronta para receber tráfego (conectividade com API externa).
+2.  **Prioridade: UX/UI Responsiva (Mobile First)**
+    - O sistema deve ser acessível em campo por agentes. Utilizamos **Tailwind CSS** para criar interfaces fluidas que funcionam perfeitamente em tablets e smartphones, não apenas desktops.
 
-**Uso:**
+3.  **Decisão: Camada de Abstração (Facade)**
+    - Ao invés de acoplar componentes diretamente ao Axios ou RxJS, a Facade Blinda a aplicação. trazendo uma visão arquitetural de longo prazo, permitindo refatorações futuras na camada de dados sem "quebrar" o frontend.
 
-```typescript
-import { performHealthCheck } from './utils/healthCheck';
-
-const healthStatus = await performHealthCheck();
-console.log(healthStatus);
-```
-
----
-
-## 📦 Dependências Principais
-
-```json
-{
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "axios": "^1.7.9",
-    "rxjs": "^7.8.1"
-  },
-  "devDependencies": {
-    "typescript": "~5.6.2",
-    "tailwindcss": "^3.4.17",
-    "vite": "^6.0.5"
-  }
-}
-```
-
----
-
-## 📝 Convenções de Código
-
-- **ESLint** configurado para React e TypeScript
-- **Strict mode** habilitado no TypeScript
-- Nomenclatura de arquivos: PascalCase para componentes, camelCase para utilitários
-- Imports organizados: externos → internos → relativos
-- Comentários em português para documentação do edital
-
----
-
-## 🎯 Próximos Passos
-
-- [ ] Implementar CRUD completo de pets
-- [ ] Adicionar validação de formulários
-- [ ] Implementar roteamento (React Router)
-- [ ] Adicionar testes unitários (Jest/Vitest)
-- [ ] Implementar camada Facade para APIs complexas
-- [ ] Adicionar tratamento de erros global
-- [ ] Implementar loading states e feedback visual
-
----
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para fins de avaliação no processo seletivo SEPLAG/MT.
-
----
-
-## 👤 Contato
-
-**Desenvolvedor:** [Seu Nome]  
-**Email:** [seu.email@example.com]  
-**Telefone:** [(XX) XXXXX-XXXX]
-
----
-
-**Desenvolvido com ❤️ para SEPLAG/MT**
+4.  **Decisão: Zod para Schemas**
+    - Segurança e integridade de dados. Validar na entrada (API) e na saída (Formulários) mitiga vulnerabilidades e garante que o backend receba dados higienizados.
