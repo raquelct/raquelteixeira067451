@@ -1,35 +1,41 @@
-/**
- * Footer Component
- * 
- * Footer com informações de copyright e branding
- * Sticky footer pattern para sempre ficar no bottom da página
- */
+import { PawPrint } from 'lucide-react';
+import githubIcon from '../../assets/github-icon.svg';
+
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white border-t border-gray-200 mt-auto">
+    <footer className="bg-white border-t border-slate-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          {/* Copyright */}
-          <div className="text-center md:text-left">
-            <p className="text-sm text-gray-500">
-              © {currentYear} <span className="font-semibold text-gray-700">SEPLAG/MT Pet Registry</span>
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Sistema de Registro de Animais de Estimação
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          
+          <div className="flex items-center gap-2 text-slate-500">
+            <PawPrint className="h-5 w-5 text-slate-400" />
+            <p className="text-sm">
+              © {currentYear} Pet Manager. Todos os direitos reservados.
             </p>
           </div>
 
-          {/* Additional Info */}
-          <div className="text-center md:text-right">
-            <p className="text-xs text-gray-500">
-              Desenvolvido para o Processo Seletivo SEPLAG/MT
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              v1.0.0 - {new Date().toLocaleDateString('pt-BR')}
-            </p>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-slate-500 hidden sm:inline">
+              Desenvolvido para SEPLAG/MT
+            </span>
+            
+            <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
+              v1.0.0
+            </span>
+
+            <a 
+              href="https://github.com/raquelct/raquelteixeira067451" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="GitHub Repository"
+            >
+              <img src={githubIcon} alt="GitHub" className="h-5 w-5 opacity-40 hover:opacity-60 transition-opacity" />
+            </a>
           </div>
+
         </div>
       </div>
     </footer>
