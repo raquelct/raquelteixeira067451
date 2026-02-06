@@ -1,5 +1,6 @@
-import { useState, useRef, useMemo } from 'react';
-import { Search, X, ChevronDown, Filter } from 'lucide-react';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { Search, X, ChevronDown, Filter, Loader2 } from 'lucide-react';
+import { useDebounce } from 'use-debounce';
 
 interface FilterOption {
   label: string;
@@ -18,24 +19,30 @@ export function SearchFilter({
   placeholder = 'Buscar...' 
 }: SearchFilterProps) {
   const [filterType, setFilterType] = useState(options[0]?.value || '');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [text, setText] = useState('');
+  const [query, debouncedControl] = useDebounce(text, 500);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    onSearch(filterType, query);
+  }, [query, filterType, onSearch]);
+
   const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
-    onSearch(filterType, term);
+    setText(term);
+    if (term === '') {
+      debouncedControl.flush();
+    }
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newFilter = e.target.value;
     setFilterType(newFilter);
-    onSearch(newFilter, searchTerm);
     inputRef.current?.focus();
   };
 
   const handleClear = () => {
-    setSearchTerm('');
-    onSearch(filterType, '');
+    setText(''); 
+    debouncedControl.flush();
     inputRef.current?.focus();
   };
 
@@ -43,6 +50,8 @@ export function SearchFilter({
     () => options.find(opt => opt.value === filterType)?.label,
     [options, filterType]
   );
+
+  const isTyping = text !== query;
 
   return (
     <div className="w-full space-y-2">
@@ -73,13 +82,13 @@ export function SearchFilter({
           <input
             ref={inputRef}
             type="text"
-            value={searchTerm}
+            value={text}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={placeholder}
             className="w-full h-12 text-sm text-gray-800 bg-transparent outline-none placeholder:text-gray-400"
           />
-          {searchTerm && (
-            <button
+          {text ? (
+             <button
               onClick={handleClear}
               className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
               type="button"
@@ -87,19 +96,24 @@ export function SearchFilter({
             >
               <X size={16} />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
-      <div className="h-5 pl-1">
-        {searchTerm && (
+      <div className="h-5 pl-1 flex items-center gap-2">
+        {isTyping ? (
+             <p className="text-xs text-indigo-500 flex items-center gap-1.5 animate-in fade-in">
+                <Loader2 size={12} className="animate-spin" />
+                Digitando...
+             </p>
+        ) : query ? (
           <p className="text-xs text-gray-500 animate-in fade-in slide-in-from-top-1">
             Buscando por{' '}
-            <span className="font-semibold text-blue-600">"{searchTerm}"</span>
+            <span className="font-semibold text-blue-600">"{query}"</span>
             {' '}em{' '}
             <span className="font-medium text-gray-700">{currentLabel}</span>
           </p>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export const PetList = () => {
   });
 
   const handleSearch = useCallback((filter: string, term: string) => {
-    const filters = term ? { [filter]: term } : undefined;
+    const filters = term ? { [filter]: term } : {};
     setIsSearching(!!term);
     setCurrentPage(0);
     fetchPets(filters, 0, PAGE_SIZE);

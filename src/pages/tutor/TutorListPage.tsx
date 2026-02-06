@@ -36,7 +36,7 @@ export const TutorList = () => {
   });
 
   const handleSearch = useCallback((_filter: string, term: string) => {
-    const filters = term ? { nome: term } : undefined;
+    const filters = term ? { nome: term } : {};
     setIsSearching(!!term);
     setCurrentPage(0);
     fetchTutores(filters, 0, PAGE_SIZE);
